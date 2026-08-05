@@ -1,0 +1,19 @@
+{
+  "name": "The Queen's Cup",
+  "short_name": "Queen's Cup",
+  "description": "Customer ordering app for The Queen's Cup.",
+  "start_url": "/orders",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7fbf8",
+  "theme_color": "#12864e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/queens-cup-logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
