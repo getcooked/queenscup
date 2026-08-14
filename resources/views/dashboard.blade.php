@@ -76,6 +76,16 @@
         .sales-bars.empty-state { display: flex; align-items: center; justify-content: center; color: var(--fg-muted); font-size: 12px; text-align: center; }
         .bar-wrap { height: 100%; display: flex; flex-direction: column; justify-content: end; gap: 8px; color: var(--fg-muted); font-size: 10px; text-align: center; }
         .bar { min-height: 18px; border-radius: 8px 8px 3px 3px; background: linear-gradient(180deg, var(--accent-light), var(--accent-dark)); box-shadow: 0 8px 20px rgba(14,140,74,0.2); }
+        .category-sales { display: grid; grid-template-columns: minmax(220px, 280px) 1fr; gap: 18px; align-items: center; }
+        .donut-wrap { position: relative; width: 100%; max-width: 280px; aspect-ratio: 1; margin: 0 auto; }
+        .donut-wrap canvas { width: 100%; height: 100%; display: block; }
+        .donut-center { position: absolute; inset: 32%; border-radius: 50%; background: #fff; border: 1px solid var(--border); display: grid; place-items: center; text-align: center; padding: 10px; }
+        .donut-center strong { display: block; font-size: 20px; line-height: 1; color: var(--accent); }
+        .donut-center span { display: block; margin-top: 5px; color: var(--fg-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .6px; }
+        .category-legend { display: grid; gap: 10px; }
+        .legend-row { display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: center; color: var(--fg-muted); font-size: 12px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .legend-row strong { color: var(--fg); font-size: 13px; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 13px 16px; border-bottom: 1px solid var(--border); text-align: left; font-size: 12px; }
         th { color: var(--fg-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; }
@@ -94,6 +104,7 @@
             .app-layout { height: auto; min-height: 100vh; }
             .sidebar { display: none; }
             .stats-grid, .grid-2 { grid-template-columns: 1fr; }
+            .category-sales { grid-template-columns: 1fr; }
             .topbar { padding: 0 16px; }
             .page-content { padding: 16px; }
         }
@@ -175,6 +186,19 @@
                 </div>
 
                 <div class="card">
+                    <div class="card-header"><h3>Sales by Category</h3><span class="badge badge-gold" id="topCategoryBadge">No sales yet</span></div>
+                    <div class="card-body">
+                        <div class="category-sales">
+                            <div class="donut-wrap">
+                                <canvas id="categoryDonutChart" aria-label="Sales by category donut chart"></canvas>
+                                <div class="donut-center"><div><strong id="categoryDonutTotal">0</strong><span>Items Sold</span></div></div>
+                            </div>
+                            <div class="category-legend" id="categoryLegend"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
                     <div class="card-header">
                         <h3>Recent Orders</h3>
                         <a class="btn" href="{{ url('/orders') }}"><i class="fas fa-receipt"></i> View Orders</a>
@@ -242,6 +266,12 @@
             return '\u20B1' + Number(value || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         }
 
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>"']/g, function(char) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[char];
+            });
+        }
+
         function parseOrderDate(value) {
             var parsed = new Date(value);
             return isNaN(parsed.getTime()) ? null : parsed;
@@ -294,6 +324,94 @@
             renderPopularItems(todayOrders);
             renderRecentOrders(orders.filter(function(order) { return order.branch === branch; }));
             renderSalesBars(orders.filter(function(order) { return order.branch === branch; }));
+            renderCategoryDonut(todayOrders);
+        }
+
+        function findItemCategory(item, productLookup) {
+            if (item.category) return item.category;
+            var product = productLookup.byId[String(item.id)] || productLookup.byName[String(item.name || '').toLowerCase()];
+            return product && product.category ? product.category : 'Uncategorized';
+        }
+
+        function categorySalesData(orders) {
+            var products = getData('products', []);
+            var productLookup = { byId: {}, byName: {} };
+            if (Array.isArray(products)) {
+                products.forEach(function(product) {
+                    productLookup.byId[String(product.id)] = product;
+                    productLookup.byName[String(product.name || '').toLowerCase()] = product;
+                });
+            }
+
+            var categories = {};
+            orders.filter(function(order) {
+                return order.status !== 'cancelled' && order.paymentStatus !== 'pending';
+            }).forEach(function(order) {
+                (order.items || []).forEach(function(item) {
+                    var category = findItemCategory(item, productLookup);
+                    if (!categories[category]) categories[category] = { name: category, qty: 0, revenue: 0 };
+                    categories[category].qty += Number(item.qty || 1);
+                    categories[category].revenue += Number(item.price || 0) * Number(item.qty || 1);
+                });
+            });
+
+            return Object.keys(categories).map(function(key) { return categories[key]; })
+                .sort(function(a, b) { return b.qty - a.qty; });
+        }
+
+        function renderCategoryDonut(orders) {
+            var canvas = document.getElementById('categoryDonutChart');
+            var legend = document.getElementById('categoryLegend');
+            var totalEl = document.getElementById('categoryDonutTotal');
+            var badge = document.getElementById('topCategoryBadge');
+            if (!canvas || !legend) return;
+
+            var data = categorySalesData(orders);
+            var totalQty = data.reduce(function(sum, category) { return sum + category.qty; }, 0);
+            var colors = ['#12864e', '#5b8def', '#f5a623', '#e53170', '#2cb67d', '#45b873', '#8a6df1'];
+            totalEl.textContent = totalQty;
+            badge.textContent = data.length ? data[0].name : 'No sales yet';
+
+            var rect = canvas.parentElement.getBoundingClientRect();
+            var size = Math.max(220, Math.floor(Math.min(rect.width, rect.height || rect.width)));
+            var dpr = window.devicePixelRatio || 1;
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+
+            var ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, size, size);
+
+            if (!totalQty) {
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, size * 0.36, 0, Math.PI * 2);
+                ctx.lineWidth = size * 0.15;
+                ctx.strokeStyle = '#e9f7ee';
+                ctx.stroke();
+                legend.innerHTML = '<div class="empty">No paid category sales yet today.</div>';
+                return;
+            }
+
+            var start = -Math.PI / 2;
+            data.forEach(function(category, index) {
+                var slice = (category.qty / totalQty) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, size * 0.36, start, start + slice);
+                ctx.lineWidth = size * 0.15;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = colors[index % colors.length];
+                ctx.stroke();
+                start += slice;
+            });
+
+            legend.innerHTML = data.slice(0, 6).map(function(category, index) {
+                var pct = Math.round(category.qty / totalQty * 100);
+                return '<div class="legend-row">' +
+                    '<span class="legend-dot" style="background:' + colors[index % colors.length] + '"></span>' +
+                    '<div><strong>' + escapeHtml(category.name) + '</strong><div>' + category.qty + ' sold · ' + money(category.revenue) + '</div></div>' +
+                    '<strong>' + pct + '%</strong>' +
+                '</div>';
+            }).join('');
         }
 
         function renderPopularItems(orders) {
@@ -382,6 +500,7 @@
         setupSidebar();
         removeSeedOrders();
         renderDashboard();
+        window.addEventListener('resize', renderDashboard);
     </script>
 </body>
 </html>

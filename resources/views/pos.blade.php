@@ -69,7 +69,9 @@
                             <div class="category">{{ $item->category ?: 'Uncategorized' }}</div>
                             <div class="prices">
                                 <div class="price"><span>Regular</span><strong>₱{{ number_format((float) $item->regular_price, 2) }}</strong></div>
-                                <div class="price"><span>Large</span><strong>₱{{ number_format((float) $item->large_price, 2) }}</strong></div>
+                                @if((float) $item->large_price > 0)
+                                    <div class="price"><span>Large</span><strong>₱{{ number_format((float) $item->large_price, 2) }}</strong></div>
+                                @endif
                             </div>
                             <div class="desc">{{ $item->description ?: 'No description' }}</div>
                         </div>
@@ -104,3 +106,5 @@
 </script>
 </body>
 </html>
+
+

@@ -9,7 +9,7 @@
     <style>
         :root{--bg:#f7fbf8;--deep:#ffffff;--card:#ffffff;--panel:#f1f8f3;--line:#cfe7d7;--text:#123524;--muted:#5f7f6b;--green:#16c76a;--gold:#2f9e62;--pink:#ef2f83;--blue:#5b8def;--yellow:#ffbd35;--danger:#ef3d5f}
         *{box-sizing:border-box;margin:0;padding:0}body{height:100vh;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow:hidden}h1,h2,h3{font-family:"Playfair Display",serif}.layout{display:flex;height:100vh}.sidebar{width:260px;background:var(--deep);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0}.sidebar-brand{padding:22px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:13px}.crown-icon{width:46px;height:46px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid rgba(22,199,106,.3);background:linear-gradient(135deg,#0c6f3f,#16c76a)}.crown-icon img{width:100%;height:100%;object-fit:cover}.sidebar-brand h2{font-size:14px;line-height:1.2;background:linear-gradient(135deg,#16a65f,#2f9e62);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.tagline{font-size:10px;color:var(--muted);letter-spacing:.5px}.sidebar-nav{flex:1;padding:14px 10px;overflow-y:auto}.nav-section-title{padding:12px 10px 7px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}.nav-item{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 12px;border-radius:10px;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600;text-decoration:none;transition:background .2s ease,color .2s ease}.nav-item:hover,.nav-item.active{background:rgba(22,199,106,.13);color:var(--green)}.sidebar-footer{padding:14px 18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:12px}.avatar{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--green),var(--gold));display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff}.user-info{flex:1;min-width:0}.user-info .name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.user-info .role{font-size:10px;color:var(--muted)}.logout-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}.logout-btn:hover{border-color:var(--danger);color:var(--danger)}
-        .content{flex:1;min-width:0;overflow:auto;padding:30px}.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}.top h1{font-size:34px}.top p{color:var(--muted);margin-top:5px}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{height:38px;border:0;border-radius:10px;padding:0 12px;background:var(--green);color:#ffffff;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn.secondary{background:var(--card);border:1px solid var(--line);color:var(--text)}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}.stat .icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;margin-bottom:12px}.stat strong{display:block;font-size:26px}.stat span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.8px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}.card-header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px}.card-header h3{font-size:18px}.filters{display:flex;gap:10px;flex-wrap:wrap}.field{height:38px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:0 11px;font-family:"DM Sans",sans-serif;outline:none}.field:focus{border-color:var(--green)}.print-header{display:none}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:880px}th{text-align:left;padding:12px 14px;color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--line)}td{padding:13px 14px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:middle}tr:hover td{background:rgba(22,199,106,.04)}.amount{font-weight:800;color:var(--gold)}.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 9px;font-size:10px;font-weight:800}.paid{background:rgba(22,199,106,.14);color:var(--green)}.pending{background:rgba(255,189,53,.14);color:var(--yellow)}.cancelled{background:rgba(239,61,95,.14);color:var(--danger)}.empty{padding:34px;text-align:center;color:var(--muted)}.items{max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}@media(max-width:1100px){body{height:auto;overflow:auto}.layout{height:auto}.sidebar{display:none}.content{padding:20px}.top{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.card-header{align-items:flex-start;flex-direction:column}}@media(max-width:650px){.stats{grid-template-columns:1fr}.actions,.filters{width:100%}.btn,.field{width:100%}}@media print{@page{margin:14mm}body{height:auto;background:#fff;color:#111;overflow:visible}.sidebar,.top,.stats,.filters{display:none!important}.layout,.content{display:block;height:auto;padding:0;overflow:visible}.card{border:0;background:#fff;color:#111;border-radius:0;overflow:visible}.card-header{display:block;border-bottom:1px solid #222;padding:0 0 10px;margin-bottom:10px}.card-header h3{display:none}.print-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}.print-header img{width:54px;height:54px;border-radius:50%;object-fit:cover}.print-header h2{font-size:22px;color:#111;margin:0}.print-header p{font-size:11px;color:#444;margin-top:2px}.table-wrap{overflow:visible}table{min-width:0;width:100%;font-size:10px}th,td{color:#111;border-bottom:1px solid #ddd;padding:7px 8px}.items{max-width:none;white-space:normal;color:#111}.amount{color:#111}.badge{background:transparent!important;color:#111!important;padding:0}.badge i{display:none}}
+        .content{flex:1;min-width:0;overflow:auto;padding:30px}.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}.top h1{font-size:34px}.top p{color:var(--muted);margin-top:5px}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{height:38px;border:0;border-radius:10px;padding:0 12px;background:var(--green);color:#ffffff;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn.secondary{background:var(--card);border:1px solid var(--line);color:var(--text)}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}.stat .icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;margin-bottom:12px}.stat strong{display:block;font-size:26px}.stat span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.8px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:18px}.card-header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px}.card-header h3{font-size:18px}.chart-card{padding:18px}.chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}.chart-head p{color:var(--muted);font-size:12px;margin-top:3px}.chart-total{text-align:right}.chart-total span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.8px}.chart-total strong{display:block;font-size:20px;color:var(--gold)}.chart-wrap{height:280px;position:relative}.chart-wrap canvas{width:100%;height:100%;display:block}.filters{display:flex;gap:10px;flex-wrap:wrap}.field{height:38px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:0 11px;font-family:"DM Sans",sans-serif;outline:none}.field:focus{border-color:var(--green)}.print-header{display:none}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:880px}th{text-align:left;padding:12px 14px;color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--line)}td{padding:13px 14px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:middle}tr:hover td{background:rgba(22,199,106,.04)}.amount{font-weight:800;color:var(--gold)}.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 9px;font-size:10px;font-weight:800}.paid{background:rgba(22,199,106,.14);color:var(--green)}.pending{background:rgba(255,189,53,.14);color:var(--yellow)}.cancelled{background:rgba(239,61,95,.14);color:var(--danger)}.empty{padding:34px;text-align:center;color:var(--muted)}.items{max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}@media(max-width:1100px){body{height:auto;overflow:auto}.layout{height:auto}.sidebar{display:none}.content{padding:20px}.top{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.card-header,.chart-head{align-items:flex-start;flex-direction:column}.chart-total{text-align:left}}@media(max-width:650px){.stats{grid-template-columns:1fr}.actions,.filters{width:100%}.btn,.field{width:100%}.chart-wrap{height:240px}}@media print{@page{margin:14mm}body{height:auto;background:#fff;color:#111;overflow:visible}.sidebar,.top,.stats,.filters,.chart-card{display:none!important}.layout,.content{display:block;height:auto;padding:0;overflow:visible}.card{border:0;background:#fff;color:#111;border-radius:0;overflow:visible}.card-header{display:block;border-bottom:1px solid #222;padding:0 0 10px;margin-bottom:10px}.card-header h3{display:none}.print-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}.print-header img{width:54px;height:54px;border-radius:50%;object-fit:cover}.print-header h2{font-size:22px;color:#111;margin:0}.print-header p{font-size:11px;color:#444;margin-top:2px}.table-wrap{overflow:visible}table{min-width:0;width:100%;font-size:10px}th,td{color:#111;border-bottom:1px solid #ddd;padding:7px 8px}.items{max-width:none;white-space:normal;color:#111}.amount{color:#111}.badge{background:transparent!important;color:#111!important;padding:0}.badge i{display:none}}
         body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transparent 34%),linear-gradient(180deg,#fbfefc 0%,var(--bg) 100%)}.sidebar,.card,.stat{box-shadow:0 12px 32px rgba(18,53,36,.07)}.card,.stat{border-color:#d8ebdf;background:#fff}.nav-item.active{box-shadow:inset 3px 0 0 var(--green)}.content h1{font-size:36px}.field{border-color:#d8ebdf}.btn{transition:transform .18s ease,box-shadow .18s ease}.btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(18,134,78,.15)}tr:hover td{background:#f8fcf9}
     </style>
 </head>
@@ -47,6 +47,22 @@
             <div class="stat"><div class="icon" style="background:rgba(91,141,239,.14);color:var(--blue)"><i class="fas fa-mug-hot"></i></div><strong id="itemsSold">0</strong><span>Items Sold</span></div>
             <div class="stat"><div class="icon" style="background:rgba(239,47,131,.14);color:var(--pink)"><i class="fas fa-chart-line"></i></div><strong id="averageOrder">&#8369;0.00</strong><span>Average Order</span></div>
         </div>
+
+        <section class="card chart-card">
+            <div class="chart-head">
+                <div>
+                    <h3>Sales by Month</h3>
+                    <p>Paid revenue from January to December.</p>
+                </div>
+                <div class="chart-total">
+                    <span>Chart Total</span>
+                    <strong id="yearlyChartTotal">&#8369;0.00</strong>
+                </div>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="yearlySalesChart" aria-label="January to December sales bar chart"></canvas>
+            </div>
+        </section>
 
         <section class="card">
             <div class="card-header">
@@ -114,6 +130,204 @@
         }).join(', ');
     }
 
+    function parseOrderDate(value) {
+        if (!value) return null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            var parts = value.split('-').map(Number);
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+        var parsed = new Date(value);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function dateInputValue(value) {
+        var date = parseOrderDate(value);
+        if (!date) return '';
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+    }
+
+    function monthlySalesData(orders) {
+        var months = {};
+        orders.forEach(function(order) {
+            var date = parseOrderDate(order.date);
+            if (!date) return;
+            var key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+            if (!months[key]) {
+                months[key] = {
+                    label: date.toLocaleString(undefined, { month: 'short', year: 'numeric' }),
+                    total: 0
+                };
+            }
+            months[key].total += Number(order.total || 0);
+        });
+
+        return Object.keys(months).sort().map(function(key) {
+            return months[key];
+        });
+    }
+
+    function drawMonthlySalesChart(orders) {
+        var canvas = document.getElementById('monthlySalesChart');
+        var totalEl = document.getElementById('monthlyChartTotal');
+        if (!canvas) return;
+
+        var data = monthlySalesData(orders);
+        var chartTotal = data.reduce(function(sum, month) { return sum + month.total; }, 0);
+        totalEl.innerHTML = money(chartTotal);
+
+        var rect = canvas.parentElement.getBoundingClientRect();
+        var dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(220, Math.floor(rect.height * dpr));
+
+        var ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        var width = canvas.width / dpr;
+        var height = canvas.height / dpr;
+        ctx.clearRect(0, 0, width, height);
+
+        if (!data.length) {
+            ctx.fillStyle = '#5f7f6b';
+            ctx.font = '13px "DM Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('No paid sales to chart yet.', width / 2, height / 2);
+            return;
+        }
+
+        var padding = { top: 18, right: 18, bottom: 42, left: 58 };
+        var chartWidth = width - padding.left - padding.right;
+        var chartHeight = height - padding.top - padding.bottom;
+        var maxValue = Math.max.apply(null, data.map(function(month) { return month.total; }));
+        var roundedMax = Math.ceil(maxValue / 100) * 100 || 100;
+        var gap = 12;
+        var barWidth = Math.max(18, (chartWidth - gap * (data.length - 1)) / data.length);
+
+        ctx.strokeStyle = '#d8ebdf';
+        ctx.lineWidth = 1;
+        ctx.fillStyle = '#5f7f6b';
+        ctx.font = '11px "DM Sans", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        for (var i = 0; i <= 4; i++) {
+            var y = padding.top + chartHeight - (chartHeight * i / 4);
+            var value = roundedMax * i / 4;
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(width - padding.right, y);
+            ctx.stroke();
+            ctx.fillText('₱' + Math.round(value).toLocaleString(), padding.left - 9, y);
+        }
+
+        data.forEach(function(month, index) {
+            var x = padding.left + index * (barWidth + gap);
+            var barHeight = chartHeight * (month.total / roundedMax);
+            var y = padding.top + chartHeight - barHeight;
+            var gradient = ctx.createLinearGradient(0, y, 0, padding.top + chartHeight);
+            gradient.addColorStop(0, '#16c76a');
+            gradient.addColorStop(1, '#2f9e62');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.roundRect(x, y, barWidth, barHeight, 8);
+            ctx.fill();
+
+            ctx.fillStyle = '#123524';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.font = '11px "DM Sans", sans-serif';
+            ctx.fillText(month.label, x + barWidth / 2, padding.top + chartHeight + 12);
+        });
+    }
+
+    function yearlySalesData(orders) {
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(function(label) {
+            return { label: label, total: 0 };
+        });
+
+        orders.forEach(function(order) {
+            var date = parseOrderDate(order.date);
+            if (!date) return;
+            months[date.getMonth()].total += Number(order.total || 0);
+        });
+
+        return months;
+    }
+
+    function drawYearlySalesChart(orders) {
+        var canvas = document.getElementById('yearlySalesChart');
+        var totalEl = document.getElementById('yearlyChartTotal');
+        if (!canvas) return;
+
+        var data = yearlySalesData(orders);
+        var chartTotal = data.reduce(function(sum, month) { return sum + month.total; }, 0);
+        totalEl.innerHTML = money(chartTotal);
+
+        var rect = canvas.parentElement.getBoundingClientRect();
+        var dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(220, Math.floor(rect.height * dpr));
+
+        var ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        var width = canvas.width / dpr;
+        var height = canvas.height / dpr;
+        ctx.clearRect(0, 0, width, height);
+
+        var padding = { top: 18, right: 18, bottom: 42, left: 58 };
+        var chartWidth = width - padding.left - padding.right;
+        var chartHeight = height - padding.top - padding.bottom;
+        var maxValue = Math.max.apply(null, data.map(function(month) { return month.total; }));
+        var roundedMax = Math.ceil(maxValue / 100) * 100 || 100;
+        var gap = 8;
+        var barWidth = Math.max(10, (chartWidth - gap * (data.length - 1)) / data.length);
+
+        ctx.strokeStyle = '#d8ebdf';
+        ctx.lineWidth = 1;
+        ctx.fillStyle = '#5f7f6b';
+        ctx.font = '11px "DM Sans", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        for (var i = 0; i <= 4; i++) {
+            var y = padding.top + chartHeight - (chartHeight * i / 4);
+            var value = roundedMax * i / 4;
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(width - padding.right, y);
+            ctx.stroke();
+            ctx.fillText('PHP ' + Math.round(value).toLocaleString(), padding.left - 9, y);
+        }
+
+        if (chartTotal <= 0) {
+            ctx.fillStyle = '#5f7f6b';
+            ctx.font = '13px "DM Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('No paid sales to chart yet.', width / 2, height / 2);
+        }
+
+        data.forEach(function(month, index) {
+            var x = padding.left + index * (barWidth + gap);
+            var barHeight = month.total > 0 ? Math.max(6, chartHeight * (month.total / roundedMax)) : 0;
+            var y = padding.top + chartHeight - barHeight;
+            if (barHeight > 0) {
+                var gradient = ctx.createLinearGradient(0, y, 0, padding.top + chartHeight);
+                gradient.addColorStop(0, '#16c76a');
+                gradient.addColorStop(1, '#2f9e62');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.roundRect(x, y, barWidth, barHeight, 8);
+                ctx.fill();
+            }
+
+            ctx.fillStyle = '#123524';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.font = '11px "DM Sans", sans-serif';
+            ctx.fillText(month.label, x + barWidth / 2, padding.top + chartHeight + 12);
+        });
+    }
+
     function filteredOrders() {
         var date = document.getElementById('dateFilter').value;
         var search = document.getElementById('searchFilter').value.trim().toLowerCase();
@@ -122,7 +336,7 @@
         return orders.filter(function(order) {
             if (order.status === 'cancelled') return false;
             if (order.paymentStatus !== 'paid') return false;
-            if (date && order.date !== date) return false;
+            if (date && dateInputValue(order.date) !== date) return false;
             if (search) {
                 var haystack = [order.id, order.customer, itemSummary(order)].join(' ').toLowerCase();
                 if (haystack.indexOf(search) === -1) return false;
@@ -145,6 +359,7 @@
         document.getElementById('totalOrders').textContent = reportRows.length;
         document.getElementById('itemsSold').textContent = items;
         document.getElementById('averageOrder').innerHTML = money(average);
+        drawYearlySalesChart(reportRows);
 
         document.getElementById('reportRows').innerHTML = reportRows.map(function(order) {
             return '<tr>' +
@@ -205,6 +420,9 @@
 
     setupSidebar();
     renderReports();
+    window.addEventListener('resize', function() {
+        drawYearlySalesChart(reportRows);
+    });
 </script>
 </body>
 </html>
