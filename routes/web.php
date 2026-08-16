@@ -29,7 +29,7 @@ Route::get('/', function () {
 
 Route::get('/staff-login', function () {
     return view('staff-login');
-});
+})->name('login');
 
 Route::post('/staff-login', function (Request $request) {
     $credentials = $request->validate([
