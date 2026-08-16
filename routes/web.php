@@ -23,9 +23,65 @@ use Illuminate\Database\QueryException;
 |
 */
 
-Route::get('/', function () {
-    return view('orders');
-});
+$ordersView = function () {
+    $manualImages = [
+        'bananush milktea' => 'bananush-milktea.png',
+        'brown sugar milktea' => 'brown-sugar-milktea.png',
+        'brulee milktea' => 'brulee-milktea.png',
+        'classic milktea' => 'classic-milktea.png',
+        'green apple milky fruit jam' => 'green-apple-milky-fruit-jam.png',
+        'guava dragon fruit' => 'guava-dragon-fruit.png',
+        'honey dew' => 'honey-dew.png',
+        'mango milky fruit jam' => 'mango-milky-fruit-jam.png',
+        'mulberry lime' => 'mulberry-lime.png',
+        'oreo and cream milktea' => 'oreo-and-cream-milktea.png',
+        'passion fruit pineapple' => 'passion-fruit-pineapple.png',
+        'peach milky fruit jam' => 'peach-milky-fruit-jam.png',
+        'peach puff milktea' => 'peach-puff-milktea.png',
+        'queens cake milktea' => 'queens-cake-milktea.png',
+        "queen's cake milktea" => 'queens-cake-milktea.png',
+        'sakura pomelo' => 'sakura-pomelo.png',
+        'strawberry milky fruit jam' => 'strawberry-milky-fruit-jam.png',
+        'wintermelon cheesecake' => 'wintermelon-cheesecake.png',
+        'wintermelon milktea' => 'wintermelon-milktea.png',
+    ];
+    $manualImageUrl = function (string $name) use ($manualImages) {
+        $key = preg_replace('/\s+/', ' ', preg_replace("/[^a-z0-9'\s]/", '', strtolower($name)));
+        $key = trim($key);
+
+        return isset($manualImages[$key]) ? asset('images/manual-menu-products/'.$manualImages[$key]) : '';
+    };
+
+    try {
+        $inventoryProducts = Inventory::query()
+            ->orderBy('name')
+            ->get()
+            ->map(function (Inventory $item) use ($manualImageUrl) {
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'category' => $item->category ?: 'Milktea Series',
+                    'prices' => [
+                        'R' => (float) $item->regular_price,
+                        'L' => (float) $item->large_price,
+                    ],
+                    'stock' => (int) $item->stock,
+                    'desc' => $item->description ?: '',
+                    'image_url' => $manualImageUrl($item->name) ?: ($item->image_path ? asset('storage/'.$item->image_path) : ''),
+                    'updated_at' => optional($item->updated_at)->toISOString(),
+                ];
+            })
+            ->values();
+    } catch (QueryException $exception) {
+        $inventoryProducts = collect();
+    }
+
+    return view('orders', [
+        'inventoryProducts' => $inventoryProducts,
+    ]);
+};
+
+Route::get('/', $ordersView);
 
 Route::get('/staff-login', function () {
     return view('staff-login');
@@ -202,63 +258,7 @@ Route::get('/dashboard', function () {
     ]);
 });
 
-Route::get('/orders', function () {
-    $manualImages = [
-        'bananush milktea' => 'bananush-milktea.png',
-        'brown sugar milktea' => 'brown-sugar-milktea.png',
-        'brulee milktea' => 'brulee-milktea.png',
-        'classic milktea' => 'classic-milktea.png',
-        'green apple milky fruit jam' => 'green-apple-milky-fruit-jam.png',
-        'guava dragon fruit' => 'guava-dragon-fruit.png',
-        'honey dew' => 'honey-dew.png',
-        'mango milky fruit jam' => 'mango-milky-fruit-jam.png',
-        'mulberry lime' => 'mulberry-lime.png',
-        'oreo and cream milktea' => 'oreo-and-cream-milktea.png',
-        'passion fruit pineapple' => 'passion-fruit-pineapple.png',
-        'peach milky fruit jam' => 'peach-milky-fruit-jam.png',
-        'peach puff milktea' => 'peach-puff-milktea.png',
-        'queens cake milktea' => 'queens-cake-milktea.png',
-        "queen's cake milktea" => 'queens-cake-milktea.png',
-        'sakura pomelo' => 'sakura-pomelo.png',
-        'strawberry milky fruit jam' => 'strawberry-milky-fruit-jam.png',
-        'wintermelon cheesecake' => 'wintermelon-cheesecake.png',
-        'wintermelon milktea' => 'wintermelon-milktea.png',
-    ];
-    $manualImageUrl = function (string $name) use ($manualImages) {
-        $key = preg_replace('/\s+/', ' ', preg_replace("/[^a-z0-9'\s]/", '', strtolower($name)));
-        $key = trim($key);
-
-        return isset($manualImages[$key]) ? asset('images/manual-menu-products/'.$manualImages[$key]) : '';
-    };
-
-    try {
-        $inventoryProducts = Inventory::query()
-            ->orderBy('name')
-            ->get()
-            ->map(function (Inventory $item) use ($manualImageUrl) {
-                return [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'category' => $item->category ?: 'Milktea Series',
-                    'prices' => [
-                        'R' => (float) $item->regular_price,
-                        'L' => (float) $item->large_price,
-                    ],
-                    'stock' => (int) $item->stock,
-                    'desc' => $item->description ?: '',
-                    'image_url' => $manualImageUrl($item->name) ?: ($item->image_path ? asset('storage/'.$item->image_path) : ''),
-                    'updated_at' => optional($item->updated_at)->toISOString(),
-                ];
-            })
-            ->values();
-    } catch (QueryException $exception) {
-        $inventoryProducts = collect();
-    }
-
-    return view('orders', [
-        'inventoryProducts' => $inventoryProducts,
-    ]);
-});
+Route::get('/orders', $ordersView);
 
 Route::resource('inventory', InventoryController::class)
     ->only(['index', 'store', 'update', 'destroy']);
