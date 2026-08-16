@@ -7,6 +7,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class InventoryController extends Controller
 {
@@ -44,7 +45,14 @@ class InventoryController extends Controller
     public function store(Request $request)
     {
         $data = $this->validatedData($request);
-        $data['image_path'] = $this->storeImage($request);
+
+        try {
+            $data['image_path'] = $this->storeImage($request);
+        } catch (Throwable $exception) {
+            return back()
+                ->withInput()
+                ->withErrors(['image' => 'We could not upload the product image. Please try a smaller image or save the item without an image.']);
+        }
 
         try {
             Inventory::create($data);
@@ -62,10 +70,16 @@ class InventoryController extends Controller
         $data = $this->validatedData($request);
 
         if ($request->hasFile('image')) {
-            if ($inventory->image_path) {
-                Storage::disk('public')->delete($inventory->image_path);
+            try {
+                if ($inventory->image_path) {
+                    Storage::disk('public')->delete($inventory->image_path);
+                }
+                $data['image_path'] = $this->storeImage($request);
+            } catch (Throwable $exception) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['image' => 'We could not upload the product image. Please try a smaller image or save the item without an image.']);
             }
-            $data['image_path'] = $this->storeImage($request);
         }
 
         try {

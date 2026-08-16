@@ -272,24 +272,51 @@
     function submitInventory(action, method, values) {
         localStorage.removeItem('qc_products');
         var form = document.getElementById('inventoryCrudForm');
-        form.action = action;
-        document.getElementById('crudMethod').value = method;
-        document.getElementById('crudName').value = values.name || '';
-        document.getElementById('crudCategory').value = values.category || '';
-        document.getElementById('crudRegularPrice').value = values.regular_price || 0;
-        document.getElementById('crudLargePrice').value = values.large_price || 0;
-        document.getElementById('crudStock').value = values.stock || 0;
-        document.getElementById('crudDescription').value = values.description || '';
-
+        var formData = new FormData(form);
         var imageInput = document.getElementById('swalImage');
-        var crudImage = document.getElementById('crudImage');
-        var dataTransfer = new DataTransfer();
-        if (imageInput && imageInput.files.length > 0) {
-            dataTransfer.items.add(imageInput.files[0]);
-        }
-        crudImage.files = dataTransfer.files;
 
-        form.submit();
+        formData.set('_method', method);
+        formData.set('name', values.name || '');
+        formData.set('category', values.category || '');
+        formData.set('regular_price', values.regular_price || 0);
+        formData.set('large_price', values.large_price || 0);
+        formData.set('stock', values.stock || 0);
+        formData.set('description', values.description || '');
+
+        if (imageInput && imageInput.files.length > 0) {
+            formData.set('image', imageInput.files[0]);
+        } else {
+            formData.delete('image');
+        }
+
+        Swal.fire({
+            title: 'Saving item...',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            customClass: { popup: 'inventory-modal' },
+            didOpen: function () {
+                Swal.showLoading();
+            }
+        });
+
+        fetch(action, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'text/html,application/xhtml+xml'
+            }
+        }).then(function (response) {
+            window.location.href = response.url || '{{ url('/inventory') }}';
+        }).catch(function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Unable to save',
+                text: 'Please check your connection and try again.',
+                customClass: { popup: 'inventory-modal' }
+            });
+        });
     }
 
     function removeCachedOrderProduct(id) {
