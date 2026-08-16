@@ -79,7 +79,7 @@
         <div class="staff-login-card">
             <div class="staff-login-header">
                 <div class="staff-login-crown">
-                    <img src="https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719" alt="Queen's Cup Logo">
+                    <img src="{{ asset('icons/queens-cup-logo.png') }}" alt="Queen's Cup Logo">
                 </div>
                 <h2>Staff Portal</h2>
                 <p>The Queen's Cup Management</p>

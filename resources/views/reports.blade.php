@@ -17,7 +17,7 @@
 <div class="layout">
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <div class="crown-icon" id="sidebarCrown"><img src="https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719" alt="Logo"></div>
+            <div class="crown-icon" id="sidebarCrown"><img src="{{ asset('icons/queens-cup-logo.png') }}" alt="Logo"></div>
             <div><h2>The Queen's Cup</h2><span class="tagline">Crowned with Flavors</span></div>
         </div>
         <nav class="sidebar-nav">
@@ -67,7 +67,7 @@
         <section class="card">
             <div class="card-header">
                 <div class="print-header">
-                    <img id="printLogo" src="https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719" alt="Queen's Cup Logo">
+                    <img id="printLogo" src="{{ asset('icons/queens-cup-logo.png') }}" alt="Queen's Cup Logo">
                     <div><h2>The Queen's Cup</h2><p>Report Records</p></div>
                 </div>
                 <h3>Report Records</h3>
@@ -97,7 +97,7 @@
     </main>
 </div>
 <script>
-    var defaultLogo = 'https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719';
+    var defaultLogo = '{{ asset('icons/queens-cup-logo.png') }}';
     var reportRows = [];
 
     function clearAllOrderRecords() {

@@ -116,7 +116,7 @@
         <aside class="sidebar">
             <div class="sidebar-brand">
                 <div class="crown-icon" id="sidebarCrown">
-                    <img src="https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719" alt="Logo">
+                    <img src="{{ asset('icons/queens-cup-logo.png') }}" alt="Logo">
                 </div>
                 <div>
                     <h2>The Queen's Cup</h2>
@@ -226,7 +226,7 @@
 
     <script>
         var staffUser = @json($staffUserPayload);
-        var LOGO_URL = 'https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719';
+        var LOGO_URL = '{{ asset('icons/queens-cup-logo.png') }}';
         var todayStr = new Date().toLocaleDateString();
         var defaultOrders = [];
 

@@ -2,6 +2,32 @@
     $pageTitle = $pageTitle ?? 'Point of Sale';
     $pageKey = $pageKey ?? 'pos';
     $pageDescription = $pageDescription ?? 'Create and manage sales transactions.';
+    $manualImages = [
+        'bananush milktea' => 'bananush-milktea.png',
+        'brown sugar milktea' => 'brown-sugar-milktea.png',
+        'brulee milktea' => 'brulee-milktea.png',
+        'classic milktea' => 'classic-milktea.png',
+        'green apple milky fruit jam' => 'green-apple-milky-fruit-jam.png',
+        'guava dragon fruit' => 'guava-dragon-fruit.png',
+        'honey dew' => 'honey-dew.png',
+        'mango milky fruit jam' => 'mango-milky-fruit-jam.png',
+        'mulberry lime' => 'mulberry-lime.png',
+        'oreo and cream milktea' => 'oreo-and-cream-milktea.png',
+        'passion fruit pineapple' => 'passion-fruit-pineapple.png',
+        'peach milky fruit jam' => 'peach-milky-fruit-jam.png',
+        'peach puff milktea' => 'peach-puff-milktea.png',
+        'queens cake milktea' => 'queens-cake-milktea.png',
+        "queen's cake milktea" => 'queens-cake-milktea.png',
+        'sakura pomelo' => 'sakura-pomelo.png',
+        'strawberry milky fruit jam' => 'strawberry-milky-fruit-jam.png',
+        'wintermelon cheesecake' => 'wintermelon-cheesecake.png',
+        'wintermelon milktea' => 'wintermelon-milktea.png',
+    ];
+    $manualImageUrl = function ($name) use ($manualImages) {
+        $key = trim(preg_replace('/\s+/', ' ', preg_replace("/[^a-z0-9'\s]/", '', strtolower($name ?? ''))));
+
+        return isset($manualImages[$key]) ? asset('images/manual-menu-products/'.$manualImages[$key]) : '';
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -22,7 +48,7 @@
 <div class="layout">
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <div class="crown-icon" id="sidebarCrown"><img src="https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719" alt="Logo"></div>
+            <div class="crown-icon" id="sidebarCrown"><img src="{{ asset('icons/queens-cup-logo.png') }}" alt="Logo"></div>
             <div><h2>The Queen's Cup</h2><span class="tagline">Crowned with Flavors</span></div>
         </div>
         <nav class="sidebar-nav">
@@ -55,10 +81,11 @@
                         @php
                             $stockClass = $item->stock <= 0 ? 'out' : ($item->stock <= 10 ? 'low' : 'ok');
                             $stockText = $item->stock <= 0 ? 'Out of stock' : ($item->stock <= 10 ? 'Low stock: '.$item->stock : 'In stock: '.$item->stock);
+                            $itemImageUrl = $manualImageUrl($item->name) ?: ($item->image_path ? asset('storage/'.$item->image_path) : '');
                         @endphp
                         <div class="product-card">
-                            @if($item->image_path)
-                                <img class="product-image" src="{{ asset('storage/'.$item->image_path) }}" alt="{{ $item->name }}">
+                            @if($itemImageUrl)
+                                <img class="product-image" src="{{ $itemImageUrl }}" alt="{{ $item->name }}">
                             @else
                                 <div class="product-placeholder"><i class="fas fa-mug-hot"></i></div>
                             @endif
@@ -82,7 +109,7 @@
     </main>
 </div>
 <script>
-    var defaultLogo = 'https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719';
+    var defaultLogo = '{{ asset('icons/queens-cup-logo.png') }}';
 
     function setupSidebar() {
         var session = null;

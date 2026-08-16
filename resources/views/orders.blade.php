@@ -535,7 +535,7 @@ body{background:radial-gradient(circle at top right,rgba(22,166,95,.08),transpar
 <div class="login-page" id="loginPage">
   <div class="login-bg-orb a"></div><div class="login-bg-orb b"></div><div class="login-bg-orb c"></div>
   <div class="login-card">
-    <div class="login-header"><div class="login-crown" id="loginCrown"><img src="https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719" alt="Queen's Cup Logo"></div><h2>The Queen's Cup</h2><p>Crowned with Flavors</p></div>
+    <div class="login-header"><div class="login-crown" id="loginCrown"><img src="{{ asset('icons/queens-cup-logo.png') }}" alt="Queen's Cup Logo"></div><h2>The Queen's Cup</h2><p>Crowned with Flavors</p></div>
     <div class="login-body">
       <div class="login-tabs"><button class="login-tab active" onclick="switchLoginTab('guest')">Order Now</button><button class="login-tab" onclick="window.location.href='/staff-login'">Staff Sign In</button></div>
       <div class="login-error" id="loginError"></div>
@@ -563,7 +563,7 @@ body{background:radial-gradient(circle at top right,rgba(22,166,95,.08),transpar
     <aside class="sidebar">
         <div class="sidebar-brand">
             <div class="crown-icon" id="sidebarCrown">
-                <img src="https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719" alt="Logo">
+                <img src="{{ asset('icons/queens-cup-logo.png') }}" alt="Logo">
             </div>
             <div>
                 <h2>The Queen's Cup</h2>
@@ -675,7 +675,7 @@ body{background:radial-gradient(circle at top right,rgba(22,166,95,.08),transpar
         <div class="grid-2 fade-in" style="margin-top:18px">
           <div class="card"><div class="card-header"><h3>Branch Logo</h3><span class="badge badge-gold"><i class="fas fa-crown" style="font-size:8px"></i> Admin Only</span></div><div class="card-body">
             <div class="logo-preview-area">
-              <div class="logo-preview-current" id="logoPreviewCurrent"><img src="https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719" alt="Logo"></div>
+              <div class="logo-preview-current" id="logoPreviewCurrent"><img src="{{ asset('icons/queens-cup-logo.png') }}" alt="Logo"></div>
               <div class="logo-preview-info">
                 <div class="label">Current Logo</div>
                 <div class="name" id="logoPreviewName">Queen's Cup Brand Logo</div>
@@ -732,7 +732,7 @@ body{background:radial-gradient(circle at top right,rgba(22,166,95,.08),transpar
       </div>
       <!-- Chatbot -->
       <div class="chatbot-container" id="chatbotContainer" style="display:none">
-        <div class="chatbot-window" id="chatWindow"><div class="chat-header"><div class="bot-avatar" id="chatBotAvatar"><img src="https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719" alt="Logo"></div><div><div class="bot-name">Queen's Cup Assistant</div><div class="bot-status"><i class="fas fa-circle" style="font-size:6px;margin-right:3px"></i>Online</div></div><button type="button" class="chat-close" onclick="toggleChatbot()" title="Close assistant"><i class="fas fa-times"></i></button></div><div class="chat-messages" id="chatMessages"></div><div class="chat-input-area"><input class="chat-input" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendChat()"><button class="chat-send" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button></div></div>
+        <div class="chatbot-window" id="chatWindow"><div class="chat-header"><div class="bot-avatar" id="chatBotAvatar"><img src="{{ asset('icons/queens-cup-logo.png') }}" alt="Logo"></div><div><div class="bot-name">Queen's Cup Assistant</div><div class="bot-status"><i class="fas fa-circle" style="font-size:6px;margin-right:3px"></i>Online</div></div><button type="button" class="chat-close" onclick="toggleChatbot()" title="Close assistant"><i class="fas fa-times"></i></button></div><div class="chat-messages" id="chatMessages"></div><div class="chat-input-area"><input class="chat-input" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendChat()"><button class="chat-send" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button></div></div>
         <button class="chatbot-toggle" onclick="toggleChatbot()"><i class="fas fa-comments"></i></button>
       </div>
     </div>
@@ -762,7 +762,7 @@ body{background:radial-gradient(circle at top right,rgba(22,166,95,.08),transpar
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 /* ========== LOGO URL ========== */
-var LOGO_URL='https://z-cdn-media.chatglm.cn/files/af3b11e5-fe61-43c7-8ea7-25f782035ca7.jpg?auth_key=1879603096-24f93fd216a54bdcbe24ff044d3e749d-0-1994c8beadd0469c9164ce8d6c133719';
+var LOGO_URL='{{ asset('icons/queens-cup-logo.png') }}';
 
 /* ========== BRANCH DATA ========== */
 var BRANCHES={
@@ -816,9 +816,72 @@ function isValidContact(value){return /^[0-9+\-\s()]{7,20}$/.test(String(value||
 
 var DEFAULT_USERS=[];
 
-var FALLBACK_PRODUCTS=[];
+var MANUAL_PRODUCT_IMAGE_BASE='{{ asset('images/manual-menu-products') }}';
+function manualProductImage(file){return MANUAL_PRODUCT_IMAGE_BASE+'/'+file;}
+function productImageFileFromName(name){
+  var files={
+    'bananush milktea':'bananush-milktea.png',
+    'brown sugar milktea':'brown-sugar-milktea.png',
+    'brulee milktea':'brulee-milktea.png',
+    'classic milktea':'classic-milktea.png',
+    'green apple milky fruit jam':'green-apple-milky-fruit-jam.png',
+    'guava dragon fruit':'guava-dragon-fruit.png',
+    'honey dew':'honey-dew.png',
+    'mango milky fruit jam':'mango-milky-fruit-jam.png',
+    'mulberry lime':'mulberry-lime.png',
+    'oreo and cream milktea':'oreo-and-cream-milktea.png',
+    'passion fruit pineapple':'passion-fruit-pineapple.png',
+    'peach milky fruit jam':'peach-milky-fruit-jam.png',
+    'peach puff milktea':'peach-puff-milktea.png',
+    'queens cake milktea':'queens-cake-milktea.png',
+    "queen's cake milktea":'queens-cake-milktea.png',
+    'sakura pomelo':'sakura-pomelo.png',
+    'strawberry milky fruit jam':'strawberry-milky-fruit-jam.png',
+    'wintermelon cheesecake':'wintermelon-cheesecake.png',
+    'wintermelon milktea':'wintermelon-milktea.png'
+  };
+  return files[String(name||'').toLowerCase().replace(/[^a-z0-9'\s]/g,'').replace(/\s+/g,' ').trim()]||'';
+}
+function manualProductImageFromName(name){
+  var file=productImageFileFromName(name);
+  return file?manualProductImage(file):'';
+}
+function fallbackProduct(id,name,category,regular,large,stock,file,desc,bestSeller){
+  return {
+    id:id,
+    name:name,
+    category:category,
+    prices:{R:regular,L:large},
+    stock:stockForAllBranches(stock),
+    sold:stockForAllBranches(0),
+    desc:desc||'',
+    imageUrl:manualProductImage(file),
+    icon:productIcon(category),
+    bestSeller:!!bestSeller
+  };
+}
+var FALLBACK_PRODUCTS=[
+  fallbackProduct(1,'Classic Milktea','Milktea Series',39,49,25,'classic-milktea.png','Smooth black tea with creamy milk.',true),
+  fallbackProduct(2,'Wintermelon Milktea','Milktea Series',39,49,25,'wintermelon-milktea.png','Sweet wintermelon milk tea blend.',true),
+  fallbackProduct(3,'Brown Sugar Milktea','Milktea Series',49,59,20,'brown-sugar-milktea.png','Caramel brown sugar milk tea.'),
+  fallbackProduct(4,'Brulee Milktea','Milktea Series',49,59,20,'brulee-milktea.png','Creamy brulee-style milk tea.'),
+  fallbackProduct(5,'Oreo and Cream Milktea','Milktea Series',49,59,20,'oreo-and-cream-milktea.png','Cookies and cream milk tea.'),
+  fallbackProduct(6,'Queens Cake Milktea','Milktea Series',49,59,20,'queens-cake-milktea.png','Signature cake-inspired milk tea.',true),
+  fallbackProduct(7,'Peach Puff Milktea','Milktea Series',49,59,20,'peach-puff-milktea.png','Peachy milk tea with a soft finish.'),
+  fallbackProduct(8,'Bananush Milktea','Milktea Series',49,59,20,'bananush-milktea.png','Banana milk tea blend.'),
+  fallbackProduct(9,'Wintermelon Cheesecake','Milktea Series',49,59,20,'wintermelon-cheesecake.png','Wintermelon with cheesecake cream.'),
+  fallbackProduct(10,'Passion Fruit Pineapple','Fruit Teas',39,49,25,'passion-fruit-pineapple.png','Tropical passion fruit and pineapple.'),
+  fallbackProduct(11,'Mulberry Lime','Fruit Teas',39,49,25,'mulberry-lime.png','Bright mulberry tea with lime.'),
+  fallbackProduct(12,'Sakura Pomelo','Fruit Teas',39,49,25,'sakura-pomelo.png','Floral sakura with pomelo citrus.'),
+  fallbackProduct(13,'Guava Dragon Fruit','Fruit Teas',39,49,25,'guava-dragon-fruit.png','Guava and dragon fruit refresher.'),
+  fallbackProduct(14,'Mango Milky Fruit Jam','Milky Fruit Jams',49,59,20,'mango-milky-fruit-jam.png','Mango fruit jam with creamy milk.'),
+  fallbackProduct(15,'Strawberry Milky Fruit Jam','Milky Fruit Jams',49,59,20,'strawberry-milky-fruit-jam.png','Strawberry fruit jam with creamy milk.'),
+  fallbackProduct(16,'Peach Milky Fruit Jam','Milky Fruit Jams',49,59,20,'peach-milky-fruit-jam.png','Peach fruit jam with creamy milk.'),
+  fallbackProduct(17,'Green Apple Milky Fruit Jam','Milky Fruit Jams',49,59,20,'green-apple-milky-fruit-jam.png','Green apple fruit jam with creamy milk.'),
+  fallbackProduct(18,'Honey Dew','Fruit Milk Shake',49,59,20,'honey-dew.png','Creamy honeydew drink.')
+];
 var SERVER_PRODUCTS=@json($inventoryProducts ?? []);
-var DEFAULT_PRODUCTS=SERVER_PRODUCTS.map(function(p){return normalizeServerProduct(p,null);});
+var DEFAULT_PRODUCTS=SERVER_PRODUCTS.length?SERVER_PRODUCTS.map(function(p){return normalizeServerProduct(p,null);}):FALLBACK_PRODUCTS;
 var todayStr=new Date().toLocaleDateString();
 var DEFAULT_ORDERS=[];
 
@@ -902,7 +965,7 @@ function normalizeServerProduct(p,existing){
     stock:stockForAllBranches(stock),
     sold:sold,
     desc:p.desc||'',
-    imageUrl:p.image_url||'',
+    imageUrl:manualProductImageFromName(p.name)||p.image_url||'',
     icon:(existing&&existing.icon)||productIcon(category),
     bestSeller:existing?!!existing.bestSeller:false,
     serverUpdatedAt:p.updated_at||'',
@@ -940,7 +1003,7 @@ function syncInventoryProducts(){
       return;
     }
     var existing=products[idx];
-    if(existing.serverUpdatedAt!==serverProduct.updated_at||existing.imageUrl!==(serverProduct.image_url||'')||existing.fromInventory!==true){
+    if(existing.serverUpdatedAt!==serverProduct.updated_at||existing.imageUrl!==(manualProductImageFromName(serverProduct.name)||serverProduct.image_url||'')||existing.fromInventory!==true){
       products[idx]=normalizeServerProduct(serverProduct,existing);
       needsSave=true;
     }
