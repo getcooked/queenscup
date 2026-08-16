@@ -39,7 +39,7 @@ class PointOfSaleController extends Controller
             $inventoryItems = collect();
 
             return view('pos', compact('sales', 'totalSales', 'todaySales', 'todayTransactions', 'inventoryItems'))
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return view('pos', compact('sales', 'totalSales', 'todaySales', 'todayTransactions', 'inventoryItems'));
@@ -70,7 +70,7 @@ class PointOfSaleController extends Controller
         } catch (QueryException $exception) {
             return back()
                 ->withInput()
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return redirect()->route('point-of-sales.index')->with('success', 'POS transaction created.');
@@ -98,7 +98,7 @@ class PointOfSaleController extends Controller
         } catch (QueryException $exception) {
             return back()
                 ->withInput()
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return redirect()->route('point-of-sales.index')->with('success', 'POS transaction updated.');
@@ -110,7 +110,7 @@ class PointOfSaleController extends Controller
             $pointOfSale->delete();
         } catch (QueryException $exception) {
             return back()
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return redirect()->route('point-of-sales.index')->with('success', 'POS transaction deleted.');

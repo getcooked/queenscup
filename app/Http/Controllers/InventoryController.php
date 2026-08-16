@@ -35,7 +35,7 @@ class InventoryController extends Controller
             $outOfStock = 0;
 
             return view('inventory', compact('items', 'totalItems', 'lowStock', 'outOfStock'))
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return view('inventory', compact('items', 'totalItems', 'lowStock', 'outOfStock'));
@@ -51,7 +51,7 @@ class InventoryController extends Controller
         } catch (QueryException $exception) {
             return back()
                 ->withInput()
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return redirect('/inventory')->with('success', 'Inventory item added.');
@@ -73,7 +73,7 @@ class InventoryController extends Controller
         } catch (QueryException $exception) {
             return back()
                 ->withInput()
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return redirect('/inventory')->with('success', 'Inventory item updated.');
@@ -89,7 +89,7 @@ class InventoryController extends Controller
             $inventory->delete();
         } catch (QueryException $exception) {
             return back()
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return redirect('/inventory')->with('success', 'Inventory item deleted.');

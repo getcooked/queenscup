@@ -24,7 +24,7 @@ class ProfileController extends Controller
             $profile = $user->profile ?: $user->profile()->create();
         } catch (QueryException $exception) {
             return redirect('/staff-login')
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return view('profile', compact('user', 'profile'));
@@ -52,7 +52,7 @@ class ProfileController extends Controller
         } catch (QueryException $exception) {
             return back()
                 ->withInput()
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         if ($request->hasFile('avatar')) {
@@ -78,7 +78,7 @@ class ProfileController extends Controller
         } catch (QueryException $exception) {
             return back()
                 ->withInput()
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return redirect('/profile')->with('success', 'Profile updated.');
@@ -107,7 +107,7 @@ class ProfileController extends Controller
             ]);
         } catch (QueryException $exception) {
             return back()
-                ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+                ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
         return redirect('/profile')->with('success', 'Password updated.');

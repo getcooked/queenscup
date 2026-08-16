@@ -43,7 +43,7 @@ Route::post('/staff-login', function (Request $request) {
             ->first();
     } catch (QueryException $exception) {
         return response()->json([
-            'message' => 'Database is not connected. Please start MySQL in XAMPP and try again.',
+            'message' => 'We could not connect to the database. Please try again later.',
         ], 503);
     }
 
@@ -73,7 +73,7 @@ Route::post('/staff', function (Request $request) {
         $admin = $adminId ? User::find($adminId) : null;
     } catch (QueryException $exception) {
         return response()->json([
-            'message' => 'Database is not connected. Please start MySQL in XAMPP and try again.',
+            'message' => 'We could not connect to the database. Please try again later.',
         ], 503);
     }
 
@@ -190,7 +190,7 @@ Route::get('/dashboard', function () {
         $user = $userId ? User::find($userId) : null;
     } catch (QueryException $exception) {
         return redirect('/staff-login')
-            ->withErrors(['database' => 'Database is not connected. Please start MySQL in XAMPP and try again.']);
+            ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
     }
 
     if (! $user || $user->role !== 'admin') {
