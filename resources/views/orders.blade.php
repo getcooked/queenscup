@@ -525,6 +525,7 @@ body{background:radial-gradient(circle at top right,rgba(22,166,95,.08),transpar
   .customer-mobile td{display:table-cell;width:auto;border-bottom:1px solid var(--border);padding:12px 14px}
 }
 </style>
+<link href="{{ asset('css/admin-shell.css') }}" rel="stylesheet">
 </head>
 <body>
 <div class="bg-orb bg-orb-1"></div>
@@ -815,6 +816,7 @@ function isValidEmail(value){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(val
 function isValidContact(value){return /^[0-9+\-\s()]{7,20}$/.test(String(value||'').trim());}
 
 var DEFAULT_USERS=[];
+var AUTHENTICATED_STAFF=@json($authenticatedStaff ?? null);
 
 var MANUAL_PRODUCT_IMAGE_BASE='{{ asset('images/manual-menu-products') }}';
 function manualProductImage(file){return MANUAL_PRODUCT_IMAGE_BASE+'/'+file;}
@@ -1430,7 +1432,7 @@ function enterApp(){
   updateInstallButton();
   updateCustomerCheckoutBar();
   var appSidebar=document.querySelector('#appLayout .sidebar');
-  if(appSidebar)appSidebar.style.display=isCustomerOrGuest()?'none':'flex';
+  if(appSidebar)appSidebar.style.display=isCustomerOrGuest()?'none':'';
   var ini=currentUser.fullName.split(' ').map(function(w){return w[0];}).join('').toUpperCase().substring(0,2);
   var sidebarAvatar=document.getElementById('sidebarAvatar');
   var sidebarName=document.getElementById('sidebarName');
@@ -1978,7 +1980,7 @@ function processChatResponse(input){
 /* ========== INIT ========== */
 function init(){
   updateAllLogos();
-  var session=getSession();
+  var session=AUTHENTICATED_STAFF||getSession();
   if(session){
     var sessionUser=userFromSession(session);
     if(sessionUser){currentUser=sessionUser;setSession(sessionUser);enterApp();return;}

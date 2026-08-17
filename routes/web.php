@@ -23,7 +23,28 @@ use Illuminate\Database\QueryException;
 |
 */
 
-$ordersView = function () {
+$ordersView = function (Request $request) {
+    $authenticatedStaff = null;
+    $staffId = $request->session()->get('staff_user_id');
+
+    if ($staffId) {
+        try {
+            $staff = User::whereIn('role', ['admin', 'cashier'])->find($staffId);
+
+            if ($staff) {
+                $authenticatedStaff = [
+                    'id' => $staff->id,
+                    'username' => $staff->email,
+                    'role' => $staff->role,
+                    'fullName' => $staff->name,
+                    'email' => $staff->email,
+                ];
+            }
+        } catch (QueryException $exception) {
+            // The public ordering page can still load while the database is unavailable.
+        }
+    }
+
     $manualImages = [
         'bananush milktea' => 'bananush-milktea.png',
         'brown sugar milktea' => 'brown-sugar-milktea.png',
@@ -77,6 +98,7 @@ $ordersView = function () {
     }
 
     return view('orders', [
+        'authenticatedStaff' => $authenticatedStaff,
         'inventoryProducts' => $inventoryProducts,
     ]);
 };

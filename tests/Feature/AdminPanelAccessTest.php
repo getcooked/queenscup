@@ -65,6 +65,28 @@ class AdminPanelAccessTest extends TestCase
             ->assertDontSee('href="#settings" data-page="settings"', false);
     }
 
+    public function test_orders_prefers_the_authenticated_staff_session_for_its_shell()
+    {
+        $admin = User::factory()->create([
+            'name' => 'Sidebar Admin',
+            'email' => 'sidebar@example.com',
+            'role' => 'admin',
+        ]);
+
+        $payload = [
+            'id' => $admin->id,
+            'username' => $admin->email,
+            'role' => 'admin',
+            'fullName' => $admin->name,
+            'email' => $admin->email,
+        ];
+
+        $this->withSession(['staff_user_id' => $admin->id])
+            ->get('/orders')
+            ->assertOk()
+            ->assertSee('var AUTHENTICATED_STAFF='.json_encode($payload).';', false);
+    }
+
     public function test_login_returns_the_correct_destination_for_each_staff_role()
     {
         $admin = User::factory()->create([
