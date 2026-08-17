@@ -572,7 +572,7 @@ body{background:radial-gradient(circle at top right,rgba(22,166,95,.08),transpar
         </div>
         <nav class="sidebar-nav" id="sidebarNav">
             <div class="nav-section"><div class="nav-section-title">Main</div><a class="nav-item" href="{{ url('/dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a></div>
-            <div class="nav-section"><div class="nav-section-title">Management</div><a class="nav-item" href="{{ url('/orders') }}"><i class="fas fa-receipt"></i> Orders</a><a class="nav-item active" href="{{ url('/inventory') }}"><i class="fas fa-boxes-stacked"></i> Inventory</a></div>
+            <div class="nav-section"><div class="nav-section-title">Management</div><a class="nav-item active" href="{{ url('/orders') }}"><i class="fas fa-receipt"></i> Orders</a><a class="nav-item" href="{{ url('/inventory') }}"><i class="fas fa-boxes-stacked"></i> Inventory</a></div>
             <div class="nav-section"><div class="nav-section-title">System</div><a class="nav-item" href="{{ url('/reports') }}"><i class="fas fa-chart-bar"></i> Reports</a><a class="nav-item" href="{{ url('/settings') }}"><i class="fas fa-gear"></i> Settings</a></div>
             <div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item" href="{{ url('/profile') }}"><i class="fas fa-user-circle"></i> My Profile</a></div>
         </nav>
@@ -884,6 +884,13 @@ var SERVER_PRODUCTS=@json($inventoryProducts ?? []);
 var DEFAULT_PRODUCTS=SERVER_PRODUCTS.length?SERVER_PRODUCTS.map(function(p){return normalizeServerProduct(p,null);}):FALLBACK_PRODUCTS;
 var todayStr=new Date().toLocaleDateString();
 var DEFAULT_ORDERS=[];
+var STAFF_PAGE_ROUTES={
+  pos:@json(route('point-of-sales.index')),
+  inventory:@json(route('inventory.index')),
+  reports:@json(route('reports')),
+  settings:@json(route('settings')),
+  profile:@json(route('profile.show'))
+};
 
 /* ========== DATA ACCESS ========== */
 function clearLegacyOrderPageRecords(){
@@ -1435,13 +1442,13 @@ function enterApp(){
   buildSidebarNav();
   updateAllLogos();
   var initialPage=(window.location.hash||'').replace('#','');
-  if(initialPage==='pos'&&isStaff()){
-    window.location.replace('{{ url('/pos') }}');
+  if(initialPage&&isStaff()&&STAFF_PAGE_ROUTES[initialPage]){
+    window.location.replace(STAFF_PAGE_ROUTES[initialPage]);
     return;
   }
   if(initialPage&&document.getElementById('page-'+initialPage))navigateTo(initialPage);
   else if(isAdmin())navigateTo('orders');
-  else if(isCashier())navigateTo('pos');
+  else if(isCashier())navigateTo('orders');
   else navigateTo('pos');
 }
 
@@ -1450,15 +1457,16 @@ function buildSidebarNav(){
   if(!nav)return;
   if(isAdmin()){
     h+='<div class="nav-section"><div class="nav-section-title">Main</div><a class="nav-item" href="{{ url('/dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a></div>';
-    h+='<div class="nav-section"><div class="nav-section-title">Management</div><a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> Orders <span class="nav-badge" id="pendingOrdersBadge">0</span> <span class="nav-badge cash-pending" id="cashPendingSidebarBadge" style="display:none">0</span></a><a class="nav-item" href="#inventory" data-page="inventory"><i class="fas fa-boxes-stacked"></i> Inventory</a></div>';
-    h+='<div class="nav-section"><div class="nav-section-title">System</div><a class="nav-item" href="#reports" data-page="reports"><i class="fas fa-chart-bar"></i> Reports</a><a class="nav-item" href="#settings" data-page="settings"><i class="fas fa-gear"></i> Settings</a></div>';
+    h+='<div class="nav-section"><div class="nav-section-title">Management</div><a class="nav-item" href="{{ url('/orders') }}" data-current-page="orders"><i class="fas fa-receipt"></i> Orders <span class="nav-badge" id="pendingOrdersBadge">0</span> <span class="nav-badge cash-pending" id="cashPendingSidebarBadge" style="display:none">0</span></a><a class="nav-item" href="{{ url('/inventory') }}"><i class="fas fa-boxes-stacked"></i> Inventory</a></div>';
+    h+='<div class="nav-section"><div class="nav-section-title">System</div><a class="nav-item" href="{{ url('/reports') }}"><i class="fas fa-chart-bar"></i> Reports</a><a class="nav-item" href="{{ url('/settings') }}"><i class="fas fa-gear"></i> Settings</a></div>';
   }else if(isCashier()){
-    h+='<div class="nav-section"><div class="nav-section-title">Counter</div><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a><a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> Orders <span class="nav-badge" id="pendingOrdersBadge">0</span> <span class="nav-badge cash-pending" id="cashPendingSidebarBadge" style="display:none">0</span></a></div>';
+    h+='<div class="nav-section"><div class="nav-section-title">Counter</div><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a><a class="nav-item" href="{{ url('/orders') }}" data-current-page="orders"><i class="fas fa-receipt"></i> Orders <span class="nav-badge" id="pendingOrdersBadge">0</span> <span class="nav-badge cash-pending" id="cashPendingSidebarBadge" style="display:none">0</span></a></div>';
   }else{
     h+='<div class="nav-section"><div class="nav-section-title">Menu</div><a class="nav-item" href="#pos" data-page="pos"><i class="fas fa-mug-hot"></i> Menu & Order</a></div>';
     h+='<div class="nav-section"><div class="nav-section-title">My Account</div><a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> My Orders <span class="nav-badge" id="pendingOrdersBadge">0</span></a></div>';
   }
-  h+='<div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item" href="#profile" data-page="profile"><i class="fas fa-user-circle"></i> My Profile</a></div>';
+  if(isStaff())h+='<div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item" href="{{ url('/profile') }}"><i class="fas fa-user-circle"></i> My Profile</a></div>';
+  else h+='<div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item" href="#profile" data-page="profile"><i class="fas fa-user-circle"></i> My Profile</a></div>';
   nav.innerHTML=h;
   nav.querySelectorAll('.nav-item[data-page]').forEach(function(item){item.addEventListener('click',function(event){event.preventDefault();navigateTo(item.dataset.page);history.replaceState(null,'','#'+item.dataset.page);});});
 }
@@ -1466,14 +1474,15 @@ function buildSidebarNav(){
 /* ========== NAVIGATION ========== */
 var currentPageId='orders';
 function navigateTo(page){
-  currentPageId=page;
   var adminOnly=['inventory','reports','settings'];
   if(isCashier()&&adminOnly.indexOf(page)!==-1){showToast('Access restricted to admins','warning');return;}
   if(isCustomerOrGuest()&&adminOnly.indexOf(page)!==-1){showToast('Access restricted to admins','warning');return;}
+  if(isStaff()&&STAFF_PAGE_ROUTES[page]){window.location.href=STAFF_PAGE_ROUTES[page];return;}
+  currentPageId=page;
   document.querySelectorAll('.page-section').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   var el=document.getElementById('page-'+page);if(el)el.classList.add('active');
-  var nv=document.querySelector('.nav-item[data-page="'+page+'"]');if(nv)nv.classList.add('active');
+  var nv=document.querySelector('.nav-item[data-page="'+page+'"],.nav-item[data-current-page="'+page+'"]');if(nv)nv.classList.add('active');
   document.querySelectorAll('#customerMobileNav button').forEach(function(btn){btn.classList.toggle('active',btn.dataset.page===page);});
   var titles={pos:isStaff()?'Point of Sale':'Menu & Order',inventory:'Inventory',orders:isStaff()?'Orders':'My Orders',reports:'Reports',settings:'Settings',profile:'My Profile'};
   var pageTitleEl=document.getElementById('pageTitle');if(pageTitleEl)pageTitleEl.textContent=titles[page]||page;

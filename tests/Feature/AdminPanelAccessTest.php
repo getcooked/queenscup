@@ -55,6 +55,16 @@ class AdminPanelAccessTest extends TestCase
         }
     }
 
+    public function test_staff_orders_sidebar_uses_server_routes_for_admin_pages()
+    {
+        $this->get('/orders')
+            ->assertOk()
+            ->assertSee('data-current-page="orders"', false)
+            ->assertDontSee('href="#inventory" data-page="inventory"', false)
+            ->assertDontSee('href="#reports" data-page="reports"', false)
+            ->assertDontSee('href="#settings" data-page="settings"', false);
+    }
+
     public function test_login_returns_the_correct_destination_for_each_staff_role()
     {
         $admin = User::factory()->create([
