@@ -111,6 +111,7 @@
         body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transparent 34%),linear-gradient(180deg,#fbfefc 0%,var(--bg) 100%)}.sidebar,.stat-card,.card{box-shadow:0 12px 32px rgba(18,53,36,.07)}.stat-card,.card{border-color:#d8ebdf}.nav-item.active{box-shadow:inset 3px 0 0 var(--accent)}.stat-card{background:#fff}.card{background:#fff}.stat-card:hover,.card:hover{box-shadow:0 16px 36px rgba(18,53,36,.12);border-color:rgba(18,134,78,.28)}.topbar{background:rgba(255,255,255,.96);box-shadow:0 8px 26px rgba(18,53,36,.05)}.page-title{font-size:36px}.btn{transition:transform .18s ease,box-shadow .18s ease}.btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(18,134,78,.15)}
     </style>
     <link href="{{ asset('css/admin-shell.css') }}" rel="stylesheet">
+    <script src="{{ asset('js/admin-sidebar.js') }}" defer></script>
 </head>
 <body>
     <div class="app-layout">

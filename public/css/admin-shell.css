@@ -1,3 +1,5 @@
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+
 .sidebar {
     width: 260px;
     background: #fff;
@@ -90,6 +92,8 @@
     width: 20px;
     font-size: 14px;
     text-align: center;
+    line-height: 1;
+    flex-shrink: 0;
 }
 
 .sidebar .nav-item:hover,
@@ -100,6 +104,31 @@
 
 .sidebar .nav-item.active {
     box-shadow: inset 3px 0 0 var(--accent, var(--green, #12864e));
+}
+
+.sidebar .nav-badge {
+    min-width: 20px;
+    height: 20px;
+    margin-left: auto;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--danger, #e53170);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.sidebar .nav-badge + .nav-badge {
+    margin-left: 4px;
+}
+
+.sidebar .nav-badge.cash-pending {
+    background: var(--warning, var(--yellow, #f5a623));
+    color: #fff;
 }
 
 .sidebar .sidebar-footer {

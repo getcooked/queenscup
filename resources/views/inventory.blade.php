@@ -277,6 +277,7 @@
         }
     </style>
     <link href="{{ asset('css/admin-shell.css') }}" rel="stylesheet">
+    <script src="{{ asset('js/admin-sidebar.js') }}" defer></script>
 </head>
 <body>
 <div class="layout">

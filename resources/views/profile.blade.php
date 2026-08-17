@@ -12,6 +12,7 @@
         body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transparent 34%),linear-gradient(180deg,#fbfefc 0%,var(--bg) 100%)}.sidebar,.card{box-shadow:0 12px 32px rgba(18,53,36,.07)}.card{border-color:#d8ebdf;background:#fff}.nav-item.active{box-shadow:inset 3px 0 0 var(--green)}.top h1{font-size:36px}.field input,.field textarea{border-color:#d8ebdf}.field input:focus,.field textarea:focus{box-shadow:0 0 0 3px rgba(22,199,106,.14)}.btn{transition:transform .18s ease,box-shadow .18s ease}.btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(18,134,78,.15)}.profile-photo{box-shadow:0 10px 24px rgba(18,134,78,.18)}
     </style>
     <link href="{{ asset('css/admin-shell.css') }}" rel="stylesheet">
+    <script src="{{ asset('js/admin-sidebar.js') }}" defer></script>
 </head>
 <body>
 @php

@@ -44,6 +44,7 @@
         body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transparent 34%),linear-gradient(180deg,#fbfefc 0%,var(--bg) 100%)}.sidebar,.card,.stat,.product-card{box-shadow:0 12px 32px rgba(18,53,36,.07)}.card,.stat,.product-card{border-color:#d8ebdf}.nav-item.active{box-shadow:inset 3px 0 0 var(--green)}.btn{transition:transform .18s ease,box-shadow .18s ease}.btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(18,134,78,.15)}.product-card{transition:transform .18s ease,box-shadow .18s ease;background:#fff}.product-card:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(18,53,36,.12)}.top h1{font-size:36px}.content{background:transparent}
     </style>
     <link href="{{ asset('css/admin-shell.css') }}" rel="stylesheet">
+    <script src="{{ asset('js/admin-sidebar.js') }}" defer></script>
 </head>
 <body>
 <div class="layout">

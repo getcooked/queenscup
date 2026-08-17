@@ -51,7 +51,10 @@ class AdminPanelAccessTest extends TestCase
         $this->withSession(['staff_user_id' => $admin->id]);
 
         foreach (['/dashboard', '/inventory', '/reports', '/settings', '/pos', '/profile'] as $uri) {
-            $this->get($uri)->assertOk();
+            $this->get($uri)
+                ->assertOk()
+                ->assertSee('css/admin-shell.css', false)
+                ->assertSee('js/admin-sidebar.js', false);
         }
     }
 
@@ -59,10 +62,23 @@ class AdminPanelAccessTest extends TestCase
     {
         $this->get('/orders')
             ->assertOk()
+            ->assertSee('js/admin-sidebar.js', false)
             ->assertSee('data-current-page="orders"', false)
             ->assertDontSee('href="#inventory" data-page="inventory"', false)
             ->assertDontSee('href="#reports" data-page="reports"', false)
             ->assertDontSee('href="#settings" data-page="settings"', false);
+    }
+
+    public function test_shared_sidebar_assets_add_bootstrap_icons_and_the_orders_indicator()
+    {
+        $script = file_get_contents(public_path('js/admin-sidebar.js'));
+        $stylesheet = file_get_contents(public_path('css/admin-shell.css'));
+
+        $this->assertStringContainsString("dashboard: 'bi-speedometer2'", $script);
+        $this->assertStringContainsString("orders: 'bi-receipt'", $script);
+        $this->assertStringContainsString('data-orders-indicator', $script);
+        $this->assertStringContainsString('bootstrap-icons@1.11.3', $stylesheet);
+        $this->assertStringContainsString('.sidebar .nav-badge', $stylesheet);
     }
 
     public function test_orders_prefers_the_authenticated_staff_session_for_its_shell()

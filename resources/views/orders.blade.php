@@ -526,6 +526,7 @@ body{background:radial-gradient(circle at top right,rgba(22,166,95,.08),transpar
 }
 </style>
 <link href="{{ asset('css/admin-shell.css') }}" rel="stylesheet">
+<script src="{{ asset('js/admin-sidebar.js') }}" defer></script>
 </head>
 <body>
 <div class="bg-orb bg-orb-1"></div>

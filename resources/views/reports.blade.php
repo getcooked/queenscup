@@ -13,6 +13,7 @@
         body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transparent 34%),linear-gradient(180deg,#fbfefc 0%,var(--bg) 100%)}.sidebar,.card,.stat{box-shadow:0 12px 32px rgba(18,53,36,.07)}.card,.stat{border-color:#d8ebdf;background:#fff}.nav-item.active{box-shadow:inset 3px 0 0 var(--green)}.content h1{font-size:36px}.field{border-color:#d8ebdf}.btn{transition:transform .18s ease,box-shadow .18s ease}.btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(18,134,78,.15)}tr:hover td{background:#f8fcf9}
     </style>
     <link href="{{ asset('css/admin-shell.css') }}" rel="stylesheet">
+    <script src="{{ asset('js/admin-sidebar.js') }}" defer></script>
 </head>
 <body>
 <div class="layout">
