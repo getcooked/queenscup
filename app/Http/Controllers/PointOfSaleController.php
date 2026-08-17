@@ -12,6 +12,7 @@ class PointOfSaleController extends Controller
 {
     public function index(Request $request)
     {
+        $staffUser = $request->attributes->get('staff_user');
         $query = PointOfSale::with('cashier')->latest();
 
         if ($request->filled('search')) {
@@ -38,11 +39,11 @@ class PointOfSaleController extends Controller
             $todayTransactions = 0;
             $inventoryItems = collect();
 
-            return view('pos', compact('sales', 'totalSales', 'todaySales', 'todayTransactions', 'inventoryItems'))
+            return view('pos', compact('sales', 'totalSales', 'todaySales', 'todayTransactions', 'inventoryItems', 'staffUser'))
                 ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
-        return view('pos', compact('sales', 'totalSales', 'todaySales', 'todayTransactions', 'inventoryItems'));
+        return view('pos', compact('sales', 'totalSales', 'todaySales', 'todayTransactions', 'inventoryItems', 'staffUser'));
     }
 
     public function create()

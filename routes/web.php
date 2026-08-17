@@ -109,18 +109,30 @@ Route::post('/staff-login', function (Request $request) {
         ], 422);
     }
 
+    $request->session()->regenerate();
     $request->session()->put('staff_user_id', $user->id);
 
     return response()->json([
+        'redirect_to' => $user->role === 'admin'
+            ? route('dashboard')
+            : route('point-of-sales.index'),
         'user' => [
             'id' => $user->id,
             'email' => $user->email,
+            'username' => $user->email,
             'role' => $user->role,
             'fullName' => $user->name,
             'since' => optional($user->created_at)->toDateString(),
         ],
     ]);
-});
+})->middleware('throttle:10,1')->name('staff.login');
+
+Route::post('/staff-logout', function (Request $request) {
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login');
+})->name('staff.logout');
 
 Route::post('/staff', function (Request $request) {
     $adminId = $request->session()->get('staff_user_id');
@@ -163,7 +175,7 @@ Route::post('/staff', function (Request $request) {
             'since' => optional($user->created_at)->toDateString(),
         ],
     ], 201);
-});
+})->middleware(['staff', 'admin'])->name('staff.store');
 
 Route::post('/customer/otp/send', function (Request $request) {
     $data = $request->validate([
@@ -240,60 +252,53 @@ Route::post('/customer/otp/verify', function (Request $request) {
     return response()->json(['message' => 'OTP verified.']);
 });
 
-Route::get('/dashboard', function () {
-    $userId = session('staff_user_id');
-    try {
-        $user = $userId ? User::find($userId) : null;
-    } catch (QueryException $exception) {
-        return redirect('/staff-login')
-            ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
-    }
+Route::get('/orders', $ordersView)->name('orders');
 
-    if (! $user || $user->role !== 'admin') {
-        return redirect('/staff-login');
-    }
+Route::middleware(['staff', 'admin'])->group(function () {
+    Route::get('/dashboard', function (Request $request) {
+        return view('dashboard', [
+            'staffUser' => $request->attributes->get('staff_user'),
+        ]);
+    })->name('dashboard');
 
-    return view('dashboard', [
-        'staffUser' => $user,
-    ]);
+    Route::resource('inventory', InventoryController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
+
+    Route::get('/reports', function () {
+        return view('reports');
+    })->name('reports');
+
+    Route::get('/settings', function () {
+        return view('settings');
+    })->name('settings');
+
+    Route::post('/settings/qr-code', function (Request $request) {
+        $data = $request->validate([
+            'payment_method' => ['required', 'in:gcash,maya'],
+            'qr_code' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
+        ]);
+
+        $directory = public_path('images');
+
+        if (! is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        $filename = $data['payment_method'] === 'gcash' ? 'gcash-qr.png' : 'maya-qr.png';
+        $request->file('qr_code')->move($directory, $filename);
+
+        return redirect()->route('settings')
+            ->with('success', strtoupper($data['payment_method']).' QR code uploaded.');
+    })->name('settings.qr-code');
 });
 
-Route::get('/orders', $ordersView);
+Route::middleware('staff')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
-Route::resource('inventory', InventoryController::class)
-    ->only(['index', 'store', 'update', 'destroy']);
-
-Route::get('/reports', function () {
-    return view('reports');
+    Route::resource('pos', PointOfSaleController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['pos' => 'pointOfSale'])
+        ->names('point-of-sales');
 });
-
-Route::get('/settings', function () {
-    return view('settings');
-});
-
-Route::post('/settings/qr-code', function (Request $request) {
-    $data = $request->validate([
-        'payment_method' => ['required', 'in:gcash,maya'],
-        'qr_code' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
-    ]);
-
-    $directory = public_path('images');
-
-    if (! is_dir($directory)) {
-        mkdir($directory, 0755, true);
-    }
-
-    $filename = $data['payment_method'] === 'gcash' ? 'gcash-qr.png' : 'maya-qr.png';
-    $request->file('qr_code')->move($directory, $filename);
-
-    return redirect('/settings')->with('success', strtoupper($data['payment_method']).' QR code uploaded.');
-});
-
-Route::get('/profile', [ProfileController::class, 'show']);
-Route::patch('/profile', [ProfileController::class, 'update']);
-Route::patch('/profile/password', [ProfileController::class, 'updatePassword']);
-
-Route::resource('pos', PointOfSaleController::class)
-    ->only(['index', 'store', 'update', 'destroy'])
-    ->parameters(['pos' => 'pointOfSale'])
-    ->names('point-of-sales');

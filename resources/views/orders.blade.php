@@ -1371,7 +1371,13 @@ function handleLogin(){
 }
 
 function handleLogout(){
+  var staffSession=isStaff();
   currentUser=null;clearSession();cart=[];
+  if(staffSession){
+    fetch(@json(route('staff.logout')),{method:'POST',credentials:'same-origin',headers:{'X-CSRF-TOKEN':@json(csrf_token())}})
+      .finally(function(){window.location.href=@json(route('login'));});
+    return;
+  }
   resetGuestOtpForm();
   document.body.classList.remove('customer-mobile');
   var mobileNav=document.getElementById('customerMobileNav');if(mobileNav)mobileNav.style.display='none';
@@ -1429,6 +1435,10 @@ function enterApp(){
   buildSidebarNav();
   updateAllLogos();
   var initialPage=(window.location.hash||'').replace('#','');
+  if(initialPage==='pos'&&isStaff()){
+    window.location.replace('{{ url('/pos') }}');
+    return;
+  }
   if(initialPage&&document.getElementById('page-'+initialPage))navigateTo(initialPage);
   else if(isAdmin())navigateTo('orders');
   else if(isCashier())navigateTo('pos');
@@ -1439,11 +1449,11 @@ function buildSidebarNav(){
   var nav=document.getElementById('sidebarNav');var h='';
   if(!nav)return;
   if(isAdmin()){
-    h+='<div class="nav-section"><div class="nav-section-title">Main</div><a class="nav-item" href="{{ url('/dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a><a class="nav-item" href="#pos" data-page="pos"><i class="fas fa-cash-register"></i> Point of Sale</a></div>';
+    h+='<div class="nav-section"><div class="nav-section-title">Main</div><a class="nav-item" href="{{ url('/dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a></div>';
     h+='<div class="nav-section"><div class="nav-section-title">Management</div><a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> Orders <span class="nav-badge" id="pendingOrdersBadge">0</span> <span class="nav-badge cash-pending" id="cashPendingSidebarBadge" style="display:none">0</span></a><a class="nav-item" href="#inventory" data-page="inventory"><i class="fas fa-boxes-stacked"></i> Inventory</a></div>';
     h+='<div class="nav-section"><div class="nav-section-title">System</div><a class="nav-item" href="#reports" data-page="reports"><i class="fas fa-chart-bar"></i> Reports</a><a class="nav-item" href="#settings" data-page="settings"><i class="fas fa-gear"></i> Settings</a></div>';
   }else if(isCashier()){
-    h+='<div class="nav-section"><div class="nav-section-title">Counter</div><a class="nav-item" href="#pos" data-page="pos"><i class="fas fa-cash-register"></i> Point of Sale</a><a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> Orders <span class="nav-badge" id="pendingOrdersBadge">0</span> <span class="nav-badge cash-pending" id="cashPendingSidebarBadge" style="display:none">0</span></a></div>';
+    h+='<div class="nav-section"><div class="nav-section-title">Counter</div><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a><a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> Orders <span class="nav-badge" id="pendingOrdersBadge">0</span> <span class="nav-badge cash-pending" id="cashPendingSidebarBadge" style="display:none">0</span></a></div>';
   }else{
     h+='<div class="nav-section"><div class="nav-section-title">Menu</div><a class="nav-item" href="#pos" data-page="pos"><i class="fas fa-mug-hot"></i> Menu & Order</a></div>';
     h+='<div class="nav-section"><div class="nav-section-title">My Account</div><a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> My Orders <span class="nav-badge" id="pendingOrdersBadge">0</span></a></div>';

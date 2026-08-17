@@ -1,4 +1,4 @@
-const CACHE_NAME = 'queens-cup-v2';
+const CACHE_NAME = 'queens-cup-v3';
 const APP_SHELL = [
   '/orders',
   '/manifest.webmanifest',

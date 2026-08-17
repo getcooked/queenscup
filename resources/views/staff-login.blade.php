@@ -178,7 +178,8 @@
                         throw new Error(data.message || 'Invalid staff email or password.');
                     }
 
-                    window.location.href = '/dashboard';
+                    localStorage.setItem('qc_session', JSON.stringify(data.user));
+                    window.location.href = data.redirect_to || '/dashboard';
                 })
                 .catch((error) => {
                     showStaffLoginError(error.message);

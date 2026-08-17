@@ -27,12 +27,16 @@
             <a class="nav-item" href="{{ url('/orders') }}"><i class="fas fa-receipt"></i> Orders</a>
             <a class="nav-item" href="{{ url('/inventory') }}"><i class="fas fa-boxes-stacked"></i> Inventory</a>
             <div class="nav-section-title">System</div>
+            <a class="nav-item" href="{{ url('/reports') }}"><i class="fas fa-chart-bar"></i> Reports</a>
             <a class="nav-item active" href="{{ url('/settings') }}"><i class="fas fa-gear"></i> Settings</a>
+            <div class="nav-section-title">Account</div>
+            <a class="nav-item" href="{{ url('/profile') }}"><i class="fas fa-user-circle"></i> My Profile</a>
         </nav>
     </aside>
     <main class="content">
         <div class="top">
             <div><h1>Settings</h1><p>Upload payment QR codes for customer checkout.</p></div>
+            <button class="btn" type="button" onclick="handleLogout()"><i class="fas fa-right-from-bracket"></i> Sign Out</button>
         </div>
 
         <div class="page-note">
@@ -140,6 +144,11 @@
 </div>
 <script>
 function csrfToken(){var token=document.querySelector('meta[name="csrf-token"]');return token?token.getAttribute('content'):'{{ csrf_token() }}';}
+function handleLogout(){
+    localStorage.removeItem('qc_session');
+    fetch(@json(route('staff.logout')),{method:'POST',credentials:'same-origin',headers:{'X-CSRF-TOKEN':csrfToken()}})
+        .finally(function(){window.location.href=@json(route('login'));});
+}
 function isValidEmail(value){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value||'').trim());}
 function showStaffMessage(message,type){
     var existing=document.getElementById('staffAccountMessage');

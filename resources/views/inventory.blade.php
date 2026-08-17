@@ -444,7 +444,13 @@
 
     function handleLogout() {
         localStorage.removeItem('qc_session');
-        window.location.href = '{{ url('/staff-login') }}';
+        fetch(@json(route('staff.logout')), {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-CSRF-TOKEN': @json(csrf_token()) }
+        }).finally(function () {
+            window.location.href = @json(route('login'));
+        });
     }
 
     function filterInventoryItems() {

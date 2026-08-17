@@ -25,9 +25,13 @@
             <div><h2>The Queen's Cup</h2><span class="tagline">Crowned with Flavors</span></div>
         </div>
         <nav class="sidebar-nav">
-            <div class="nav-section"><div class="nav-section-title">Main</div><a class="nav-item" href="{{ url('/dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a></div>
-            <div class="nav-section"><div class="nav-section-title">Management</div><a class="nav-item" href="{{ url('/orders') }}"><i class="fas fa-receipt"></i> Orders</a><a class="nav-item" href="{{ url('/inventory') }}"><i class="fas fa-boxes-stacked"></i> Inventory</a></div>
-            <div class="nav-section"><div class="nav-section-title">System</div><a class="nav-item" href="{{ url('/reports') }}"><i class="fas fa-chart-bar"></i> Reports</a><a class="nav-item" href="{{ url('/settings') }}"><i class="fas fa-gear"></i> Settings</a></div>
+            @if($user->role === 'admin')
+                <div class="nav-section"><div class="nav-section-title">Main</div><a class="nav-item" href="{{ url('/dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a></div>
+                <div class="nav-section"><div class="nav-section-title">Management</div><a class="nav-item" href="{{ url('/orders') }}"><i class="fas fa-receipt"></i> Orders</a><a class="nav-item" href="{{ url('/inventory') }}"><i class="fas fa-boxes-stacked"></i> Inventory</a></div>
+                <div class="nav-section"><div class="nav-section-title">System</div><a class="nav-item" href="{{ url('/reports') }}"><i class="fas fa-chart-bar"></i> Reports</a><a class="nav-item" href="{{ url('/settings') }}"><i class="fas fa-gear"></i> Settings</a></div>
+            @else
+                <div class="nav-section"><div class="nav-section-title">Counter</div><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a><a class="nav-item" href="{{ url('/orders') }}"><i class="fas fa-receipt"></i> Orders</a></div>
+            @endif
             <div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item active" href="{{ url('/profile') }}"><i class="fas fa-user-circle"></i> My Profile</a></div>
         </nav>
         <div class="sidebar-footer">
@@ -113,7 +117,13 @@
 
     function handleLogout() {
         localStorage.removeItem('qc_session');
-        window.location.href = '{{ url('/staff-login') }}';
+        fetch(@json(route('staff.logout')), {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-CSRF-TOKEN': @json(csrf_token()) }
+        }).finally(function () {
+            window.location.href = @json(route('login'));
+        });
     }
 </script>
 </body>
