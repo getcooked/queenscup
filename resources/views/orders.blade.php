@@ -789,6 +789,7 @@ function getBranchSold(p){var b=getBranch();if(!p.sold)return 0;if(typeof p.sold
 function setBranchSold(p,val){var b=getBranch();if(!p.sold||typeof p.sold==='number')p.sold={};p.sold[b]=val;}
 
 function onBranchChange(){
+  setData('branch',getBranch());if(window.refreshAdminSidebar)window.refreshAdminSidebar();
   var info=getBranchInfo();var sa=document.getElementById('settingsAddress');if(sa)sa.value=info.address;
   showToast('Switched to '+info.name,'info');
   var activeEl=document.querySelector('.page-section.active');if(activeEl)navigateTo(activeEl.id.replace('page-',''));

@@ -69,16 +69,19 @@ class AdminPanelAccessTest extends TestCase
             ->assertDontSee('href="#settings" data-page="settings"', false);
     }
 
-    public function test_shared_sidebar_assets_add_bootstrap_icons_and_the_orders_indicator()
+    public function test_shared_sidebar_assets_inline_their_icons_and_the_orders_indicator()
     {
         $script = file_get_contents(public_path('js/admin-sidebar.js'));
         $stylesheet = file_get_contents(public_path('css/admin-shell.css'));
 
-        $this->assertStringContainsString("dashboard: 'bi-speedometer2'", $script);
-        $this->assertStringContainsString("orders: 'bi-receipt'", $script);
+        // Icons ship as inline SVG so the sidebar paints without a webfont round trip.
+        $this->assertStringContainsString("dashboard: '<path", $script);
+        $this->assertStringContainsString("orders: '<path", $script);
         $this->assertStringContainsString('data-orders-indicator', $script);
-        $this->assertStringContainsString('bootstrap-icons@1.11.3', $stylesheet);
+        $this->assertStringNotContainsString('bootstrap-icons', $stylesheet);
+        $this->assertStringNotContainsString('@import', $stylesheet);
         $this->assertStringContainsString('.sidebar .nav-badge', $stylesheet);
+        $this->assertStringContainsString('.sidebar .nav-item .nav-icon svg', $stylesheet);
     }
 
     public function test_orders_prefers_the_authenticated_staff_session_for_its_shell()
