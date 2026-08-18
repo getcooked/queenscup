@@ -127,6 +127,77 @@ class ReservationService
     }
 
     /**
+     * Rings up a walk-in sale at the counter.
+     *
+     * A physical sale is the same shape as a reservation that has already been
+     * made, handed over and paid for, so it is stored the same way with
+     * source 'pos'. That keeps one record of every order rather than two
+     * parallel sales tables that have to be reconciled later.
+     *
+     * Unlike a reservation, this also takes the drinks out of stock, because
+     * the customer is walking away with them right now.
+     */
+    public function recordWalkInSale(array $data, ?User $cashier = null): Reservation
+    {
+        $method = $data['payment_method'] ?? Reservation::PAYMENT_CASH;
+
+        if (! in_array($method, Reservation::PAYMENT_METHODS, true)) {
+            throw ValidationException::withMessages([
+                'payment_method' => 'Payment must be cash, GCash or PayMaya.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($data, $method, $cashier) {
+            $reservation = $this->create(array_merge($data, [
+                'source' => 'pos',
+                'customer_name' => trim($data['customer_name'] ?? '') ?: 'Walk-in customer',
+            ]));
+
+            $this->drawDownStock($reservation);
+
+            $reservation->forceFill([
+                'status' => Reservation::STATUS_COMPLETED,
+                'completed_at' => now(),
+                'payment_method' => $method,
+                'payment_status' => 'paid',
+                'paid_by' => $cashier?->id,
+                'paid_at' => now(),
+            ])->save();
+
+            return $reservation->load('items');
+        });
+    }
+
+    /**
+     * Takes the sold cups out of inventory, refusing the sale rather than
+     * letting stock go negative.
+     */
+    private function drawDownStock(Reservation $reservation): void
+    {
+        foreach ($reservation->items as $item) {
+            if (! $item->inventory_id) {
+                continue;
+            }
+
+            // Locked for the length of the transaction so two tills cannot
+            // both sell the last cup.
+            $product = Inventory::lockForUpdate()->find($item->inventory_id);
+
+            if (! $product) {
+                continue;
+            }
+
+            if ($product->stock < $item->quantity) {
+                throw ValidationException::withMessages([
+                    'items' => "Only {$product->stock} left of {$product->name}.",
+                ]);
+            }
+
+            $product->decrement('stock', $item->quantity);
+        }
+    }
+
+    /**
      * Moves a reservation along the counter workflow, stamping the matching
      * timestamp and pushing to the customer's devices when it becomes ready.
      *

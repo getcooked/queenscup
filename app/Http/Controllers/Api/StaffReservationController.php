@@ -74,6 +74,27 @@ class StaffReservationController extends Controller
         return $staff instanceof User ? $staff : $request->user();
     }
 
+    /**
+     * Rings up a walk-in sale at the counter. The basket is priced server side
+     * exactly like an app reservation, so a till cannot invent its own totals.
+     */
+    public function storeSale(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'service_type' => ['required', Rule::in(Reservation::SERVICE_TYPES)],
+            'payment_method' => ['required', Rule::in(Reservation::PAYMENT_METHODS)],
+            'customer_name' => ['nullable', 'string', 'max:120'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.inventory_id' => ['required', 'integer'],
+            'items.*.size' => ['nullable', Rule::in(['regular', 'large'])],
+            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
+        ]);
+
+        $sale = $this->reservations->recordWalkInSale($data, $this->actor($request));
+
+        return response()->json($this->present($sale), 201);
+    }
+
     private function present(Reservation $reservation): array
     {
         return [

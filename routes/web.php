@@ -362,4 +362,8 @@ Route::middleware('staff')->group(function () {
         Route::patch('/{reservation}/status', [StaffReservationController::class, 'updateStatus'])->name('status');
         Route::patch('/{reservation}/payment', [StaffReservationController::class, 'recordPayment'])->name('payment');
     });
+
+    // Walk-in sales rung up at the till. Stored as completed, paid orders so
+    // there is one record of every sale rather than two parallel tables.
+    Route::post('/staff/pos/sales', [StaffReservationController::class, 'storeSale'])->name('staff.pos.sales');
 });
