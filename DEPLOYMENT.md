@@ -162,6 +162,27 @@ The trailing slash matters. Without setting this, a release build inherits the
 debug URL (`10.0.2.2`, the emulator's alias for your own PC) and will not reach
 your server from a real phone.
 
+## 10. Publishing the Android APK
+
+The landing page has a **Download for Android** button. It only appears as a
+real link once the file exists, otherwise it shows "coming soon", so the page
+never offers a broken download.
+
+Build a release APK and copy it in:
+
+```bash
+cd android
+./gradlew assembleRelease
+```
+
+Upload `android/app/build/outputs/apk/release/app-release.apk` to the server as
+`public/downloads/queens-cup.apk`. The button then links to it and shows the
+file size automatically.
+
+Do not publish a debug APK. It is signed with the throwaway debug key and its
+application id ends in `.debug`, so it cannot be upgraded to a real release
+later without users uninstalling first.
+
 ## Checklist
 
 - [ ] Document root points at `public/`

@@ -104,7 +104,25 @@ $ordersView = function (Request $request) {
     ]);
 };
 
-Route::get('/', $ordersView);
+/*
+| The public landing page. The reservation app itself stays on /orders, so a
+| first-time visitor gets the menu and the app download rather than being
+| dropped straight into a login screen.
+*/
+Route::get('/', function () {
+    try {
+        $products = Inventory::orderBy('category')->orderBy('name')->get();
+    } catch (QueryException $exception) {
+        // The shop front is the last page that should 500. If the database
+        // is unreachable it still renders, just without the menu.
+        $products = collect();
+    }
+
+    return view('landing', [
+        'products' => $products,
+        'categories' => $products->pluck('category')->filter()->unique()->values(),
+    ]);
+})->name('landing');
 
 Route::get('/staff-login', function () {
     return view('staff-login');
@@ -327,14 +345,21 @@ Route::middleware('staff')->group(function () {
 });
 
 /*
-| Counter-side reservation endpoints.
+| Reservations, counter side.
 |
-| These live in web.php rather than api.php because the admin panel calls them
-| from the browser with the staff session it already holds. The customer app
-| never touches these - it uses the token routes in api.php.
+| The Manage Reservations screen plus the endpoints it reads and writes.
+| These live in web.php rather than api.php because the admin panel calls
+| them from the browser with the staff session it already holds. The
+| customer app never touches these - it uses the token routes in api.php.
 */
-Route::middleware('staff')->prefix('staff/reservations')->name('staff.reservations.')->group(function () {
-    Route::get('/', [StaffReservationController::class, 'index'])->name('index');
-    Route::patch('/{reservation}/status', [StaffReservationController::class, 'updateStatus'])->name('status');
-    Route::patch('/{reservation}/payment', [StaffReservationController::class, 'recordPayment'])->name('payment');
+Route::middleware('staff')->group(function () {
+    Route::get('/reservations', function () {
+        return view('reservations');
+    })->name('reservations');
+
+    Route::prefix('staff/reservations')->name('staff.reservations.')->group(function () {
+        Route::get('/', [StaffReservationController::class, 'index'])->name('index');
+        Route::patch('/{reservation}/status', [StaffReservationController::class, 'updateStatus'])->name('status');
+        Route::patch('/{reservation}/payment', [StaffReservationController::class, 'recordPayment'])->name('payment');
+    });
 });

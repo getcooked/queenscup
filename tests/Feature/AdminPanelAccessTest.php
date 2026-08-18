@@ -93,6 +93,8 @@ class AdminPanelAccessTest extends TestCase
         // outright because the face declares font-display: block.
         $this->assertFileExists(public_path('vendor/fontawesome/css/all.min.css'));
         $this->assertFileExists(public_path('vendor/fontawesome/webfonts/fa-solid-900.woff2'));
+        // The landing page uses the Android brand mark on its download button.
+        $this->assertFileExists(public_path('vendor/fontawesome/webfonts/fa-brands-400.woff2'));
 
         foreach (['dashboard', 'orders', 'pos', 'inventory', 'reports', 'settings', 'profile', 'staff-login'] as $view) {
             $blade = file_get_contents(resource_path("views/{$view}.blade.php"));
