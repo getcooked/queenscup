@@ -58,32 +58,40 @@
         .topbar-title { font-family: "Playfair Display", serif; font-size: 24px; font-weight: 700; }
         .topbar-breadcrumb { margin-top: 3px; color: var(--fg-muted); font-size: 11px; }
         .branch-select { height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--fg); outline: none; }
-        .page-content { flex: 1; overflow: auto; padding: 24px; scrollbar-width: none; -ms-overflow-style: none; }
+        .page-content { flex: 1; min-height: 0; overflow: hidden; padding: 12px 18px; display: grid;
+                    grid-template-rows: auto minmax(0, 1.06fr) minmax(0, 1fr); gap: 11px;
+                    scrollbar-width: none; -ms-overflow-style: none; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
         .stat-card, .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 32px rgba(18,53,36,0.10); }
-        .stat-card { padding: 20px; }
-        .stat-icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 14px; }
-        .stat-value { font-size: 28px; font-weight: 800; line-height: 1; }
-        .stat-label { margin-top: 7px; color: var(--fg-muted); font-size: 12px; }
-        .stat-change { margin-top: 12px; font-size: 11px; font-weight: 700; }
+        .stat-card { padding: 10px 13px; }
+        .stat-icon { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; margin-bottom: 6px; font-size: 12px; }
+        .stat-value { font-size: 20px; font-weight: 800; line-height: 1; }
+        .stat-label { margin-top: 4px; color: var(--fg-muted); font-size: 11px; }
+        .stat-change { margin-top: 4px; font-size: 10px; font-weight: 700; }
         .stat-change.up { color: var(--success); }
         .stat-change.down { color: var(--warning); }
-        .grid-2 { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr); gap: 16px; margin-bottom: 20px; }
-        .card-header { min-height: 56px; padding: 0 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .card-header h3 { font-size: 17px; }
-        .card-body { padding: 18px; }
-        .sales-bars { height: 220px; display: grid; grid-template-columns: repeat(7, 1fr); align-items: end; gap: 12px; }
+        .dash-row { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr) minmax(0, 1.05fr); gap: 11px; min-height: 0; }
+        .card-header { min-height: 40px; flex-shrink: 0; padding: 0 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .card-header h3 { font-size: 15px; }
+        .card-body { padding: 11px; flex: 1; min-height: 0; overflow: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        .card-body::-webkit-scrollbar { display: none; }
+        .stat-card, .card { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        .stat-card { display: block; }
+        .dash-orders { min-height: 0; }
+        /* Keep column headings in view while a long list scrolls inside its card. */
+        thead th { position: sticky; top: 0; background: var(--card); z-index: 1; }
+        .sales-bars { height: 100%; min-height: 96px; display: grid; grid-template-columns: repeat(7, 1fr); align-items: end; gap: 12px; }
         .sales-bars.empty-state { display: flex; align-items: center; justify-content: center; color: var(--fg-muted); font-size: 12px; text-align: center; }
         .bar-wrap { height: 100%; display: flex; flex-direction: column; justify-content: end; gap: 8px; color: var(--fg-muted); font-size: 10px; text-align: center; }
         .bar { min-height: 18px; border-radius: 8px 8px 3px 3px; background: linear-gradient(180deg, var(--accent-light), var(--accent-dark)); box-shadow: 0 8px 20px rgba(14,140,74,0.2); }
-        .category-sales { display: grid; grid-template-columns: minmax(220px, 280px) 1fr; gap: 18px; align-items: center; }
-        .donut-wrap { position: relative; width: 100%; max-width: 280px; aspect-ratio: 1; margin: 0 auto; }
+        .category-sales { display: flex; flex-direction: column; align-items: center; gap: 9px; height: 100%; min-height: 0; }
+        .donut-wrap { position: relative; width: 100%; max-width: min(132px, 34vh); aspect-ratio: 1; margin: 0 auto; flex-shrink: 0; }
         .donut-wrap canvas { width: 100%; height: 100%; display: block; }
         .donut-center { position: absolute; inset: 32%; border-radius: 50%; background: #fff; border: 1px solid var(--border); display: grid; place-items: center; text-align: center; padding: 10px; }
         .donut-center strong { display: block; font-size: 20px; line-height: 1; color: var(--accent); }
         .donut-center span { display: block; margin-top: 5px; color: var(--fg-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .6px; }
-        .category-legend { display: grid; gap: 10px; }
+        .category-legend { display: grid; gap: 7px; width: 100%; min-height: 0; overflow: auto; scrollbar-width: none; }
         .legend-row { display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: center; color: var(--fg-muted); font-size: 12px; }
         .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
         .legend-row strong { color: var(--fg); font-size: 13px; }
@@ -100,14 +108,26 @@
         .btn:hover { border-color: var(--accent); color: var(--accent-light); }
         .empty { padding: 28px; color: var(--fg-muted); text-align: center; }
 
-        @media (max-width: 960px) {
+        /*
+         * The single screen layout needs room to breathe. Below these sizes the
+         * cards would be too squashed to read, so the dashboard reverts to a
+         * normal scrolling column rather than becoming unusable.
+         */
+        @media (max-width: 1100px), (max-height: 600px) {
             body { overflow: auto; height: auto; min-height: 100vh; }
             .app-layout { height: auto; min-height: 100vh; }
+            .page-content { display: block; overflow: visible; padding: 16px; }
+            .page-content > * { margin-bottom: 14px; }
+            .card, .card-body { overflow: visible; }
+            .dash-row { grid-template-columns: 1fr; }
+            .sales-bars { height: 200px; }
+            .donut-wrap { max-width: 240px; }
+        }
+
+        @media (max-width: 960px) {
             .sidebar { display: none; }
-            .stats-grid, .grid-2 { grid-template-columns: 1fr; }
-            .category-sales { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
             .topbar { padding: 0 16px; }
-            .page-content { padding: 16px; }
         }
         body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transparent 34%),linear-gradient(180deg,#fbfefc 0%,var(--bg) 100%)}.sidebar,.stat-card,.card{box-shadow:0 12px 32px rgba(18,53,36,.07)}.stat-card,.card{border-color:#d8ebdf}.nav-item.active{box-shadow:inset 3px 0 0 var(--accent)}.stat-card{background:#fff}.card{background:#fff}.stat-card:hover,.card:hover{box-shadow:0 16px 36px rgba(18,53,36,.12);border-color:rgba(18,134,78,.28)}.topbar{background:rgba(255,255,255,.96);box-shadow:0 8px 26px rgba(18,53,36,.05)}.page-title{font-size:36px}.btn{transition:transform .18s ease,box-shadow .18s ease}.btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(18,134,78,.15)}
     </style>
@@ -172,7 +192,7 @@
                     </div>
                 </div>
 
-                <div class="grid-2">
+                <div class="dash-row">
                     <div class="card">
                         <div class="card-header"><h3>Sales Overview</h3><span class="badge badge-gold">This Week</span></div>
                         <div class="card-body"><div class="sales-bars" id="salesBars"></div></div>
@@ -186,22 +206,21 @@
                             </table>
                         </div>
                     </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header"><h3>Sales by Category</h3><span class="badge badge-gold" id="topCategoryBadge">No sales yet</span></div>
-                    <div class="card-body">
-                        <div class="category-sales">
-                            <div class="donut-wrap">
-                                <canvas id="categoryDonutChart" aria-label="Sales by category donut chart"></canvas>
-                                <div class="donut-center"><div><strong id="categoryDonutTotal">0</strong><span>Items Sold</span></div></div>
+                    <div class="card">
+                        <div class="card-header"><h3>Sales by Category</h3><span class="badge badge-gold" id="topCategoryBadge">No sales yet</span></div>
+                        <div class="card-body">
+                            <div class="category-sales">
+                                <div class="donut-wrap">
+                                    <canvas id="categoryDonutChart" aria-label="Sales by category donut chart"></canvas>
+                                    <div class="donut-center"><div><strong id="categoryDonutTotal">0</strong><span>Items Sold</span></div></div>
+                                </div>
+                                <div class="category-legend" id="categoryLegend"></div>
                             </div>
-                            <div class="category-legend" id="categoryLegend"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card">
+                <div class="card dash-orders">
                     <div class="card-header">
                         <h3>Recent Orders</h3>
                         <a class="btn" href="{{ url('/orders') }}"><i class="fas fa-receipt"></i> View Orders</a>
