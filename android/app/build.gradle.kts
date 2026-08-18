@@ -12,6 +12,14 @@ if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
 }
 
+// Where the app looks for the Laravel API. Set these in gradle.properties (or
+// pass -P on the command line) rather than editing this file, so the same
+// source builds against a local server or the live site.
+val debugApiUrl = (findProperty("QC_API_BASE_URL_DEBUG") as String?)
+    ?: "http://10.0.2.2:8000/api/v1/"
+val releaseApiUrl = (findProperty("QC_API_BASE_URL_RELEASE") as String?)
+    ?: debugApiUrl
+
 android {
     namespace = "ph.queenscup.customer"
     compileSdk = 34
@@ -22,20 +30,17 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
-        // 10.0.2.2 is how the Android emulator reaches localhost on the host
-        // machine. Point this at your server for a real device or release.
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/api/v1/\"")
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            buildConfigField("String", "API_BASE_URL", "\"$releaseApiUrl\"")
         }
         debug {
-            // Cleartext HTTP is allowed in debug only, for local development.
             applicationIdSuffix = ".debug"
+            buildConfigField("String", "API_BASE_URL", "\"$debugApiUrl\"")
         }
     }
 
