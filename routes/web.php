@@ -369,4 +369,7 @@ Route::middleware('staff')->group(function () {
     Route::post('/staff/pos/sales', [StaffReservationController::class, 'storeSale'])->name('staff.pos.sales');
     // Till log for the sales report.
     Route::get('/staff/pos/sales', [StaffReservationController::class, 'salesLog'])->name('staff.pos.log');
+
+    // Paid sales from both channels, shaped for the dashboard charts.
+    Route::get('/staff/dashboard/sales', [StaffReservationController::class, 'dashboardSales'])->name('staff.dashboard.sales');
 });

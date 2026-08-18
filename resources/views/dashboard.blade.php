@@ -400,18 +400,57 @@
                 });
         }
 
+        /*
+         * Sales come from the server. They used to be read out of local
+         * storage, which meant a till sale rung up on the counter machine was
+         * invisible here, and a browser with no history showed an empty
+         * dashboard even when the shop had been trading all day.
+         */
+        var serverSales = null;
+
+        function loadServerSales() {
+            return fetch(@json(url('/staff/dashboard/sales')), {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Could not load sales.');
+                    return response.json();
+                })
+                .then(function (payload) {
+                    // Reshape into the record the charts already understand.
+                    serverSales = (payload.data || []).map(function (sale) {
+                        var when = sale.at ? new Date(sale.at) : null;
+                        return {
+                            id: sale.id,
+                            customer: sale.customer,
+                            branch: sale.branch,
+                            total: sale.total,
+                            status: sale.status,
+                            paymentStatus: sale.paymentStatus,
+                            payment: sale.payment,
+                            source: sale.source,
+                            items: sale.items,
+                            date: when ? when.toLocaleDateString() : '',
+                            time: when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
+                        };
+                    });
+                })
+                .catch(function () { serverSales = []; });
+        }
+
         function renderDashboard() {
-            var branch = 'kotapark';
-            var orders = getData('orders', defaultOrders);
+            // Fall back to local records only until the server answers.
+            var orders = serverSales || getData('orders', defaultOrders);
             var users = getData('users', [staffUser]);
             var todayOrders = orders.filter(function(order) {
-                return order.date === todayStr && order.branch === branch;
+                return order.date === todayStr;
             });
             var revenue = todayOrders.filter(function(order) {
                 return order.status !== 'cancelled' && order.paymentStatus !== 'pending';
             }).reduce(function(sum, order) { return sum + Number(order.total || 0); }, 0);
             var cashPending = todayOrders.filter(function(order) {
-                return order.payment === 'Cash' && order.paymentStatus === 'pending';
+                return order.paymentStatus === 'pending';
             }).length;
 
             document.getElementById('statRevenue').textContent = money(revenue);
@@ -420,8 +459,8 @@
             document.getElementById('statUsers').textContent = users.length || 1;
 
             renderPopularItems(todayOrders);
-            renderRecentOrders(orders.filter(function(order) { return order.branch === branch; }));
-            renderSalesBars(orders.filter(function(order) { return order.branch === branch; }));
+            renderRecentOrders(orders);
+            renderSalesBars(orders);
             renderCategoryDonut(todayOrders);
         }
 
@@ -605,6 +644,10 @@
         removeSeedOrders();
         renderDashboard();
         renderRecentSales();
+        loadServerSales().then(renderDashboard);
+        window.setInterval(function () {
+            if (!document.hidden) loadServerSales().then(renderDashboard);
+        }, 20000);
         window.setInterval(function () { if (!document.hidden) renderRecentSales(); }, 20000);
         window.addEventListener('resize', renderDashboard);
     </script>

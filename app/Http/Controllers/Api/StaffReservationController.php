@@ -104,26 +104,89 @@ class StaffReservationController extends Controller
         $filters = $request->validate([
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date'],
+            // pos = rung up at the till, reservation = ordered from the app or
+            // the web and settled at the counter. Omit for both.
+            'source' => ['nullable', Rule::in(['pos', 'reservation'])],
         ]);
 
+        $source = $filters['source'] ?? null;
+
         $sales = Reservation::with(['items', 'paidBy'])
-            ->where('source', 'pos')
-            ->when($filters['from'] ?? null, fn ($query, $from) => $query->whereDate('completed_at', '>=', $from))
-            ->when($filters['to'] ?? null, fn ($query, $to) => $query->whereDate('completed_at', '<=', $to))
-            ->orderByDesc('completed_at')
+            ->where('payment_status', 'paid')
+            ->where('status', '!=', Reservation::STATUS_CANCELLED)
+            ->when($source === 'pos', fn ($query) => $query->where('source', 'pos'))
+            ->when($source === 'reservation', fn ($query) => $query->where('source', '!=', 'pos'))
+            // A till sale is settled the moment it completes; a reservation is
+            // settled when it is paid for, so rank both by when money moved.
+            ->when($filters['from'] ?? null, fn ($query, $from) => $query->whereDate('paid_at', '>=', $from))
+            ->when($filters['to'] ?? null, fn ($query, $to) => $query->whereDate('paid_at', '<=', $to))
+            ->orderByDesc('paid_at')
             ->limit(500)
             ->get();
 
         return response()->json([
             'data' => $sales->map(fn (Reservation $sale) => array_merge($this->present($sale), [
                 'cashier' => $sale->paidBy?->name ?? 'Counter',
-                'completed_at' => optional($sale->completed_at)->toIso8601String(),
+                'completed_at' => optional($sale->paid_at ?? $sale->completed_at)->toIso8601String(),
+                'channel' => $sale->source === 'pos' ? 'Point of Sale' : 'Reservation',
             ]))->all(),
             'totals' => [
                 'count' => $sales->count(),
                 'revenue' => round((float) $sales->sum('total'), 2),
                 'cups' => (int) $sales->sum(fn (Reservation $sale) => $sale->items->sum('quantity')),
+                'pos' => round((float) $sales->where('source', 'pos')->sum('total'), 2),
+                'reservation' => round((float) $sales->where('source', '!=', 'pos')->sum('total'), 2),
             ],
+        ]);
+    }
+
+    /**
+     * Real sales for the dashboard: everything actually paid for, whether it
+     * was rung up at the till or reserved in the app and settled at the
+     * counter. Cancelled orders never count.
+     *
+     * The shape mirrors the browser's old local-storage order records so the
+     * dashboard's existing charts can consume it unchanged.
+     */
+    public function dashboardSales(Request $request): JsonResponse
+    {
+        $since = now()->subDays(30)->startOfDay();
+
+        $sales = Reservation::with(['items.inventory'])
+            ->where('payment_status', 'paid')
+            ->where('status', '!=', Reservation::STATUS_CANCELLED)
+            ->where(function ($query) use ($since) {
+                $query->where('paid_at', '>=', $since)->orWhere('created_at', '>=', $since);
+            })
+            ->orderByDesc('paid_at')
+            ->limit(1000)
+            ->get();
+
+        return response()->json([
+            'data' => $sales->map(function (Reservation $sale) {
+                $stamp = $sale->paid_at ?? $sale->completed_at ?? $sale->created_at;
+
+                return [
+                    'id' => $sale->reference,
+                    'at' => optional($stamp)->toIso8601String(),
+                    'customer' => $sale->customer_name,
+                    'branch' => $sale->branch,
+                    'total' => (float) $sale->total,
+                    'status' => $sale->status,
+                    'paymentStatus' => $sale->payment_status,
+                    'payment' => strtoupper((string) $sale->payment_method),
+                    'source' => $sale->source,
+                    'items' => $sale->items->map(fn ($item) => [
+                        'id' => $item->inventory_id,
+                        'name' => $item->name,
+                        // Items keep the name they were sold under; the
+                        // category still lives on the product record.
+                        'category' => $item->inventory->category ?? 'Uncategorized',
+                        'qty' => (int) $item->quantity,
+                        'price' => (float) $item->unit_price,
+                    ])->all(),
+                ];
+            })->all(),
         ]);
     }
 

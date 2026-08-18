@@ -101,19 +101,26 @@
         <section class="card" id="posLogCard">
             <div class="card-header">
                 <div>
-                    <h3>Point of Sale Log</h3>
-                    <p style="color:var(--muted);font-size:12px;margin-top:4px">Every walk-in sale rung up at the till.</p>
+                    <h3>Sales Log</h3>
+                    <p style="color:var(--muted);font-size:12px;margin-top:4px">Paid sales from the counter and from app reservations.</p>
                 </div>
                 <div class="filters">
+                    <select class="field" id="posLogSource" onchange="loadPosLog()">
+                        <option value="">All sales</option>
+                        <option value="pos">Point of Sale</option>
+                        <option value="reservation">Reservations</option>
+                    </select>
                     <input class="field" id="posLogFrom" type="date" onchange="loadPosLog()">
                     <input class="field" id="posLogTo" type="date" onchange="loadPosLog()">
                     <button class="btn secondary" onclick="exportPosLog()"><i class="fas fa-file-csv"></i> Export</button>
                 </div>
             </div>
-            <div class="stats" style="margin:0;padding:16px 18px;border-bottom:1px solid var(--line);grid-template-columns:repeat(3,minmax(0,1fr))">
+            <div class="stats" style="margin:0;padding:16px 18px;border-bottom:1px solid var(--line);grid-template-columns:repeat(5,minmax(0,1fr))">
                 <div class="stat"><strong id="posLogCount">0</strong><span>Sales</span></div>
-                <div class="stat"><strong id="posLogRevenue">&#8369;0.00</strong><span>Till Revenue</span></div>
+                <div class="stat"><strong id="posLogRevenue">&#8369;0.00</strong><span>Total Revenue</span></div>
                 <div class="stat"><strong id="posLogCups">0</strong><span>Cups Sold</span></div>
+                <div class="stat"><strong id="posLogSplitPos">&#8369;0.00</strong><span>From Counter</span></div>
+                <div class="stat"><strong id="posLogSplitRes">&#8369;0.00</strong><span>From Reservations</span></div>
             </div>
             <div class="table-wrap">
                 <table>
@@ -122,6 +129,7 @@
                             <th>Receipt</th>
                             <th>Date</th>
                             <th>Time</th>
+                            <th>Channel</th>
                             <th>Cashier</th>
                             <th>Items</th>
                             <th>Serving</th>
@@ -129,7 +137,7 @@
                             <th>Total</th>
                         </tr>
                     </thead>
-                    <tbody id="posLogRows"><tr><td colspan="8" class="empty">Loading till sales…</td></tr></tbody>
+                    <tbody id="posLogRows"><tr><td colspan="9" class="empty">Loading sales…</td></tr></tbody>
                 </table>
             </div>
         </section>
@@ -485,9 +493,11 @@
     function loadPosLog() {
         var from = document.getElementById('posLogFrom').value;
         var to = document.getElementById('posLogTo').value;
+        var source = document.getElementById('posLogSource').value;
         var query = [];
         if (from) query.push('from=' + encodeURIComponent(from));
         if (to) query.push('to=' + encodeURIComponent(to));
+        if (source) query.push('source=' + encodeURIComponent(source));
 
         var url = @json(url('/staff/pos/sales')) + (query.length ? '?' + query.join('&') : '');
 
@@ -501,11 +511,13 @@
                 document.getElementById('posLogCount').textContent = payload.totals.count;
                 document.getElementById('posLogRevenue').textContent = posMoney(payload.totals.revenue);
                 document.getElementById('posLogCups').textContent = payload.totals.cups;
+                document.getElementById('posLogSplitPos').textContent = posMoney(payload.totals.pos);
+                document.getElementById('posLogSplitRes').textContent = posMoney(payload.totals.reservation);
                 renderPosLog();
             })
             .catch(function (error) {
                 document.getElementById('posLogRows').innerHTML =
-                    '<tr><td colspan="8" class="empty">' + posEscape(error.message) + '</td></tr>';
+                    '<tr><td colspan="9" class="empty">' + posEscape(error.message) + '</td></tr>';
             });
     }
 
@@ -513,7 +525,7 @@
         var body = document.getElementById('posLogRows');
 
         if (!posLog.length) {
-            body.innerHTML = '<tr><td colspan="8" class="empty">No till sales in this period.</td></tr>';
+            body.innerHTML = '<tr><td colspan="9" class="empty">No sales in this period.</td></tr>';
             return;
         }
 
@@ -527,6 +539,8 @@
                 '<td><strong>' + posEscape(sale.reference) + '</strong></td>' +
                 '<td>' + (when ? when.toLocaleDateString() : '-') + '</td>' +
                 '<td>' + (when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-') + '</td>' +
+                '<td><span class="badge ' + (sale.channel === 'Point of Sale' ? 'paid' : 'pending') + '">' +
+                    posEscape(sale.channel) + '</span></td>' +
                 '<td>' + posEscape(sale.cashier) + '</td>' +
                 '<td class="items">' + posEscape(items) + '</td>' +
                 '<td>' + (sale.service_type === 'take_out' ? 'Take out' : 'Dine in') + '</td>' +
@@ -539,7 +553,7 @@
     function exportPosLog() {
         if (!posLog.length) return;
 
-        var headers = ['Receipt', 'Completed', 'Cashier', 'Serving', 'Payment', 'Items', 'Subtotal', 'TakeoutFee', 'Total'];
+        var headers = ['Receipt', 'Paid', 'Channel', 'Cashier', 'Serving', 'Payment', 'Items', 'Subtotal', 'TakeoutFee', 'Total'];
         var rows = posLog.map(function (sale) {
             var items = (sale.items || []).map(function (l) {
                 return l.quantity + 'x ' + l.name + ' (' + l.size_label + ')';
@@ -548,6 +562,7 @@
             return [
                 sale.reference,
                 sale.completed_at || '',
+                sale.channel,
                 sale.cashier,
                 sale.service_type === 'take_out' ? 'Take out' : 'Dine in',
                 (sale.payment_method || '').toUpperCase(),
@@ -564,7 +579,7 @@
         var blob = new Blob([[headers.join(',')].concat(rows).join('\n')], { type: 'text/csv;charset=utf-8;' });
         var link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'queens-cup-till-log.csv';
+        link.download = 'queens-cup-sales-log.csv';
         link.click();
         URL.revokeObjectURL(link.href);
     }

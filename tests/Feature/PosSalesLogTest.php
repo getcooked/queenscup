@@ -88,10 +88,11 @@ class PosSalesLogTest extends TestCase
         $staff = User::factory()->create(['role' => 'admin']);
         $this->withSession(['staff_user_id' => $staff->id]);
 
+        // The panel now covers both channels, so it is just the Sales Log.
         $this->get('/reports')
             ->assertOk()
-            ->assertSee('Point of Sale Log')
-            ->assertSee('Till Revenue')
+            ->assertSee('Sales Log')
+            ->assertSee('Total Revenue')
             ->assertSee('loadPosLog', false);
     }
 }
