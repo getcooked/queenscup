@@ -639,12 +639,13 @@ body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transpa
         <div id="adminOrderFilters" style="display:none" class="flex-between mb-6 fade-in"><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm order-filter active" data-filter="all" onclick="filterOrders('all',this)">All</button><button class="btn btn-secondary btn-sm order-filter" data-filter="pending" onclick="filterOrders('pending',this)">Pending</button><button class="btn btn-secondary btn-sm order-filter" data-filter="preparing" onclick="filterOrders('preparing',this)">Preparing</button><button class="btn btn-secondary btn-sm order-filter" data-filter="serving" onclick="filterOrders('serving',this)">Serving</button><button class="btn btn-secondary btn-sm order-filter" data-filter="completed" onclick="filterOrders('completed',this)">Completed</button><button class="btn btn-secondary btn-sm order-filter" data-filter="cancelled" onclick="filterOrders('cancelled',this)">Cancelled</button><button class="btn btn-secondary btn-sm order-filter" data-filter="cash_pending" onclick="filterOrders('cash_pending',this)" style="border-color:rgba(245,166,35,0.4);color:var(--warning)"><i class="fas fa-money-bill-wave"></i> Payment Pending</button></div><div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search orders..." id="orderSearch" oninput="renderOrders()"></div></div>
         <div id="customerOrderHeader" style="display:none" class="mb-6 fade-in flex-between">
           <div>
-            <h3 style="font-family:'Playfair Display';font-size:22px;margin-bottom:4px">My Orders</h3>
-            <p style="font-size:12px;color:var(--fg-muted)">Track your current and past orders</p>
+            <h3 style="font-family:'Playfair Display';font-size:22px;margin-bottom:4px">My Reservations</h3>
+            <p style="font-size:12px;color:var(--fg-muted)">Track your reservations and pick them up at the counter</p>
           </div>
           <button class="btn btn-gold btn-sm" onclick="navigateTo('pos')"><i class="fas fa-mug-hot"></i> Back to Menu</button>
         </div>
-        <div class="card fade-in"><div class="card-body" style="padding:0"><div class="table-wrap"><table><thead id="ordersThead"></thead><tbody id="ordersTable"></tbody></table></div></div></div>
+        <div id="customerReservationList" style="display:none"></div>
+        <div class="card fade-in" id="staffOrdersCard"><div class="card-body" style="padding:0"><div class="table-wrap"><table><thead id="ordersThead"></thead><tbody id="ordersTable"></tbody></table></div></div></div>
       </div>
       <!-- INVENTORY -->
       <div class="page-section" id="page-inventory">
@@ -764,7 +765,7 @@ body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transpa
 <!-- Modals -->
 <div class="modal-overlay" id="inventoryModal"><div class="modal"><div class="modal-header"><h3 id="invModalTitle">Add New Item</h3><button class="modal-close" onclick="closeModal('inventoryModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><input type="hidden" id="editItemId"><input type="hidden" id="invImageUrl"><div class="form-group"><label>Picture</label><div class="item-upload-row"><div class="item-thumb-sm" id="invImagePreview"><i class="fas fa-image"></i></div><input class="form-input" type="file" id="invImageFile" accept="image/*" onchange="previewInventoryImage(event)"></div></div><div class="form-group"><label>Product Name</label><input class="form-input" id="invName"></div><div class="form-group"><label>Category</label><select class="form-select" id="invCategory"><option>Milktea Series</option><option>Fruit Teas</option><option>Milky Fruit Jams</option><option>Lemonade</option><option>Coffee & Non-Coffee</option><option>Fruit Milk Shake</option><option>Sticky Milk Drinks</option></select></div><div class="grid-2"><div class="form-group"><label>Price R (Regular / 16oz)</label><input class="form-input" type="number" id="invPriceR"></div><div class="form-group"><label>Price L (Large / 22oz)</label><input class="form-input" type="number" id="invPriceL"></div></div><div class="form-group"><label>Stock <span id="invStockLabelBranch"></span></label><input class="form-input" type="number" id="invStock"></div><div class="form-group"><label>Description</label><textarea class="form-textarea" id="invDesc"></textarea></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('inventoryModal')">Cancel</button><button class="btn btn-primary" onclick="saveInventoryItem()"><i class="fas fa-save"></i> Save</button></div></div></div>
 <div class="modal-overlay" id="sizeModal"><div class="modal" style="max-width:400px"><div class="modal-header"><h3>Select Size</h3><button class="modal-close" onclick="closeModal('sizeModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="sizeModalBody"></div></div></div>
-<div class="modal-overlay" id="checkoutModal"><div class="modal"><div class="modal-header"><h3>Confirm Order</h3><button class="modal-close" onclick="closeModal('checkoutModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-group" id="checkoutNameField"><label>Customer Name</label><input class="form-input" id="checkoutCustomerName" placeholder="Walk-in"></div><div class="form-group"><label>Order Type</label><select class="form-select" id="checkoutType"><option>Dine In</option><option>Take Out</option><option>Pick Up</option></select></div><div class="form-group"><label>Payment Method</label><div class="payment-method-grid"><button type="button" class="payment-method-option active" data-payment-method="Cash" onclick="selectPaymentMethod('Cash')"><i class="fas fa-money-bill-wave"></i><span>Cash</span></button><button type="button" class="payment-method-option" data-payment-method="GCash QR" onclick="selectPaymentMethod('GCash QR')"><i class="fas fa-qrcode"></i><span>GCash QR</span></button><button type="button" class="payment-method-option" data-payment-method="Maya QR" onclick="selectPaymentMethod('Maya QR')"><i class="fas fa-qrcode"></i><span>Maya QR</span></button></div><input type="hidden" id="checkoutPaymentMethod" value="Cash"></div><div class="form-group" id="discountField"><label>Discount (%)</label><input class="form-input" type="number" id="checkoutDiscount" value="0" min="0" max="100" oninput="updateCartTotals()"></div><div class="form-group" id="cashTenderedField"><label>Cash Tendered (&#8369;)</label><input class="form-input" type="number" id="checkoutCashTendered" min="0" step="1" oninput="updateCartTotals()" placeholder="0.00"></div><div class="qr-payment-panel" id="qrPaymentPanel"><div class="qr-frame" id="qrPaymentCode"></div><div class="qr-details"><h4 id="qrPaymentTitle">Scan to Pay</h4><p>Ask the customer to scan this QR code, then confirm payment after the app shows a successful transfer.</p><div class="amount" id="qrPaymentAmount">&#8369;0.00</div><p id="qrPaymentHint">Place your real QR image at public/images/gcash-qr.png or public/images/maya-qr.png.</p></div></div><div id="paymentNotice" style="background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--warning)"><i class="fas fa-info-circle" style="margin-right:5px"></i>Cash orders are marked <strong>Cash Pending</strong> until the cashier confirms payment.</div><div style="background:rgba(255,255,255,0.92);border-radius:var(--radius-sm);padding:14px;margin-top:6px"><div class="cart-summary-row"><span>Subtotal</span><span id="chkSubtotal">&#8369;0.00</span></div><div class="cart-summary-row"><span>Discount</span><span id="chkDiscount" style="color:var(--success)">-&#8369;0.00</span></div><div class="cart-summary-row total"><span>Total Due</span><span id="chkTotal">&#8369;0.00</span></div><div class="cart-summary-row" id="changeRow" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)"><span style="font-weight:700">Change</span><span id="chkChange" style="font-weight:700;color:var(--success)">&#8369;0.00</span></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('checkoutModal')">Cancel</button><button class="btn btn-gold" onclick="processPayment()"><i class="fas fa-check"></i> Confirm</button></div></div></div>
+<div class="modal-overlay" id="checkoutModal"><div class="modal"><div class="modal-header"><h3 id="checkoutHeading">Confirm Order</h3><button class="modal-close" onclick="closeModal('checkoutModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-group" id="checkoutNameField"><label>Customer Name</label><input class="form-input" id="checkoutCustomerName" placeholder="Walk-in"></div><div class="form-group"><label>How will you have it?</label><select class="form-select" id="checkoutType" onchange="updateCartTotals()"><option>Dine In</option><option>Take Out</option><option id="checkoutTypePickup">Pick Up</option></select><div id="takeoutFeeHint" style="display:none;margin-top:6px;font-size:11px;color:var(--fg-muted)"></div></div><div class="form-group" id="paymentMethodField"><label>Payment Method</label><div class="payment-method-grid"><button type="button" class="payment-method-option active" data-payment-method="Cash" onclick="selectPaymentMethod('Cash')"><i class="fas fa-money-bill-wave"></i><span>Cash</span></button><button type="button" class="payment-method-option" data-payment-method="GCash QR" onclick="selectPaymentMethod('GCash QR')"><i class="fas fa-qrcode"></i><span>GCash QR</span></button><button type="button" class="payment-method-option" data-payment-method="Maya QR" onclick="selectPaymentMethod('Maya QR')"><i class="fas fa-qrcode"></i><span>Maya QR</span></button></div><input type="hidden" id="checkoutPaymentMethod" value="Cash"></div><div class="form-group" id="discountField"><label>Discount (%)</label><input class="form-input" type="number" id="checkoutDiscount" value="0" min="0" max="100" oninput="updateCartTotals()"></div><div class="form-group" id="cashTenderedField"><label>Cash Tendered (&#8369;)</label><input class="form-input" type="number" id="checkoutCashTendered" min="0" step="1" oninput="updateCartTotals()" placeholder="0.00"></div><div class="qr-payment-panel" id="qrPaymentPanel"><div class="qr-frame" id="qrPaymentCode"></div><div class="qr-details"><h4 id="qrPaymentTitle">Scan to Pay</h4><p>Ask the customer to scan this QR code, then confirm payment after the app shows a successful transfer.</p><div class="amount" id="qrPaymentAmount">&#8369;0.00</div><p id="qrPaymentHint">Place your real QR image at public/images/gcash-qr.png or public/images/maya-qr.png.</p></div></div><div id="paymentNotice" style="background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--warning)"><i class="fas fa-info-circle" style="margin-right:5px"></i>Cash orders are marked <strong>Cash Pending</strong> until the cashier confirms payment.</div><div style="background:rgba(255,255,255,0.92);border-radius:var(--radius-sm);padding:14px;margin-top:6px"><div class="cart-summary-row"><span>Subtotal</span><span id="chkSubtotal">&#8369;0.00</span></div><div class="cart-summary-row"><span>Discount</span><span id="chkDiscount" style="color:var(--success)">-&#8369;0.00</span></div><div class="cart-summary-row" id="chkFeeRow" style="display:none"><span id="chkFeeLabel">Take-out cups</span><span id="chkFee">&#8369;0.00</span></div><div class="cart-summary-row total"><span>Total Due</span><span id="chkTotal">&#8369;0.00</span></div><div class="cart-summary-row" id="changeRow" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)"><span style="font-weight:700">Change</span><span id="chkChange" style="font-weight:700;color:var(--success)">&#8369;0.00</span></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('checkoutModal')">Cancel</button><button class="btn btn-gold" id="reserveConfirmBtn" onclick="processPayment()"><i class="fas fa-check"></i> Confirm</button></div></div></div>
 <div class="modal-overlay" id="receiptModal"><div class="modal" style="max-width:370px"><div class="modal-header"><h3>Receipt</h3><button class="modal-close" onclick="closeModal('receiptModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="receiptContent"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('receiptModal')">Close</button><button class="btn btn-primary" onclick="printReceipt()"><i class="fas fa-print"></i> Print</button></div></div></div>
 <div class="modal-overlay" id="orderDetailModal"><div class="modal" style="max-width:540px"><div class="modal-header"><h3>Order Details</h3><button class="modal-close" onclick="closeModal('orderDetailModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="orderDetailContent"></div><div class="modal-footer" id="orderDetailFooter"></div></div></div>
 
@@ -1280,6 +1281,169 @@ function closeNotifPanel(){notifPanelOpen=false;var panel=document.getElementByI
 
 document.addEventListener('click',function(e){var wrapper=document.querySelector('.notif-wrapper');if(notifPanelOpen&&wrapper&&!wrapper.contains(e.target)){closeNotifPanel();}});
 
+
+/* ========== CUSTOMER RESERVATIONS ==========
+ *
+ * Customers do not buy here, they reserve. Buying happens at the till in the
+ * admin panel. So the customer checkout sends the basket to the reservation
+ * API, which prices it, applies the per-cup take-out fee and hands back a
+ * reference code. Payment is taken in person at the counter.
+ */
+var TAKEOUT_FEE_PER_CUP = {{ $takeoutFeePerCup ?? 5 }};
+var RESERVE_URL = @json(url('/api/v1/reservations'));
+
+function reservedReferences() {
+  var stored = getData('my_reservations', []);
+  return Array.isArray(stored) ? stored : [];
+}
+
+function rememberReference(reference) {
+  var all = reservedReferences();
+  if (all.indexOf(reference) === -1) all.unshift(reference);
+  setData('my_reservations', all.slice(0, 40));
+}
+
+/** Cups in the basket. The surcharge is per cup, not per line. */
+function cartCupCount() {
+  return cart.reduce(function (n, i) { return n + i.qty; }, 0);
+}
+
+function checkoutIsTakeOut() {
+  var select = document.getElementById('checkoutType');
+  return !!select && select.value === 'Take Out';
+}
+
+/** Take-out surcharge for the current basket, or zero for dine in. */
+function checkoutTakeoutFee() {
+  if (!isCustomerOrGuest()) return 0;
+  return checkoutIsTakeOut() ? TAKEOUT_FEE_PER_CUP * cartCupCount() : 0;
+}
+
+function submitReservation() {
+  var button = document.getElementById('reserveConfirmBtn');
+  if (button) { button.disabled = true; button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reserving...'; }
+
+  fetch(RESERVE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      service_type: checkoutIsTakeOut() ? 'take_out' : 'dine_in',
+      customer_name: currentUser.fullName,
+      customer_email: currentUser.email || null,
+      customer_contact: currentUser.contactNumber || null,
+      branch: getBranch(),
+      source: 'web',
+      items: cart.map(function (i) {
+        return { inventory_id: i.id, size: i.size === 'L' ? 'large' : 'regular', quantity: i.qty };
+      })
+    })
+  })
+    .then(function (response) {
+      return response.json().then(function (payload) {
+        if (!response.ok) {
+          var message = payload.message || 'We could not save that reservation.';
+          if (payload.errors) {
+            var first = Object.keys(payload.errors)[0];
+            if (first) message = payload.errors[first][0];
+          }
+          throw new Error(message);
+        }
+        return payload;
+      });
+    })
+    .then(function (reservation) {
+      rememberReference(reservation.reference);
+      closeModal('checkoutModal');
+      cart = [];
+      renderCart();
+      renderPOS();
+      showReservationConfirmed(reservation);
+      navigateTo('orders');
+    })
+    .catch(function (error) { showToast(error.message, 'error'); })
+    .finally(function () {
+      if (button) { button.disabled = false; button.innerHTML = '<i class="fas fa-check"></i> Confirm reservation'; }
+    });
+}
+
+function showReservationConfirmed(reservation) {
+  showToast('Reserved! Show ' + reservation.reference + ' at the counter.', 'success');
+}
+
+/* ---------- customer reservation tracking ---------- */
+
+var myReservations = [];
+
+function loadMyReservations() {
+  var references = reservedReferences();
+  var list = document.getElementById('customerReservationList');
+  if (!list) return;
+
+  if (!references.length) {
+    myReservations = [];
+    renderMyReservations();
+    return;
+  }
+
+  Promise.all(references.map(function (reference) {
+    return fetch(@json(url('/api/v1/reservations')) + '/' + encodeURIComponent(reference), {
+      headers: { 'Accept': 'application/json' }
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  })).then(function (results) {
+    myReservations = results.filter(Boolean);
+    renderMyReservations();
+  });
+}
+
+function reservationStatusBadge(status) {
+  var map = {
+    pending: ['badge-warning', 'fa-clock', 'Reservation received'],
+    preparing: ['badge-info', 'fa-blender', 'Being prepared'],
+    ready: ['badge-success', 'fa-bell-concierge', 'Ready for pick up'],
+    completed: ['badge-success', 'fa-check', 'Picked up'],
+    cancelled: ['badge-warning', 'fa-times', 'Cancelled']
+  };
+  var entry = map[status] || map.pending;
+  return '<span class="badge ' + entry[0] + '"><i class="fas ' + entry[1] + '"></i> ' + entry[2] + '</span>';
+}
+
+function renderMyReservations() {
+  var list = document.getElementById('customerReservationList');
+  if (!list) return;
+
+  if (!myReservations.length) {
+    list.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><h3>No reservations yet</h3>' +
+      '<p>Reserve from the menu and your code will appear here.</p></div>';
+    return;
+  }
+
+  list.innerHTML = myReservations.map(function (r) {
+    var items = r.items.map(function (i) {
+      return escapeHtml(i.quantity + '× ' + i.name + ' (' + i.size_label + ')');
+    }).join('<br>');
+
+    var fee = Number(r.takeout_fee) > 0
+      ? '<div style="font-size:11px;color:var(--fg-muted)">incl. ₱' + Number(r.takeout_fee).toFixed(2) + ' take-out cups</div>'
+      : '';
+
+    return '<div class="card" style="margin-bottom:12px"><div class="card-body">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px">' +
+        '<div><div style="font-size:18px;font-weight:900;color:var(--gold-light)">' + escapeHtml(r.reference) + '</div>' +
+        '<div style="font-size:11px;color:var(--fg-muted)">' + (r.service_type === 'take_out' ? 'Take out' : 'Dine in') +
+        ' · ' + r.cup_count + (r.cup_count === 1 ? ' cup' : ' cups') + '</div></div>' +
+        reservationStatusBadge(r.status) +
+      '</div>' +
+      '<div style="font-size:12px;margin-bottom:8px">' + items + '</div>' + fee +
+      '<div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;font-weight:800">' +
+        '<span>Total</span><span>₱' + Number(r.total).toFixed(2) + '</span></div>' +
+      '<div style="font-size:11px;color:var(--fg-muted);margin-top:4px">' +
+        (r.payment_status === 'paid' ? 'Paid at the counter' : 'Pay at the counter on pick up') + '</div>' +
+    '</div></div>';
+  }).join('');
+}
+
 /* ========== COUNT CASH PENDING ========== */
 function countCashPending(){var br=getBranch();return orders.filter(function(o){return o.branch===br&&o.paymentStatus==='pending';}).length;}
 function countCashPendingAmount(){var br=getBranch();return orders.filter(function(o){return o.branch===br&&o.paymentStatus==='pending';}).reduce(function(s,o){return s+o.total;},0);}
@@ -1473,8 +1637,8 @@ function buildSidebarNav(){
   }else if(isCashier()){
     h+='<div class="nav-section"><div class="nav-section-title">Counter</div><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a><a class="nav-item" href="{{ url('/orders') }}" data-current-page="orders"><i class="fas fa-receipt"></i> Orders <span class="nav-badge" id="pendingOrdersBadge">0</span> <span class="nav-badge cash-pending" id="cashPendingSidebarBadge" style="display:none">0</span></a></div>';
   }else{
-    h+='<div class="nav-section"><div class="nav-section-title">Menu</div><a class="nav-item" href="#pos" data-page="pos"><i class="fas fa-mug-hot"></i> Menu & Order</a></div>';
-    h+='<div class="nav-section"><div class="nav-section-title">My Account</div><a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> My Orders <span class="nav-badge" id="pendingOrdersBadge">0</span></a></div>';
+    h+='<div class="nav-section"><div class="nav-section-title">Menu</div><a class="nav-item" href="#pos" data-page="pos"><i class="fas fa-mug-hot"></i> Menu &amp; Reserve</a></div>';
+    h+='<div class="nav-section"><div class="nav-section-title">My Account</div><a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> My Reservations <span class="nav-badge" id="pendingOrdersBadge">0</span></a></div>';
   }
   if(isStaff())h+='<div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item" href="{{ url('/profile') }}"><i class="fas fa-user-circle"></i> My Profile</a></div>';
   else h+='<div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item" href="#profile" data-page="profile"><i class="fas fa-user-circle"></i> My Profile</a></div>';
@@ -1505,7 +1669,15 @@ function navigateTo(page){
   if(isCustomerOrGuest()&&document.getElementById('checkoutDiscount'))document.getElementById('checkoutDiscount').value='0';
   if(page==='pos')renderPOS();
   if(page==='inventory')renderInventory();
-  if(page==='orders')renderOrders();
+  if(page==='orders'){
+    // Customers track reservations from the server; staff work the local queue.
+    var reserving=isCustomerOrGuest();
+    var staffCard=document.getElementById('staffOrdersCard');
+    if(staffCard)staffCard.style.display=reserving?'none':'';
+    var mine=document.getElementById('customerReservationList');
+    if(mine)mine.style.display=reserving?'block':'none';
+    if(reserving)loadMyReservations();else renderOrders();
+  }
   if(page==='reports')renderReports();
   if(page==='settings'){renderSettings();initLogoDragDrop();}
   if(page==='profile')renderProfile();
@@ -1672,6 +1844,17 @@ function updateCartTotals(){
   var sub=cart.reduce(function(s,i){return s+i.price*i.qty;},0);
   var dp=parseFloat(document.getElementById('checkoutDiscount')?document.getElementById('checkoutDiscount').value:0)||0;
   var disc=sub*(dp/100);var tot=sub-disc;
+  // Customers see the take-out surcharge before they commit; the server
+  // recalculates it on submit, so this is display only.
+  var takeFee=checkoutTakeoutFee();tot=tot+takeFee;
+  var feeRow=document.getElementById('chkFeeRow');
+  if(feeRow){
+    feeRow.style.display=takeFee>0?'flex':'none';
+    var lbl=document.getElementById('chkFeeLabel');
+    if(lbl)lbl.textContent='Take-out cups ('+cartCupCount()+' × ₱'+TAKEOUT_FEE_PER_CUP.toFixed(2)+')';
+    var amt=document.getElementById('chkFee');
+    if(amt)amt.textContent='₱'+takeFee.toFixed(2);
+  }
   var f=function(v){return '\u20B1'+v.toFixed(2);};
   var cs=document.getElementById('cartSummary');
   if(cs&&cs.style.display!=='none'){document.getElementById('cartSubtotal').textContent=f(sub);document.getElementById('cartDiscount').textContent='-'+f(disc);document.getElementById('chkTotal').textContent=f(tot);
@@ -1711,6 +1894,19 @@ function selectPaymentMethod(method){
 
 function checkout(){
   if(cart.length===0){showToast('Cart is empty','warning');return;}
+  var reserving=isCustomerOrGuest();
+  // A customer reserves and pays in person, so none of the till controls apply.
+  var show=function(id,on){var el=document.getElementById(id);if(el)el.style.display=on?'':'none';};
+  show('checkoutTypePickup',!reserving);
+  show('takeoutFeeHint',reserving);
+  var pickup=document.getElementById('checkoutTypePickup');
+  if(pickup&&reserving&&document.getElementById('checkoutType').value==='Pick Up')document.getElementById('checkoutType').value='Dine In';
+  var heading=document.getElementById('checkoutHeading');
+  if(heading)heading.textContent=reserving?'Confirm reservation':'Confirm Order';
+  var confirmBtn=document.getElementById('reserveConfirmBtn');
+  if(confirmBtn)confirmBtn.innerHTML=reserving?'<i class="fas fa-check"></i> Confirm reservation':'<i class="fas fa-check"></i> Confirm';
+  var hint=document.getElementById('takeoutFeeHint');
+  if(hint)hint.textContent='Take out adds ₱'+TAKEOUT_FEE_PER_CUP.toFixed(0)+' per cup for the cup and lid.';
   document.getElementById('checkoutDiscount').value='0';
   var cnInput=document.getElementById('checkoutCustomerName');
   var cnField=document.getElementById('checkoutNameField');
@@ -1718,10 +1914,18 @@ function checkout(){
   else{cnField.style.display='none';cnInput.value=currentUser.fullName;}
   var ct=document.getElementById('checkoutCashTendered');if(ct)ct.value='';
   selectPaymentMethod('Cash');
+  // selectPaymentMethod reveals the till fields, so hide them again for
+  // a customer, who pays in person rather than here.
+  show('paymentMethodField',!reserving);
+  show('cashTenderedField',!reserving);
+  show('qrPaymentPanel',false);
+  show('paymentNotice',!reserving);
   updateCartTotals();openModal('checkoutModal');
 }
 
 function processPayment(){
+  // Buying happens at the till. From the customer side this only reserves.
+  if(isCustomerOrGuest()){submitReservation();return;}
   var ot=document.getElementById('checkoutType').value;
   var dp=parseFloat(document.getElementById('checkoutDiscount').value||0);
   var sub=cart.reduce(function(s,i){return s+i.price*i.qty;},0);var disc=sub*(dp/100);var tot=sub-disc;

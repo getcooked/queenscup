@@ -101,6 +101,7 @@ $ordersView = function (Request $request) {
     return view('orders', [
         'authenticatedStaff' => $authenticatedStaff,
         'inventoryProducts' => $inventoryProducts,
+        'takeoutFeePerCup' => (float) config('queenscup.takeout_fee_per_cup', 5.00),
     ]);
 };
 
