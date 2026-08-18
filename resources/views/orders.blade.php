@@ -13,7 +13,8 @@
 <link rel="apple-touch-icon" href="{{ asset('icons/queens-cup-logo.png') }}">
 <title>The Queen's Cup — Madridejos, Cebu</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link rel="preload" href="{{ asset('vendor/fontawesome/webfonts/fa-solid-900.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link href="{{ asset('vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
 <style>
 :root{
   --bg:#f7fbf8;--bg-deep:#ffffff;--card:#ffffff;--card-hover:#e9f7ee;
@@ -208,6 +209,9 @@ body.customer-mobile .page-content{
 .btn-transparent-info{background:transparent;color:var(--info);border:1px solid transparent}
 .btn-transparent-info:hover{border-color:rgba(91,141,239,0.35);box-shadow:none;transform:none}
 .btn-sm{padding:5px 10px;font-size:11px}
+/* The order filter buttons had no selected state at all, so the active filter
+   was indistinguishable from the rest. Mirrors .pos-cat-btn.active. */
+.order-filter.active{background:linear-gradient(135deg,rgba(14,140,74,0.15),rgba(201,168,76,0.08));border-color:var(--accent);color:var(--accent);box-shadow:0 0 12px var(--accent-glow);font-weight:700}
 .btn-icon{width:32px;height:32px;padding:0;justify-content:center}
 
 .table-wrap{overflow-x:auto}

@@ -88,6 +88,17 @@ class AdminPanelAccessTest extends TestCase
         // The shell owns the sidebar outright so no page stylesheet can leak into it.
         $this->assertStringContainsString('text-transform: none;', $stylesheet);
         $this->assertStringContainsString('-webkit-text-fill-color: transparent;', $stylesheet);
+
+        // Font Awesome is served locally; a blocked CDN made every icon vanish
+        // outright because the face declares font-display: block.
+        $this->assertFileExists(public_path('vendor/fontawesome/css/all.min.css'));
+        $this->assertFileExists(public_path('vendor/fontawesome/webfonts/fa-solid-900.woff2'));
+
+        foreach (['dashboard', 'orders', 'pos', 'inventory', 'reports', 'settings', 'profile', 'staff-login'] as $view) {
+            $blade = file_get_contents(resource_path("views/{$view}.blade.php"));
+            $this->assertStringNotContainsString('cdnjs.cloudflare.com/ajax/libs/font-awesome', $blade);
+            $this->assertStringContainsString('vendor/fontawesome/css/all.min.css', $blade);
+        }
     }
 
     public function test_orders_prefers_the_authenticated_staff_session_for_its_shell()
