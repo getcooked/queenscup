@@ -5,6 +5,7 @@ use App\Models\Inventory;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PointOfSaleController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Api\StaffReservationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -323,4 +324,17 @@ Route::middleware('staff')->group(function () {
         ->only(['index', 'store', 'update', 'destroy'])
         ->parameters(['pos' => 'pointOfSale'])
         ->names('point-of-sales');
+});
+
+/*
+| Counter-side reservation endpoints.
+|
+| These live in web.php rather than api.php because the admin panel calls them
+| from the browser with the staff session it already holds. The customer app
+| never touches these - it uses the token routes in api.php.
+*/
+Route::middleware('staff')->prefix('staff/reservations')->name('staff.reservations.')->group(function () {
+    Route::get('/', [StaffReservationController::class, 'index'])->name('index');
+    Route::patch('/{reservation}/status', [StaffReservationController::class, 'updateStatus'])->name('status');
+    Route::patch('/{reservation}/payment', [StaffReservationController::class, 'recordPayment'])->name('payment');
 });
