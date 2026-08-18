@@ -72,13 +72,13 @@
         .stat-change.up { color: var(--success); }
         .stat-change.down { color: var(--warning); }
         .dash-row { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr) minmax(0, 1.05fr); gap: 11px; min-height: 0; }
+        .dash-bottom { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 11px; min-height: 0; }
         .card-header { min-height: 40px; flex-shrink: 0; padding: 0 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .card-header h3 { font-size: 15px; }
         .card-body { padding: 11px; flex: 1; min-height: 0; overflow: auto; scrollbar-width: none; -ms-overflow-style: none; }
         .card-body::-webkit-scrollbar { display: none; }
         .stat-card, .card { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
         .stat-card { display: block; }
-        .dash-orders { min-height: 0; }
         /* Keep column headings in view while a long list scrolls inside its card. */
         thead th { position: sticky; top: 0; background: var(--card); z-index: 1; }
         .sales-bars { height: 100%; min-height: 96px; display: grid; grid-template-columns: repeat(7, 1fr); align-items: end; gap: 12px; }
@@ -119,7 +119,7 @@
             .page-content { display: block; overflow: visible; padding: 16px; }
             .page-content > * { margin-bottom: 14px; }
             .card, .card-body { overflow: visible; }
-            .dash-row { grid-template-columns: 1fr; }
+            .dash-row, .dash-bottom { grid-template-columns: 1fr; }
             .sales-bars { height: 200px; }
             .donut-wrap { max-width: 240px; }
         }
@@ -220,16 +220,31 @@
                     </div>
                 </div>
 
-                <div class="card dash-orders">
-                    <div class="card-header">
-                        <h3>Recent Orders</h3>
-                        <a class="btn" href="{{ url('/orders') }}"><i class="fas fa-receipt"></i> View Orders</a>
+                <div class="dash-bottom">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Recent Orders</h3>
+                            <a class="btn" href="{{ url('/orders') }}"><i class="fas fa-receipt"></i> View Orders</a>
+                        </div>
+                        <div class="card-body" style="padding:0">
+                            <table>
+                                <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Time</th></tr></thead>
+                                <tbody id="recentOrdersTable"></tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="card-body" style="padding:0">
-                        <table>
-                            <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Time</th></tr></thead>
-                            <tbody id="recentOrdersTable"></tbody>
-                        </table>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Recent Sales</h3>
+                            <span class="badge badge-gold" id="recentSalesTotal">&#8369;0</span>
+                        </div>
+                        <div class="card-body" style="padding:0">
+                            <table>
+                                <thead><tr><th>Receipt</th><th>Items</th><th>Payment</th><th>Total</th><th>Time</th></tr></thead>
+                                <tbody id="recentSalesTable"><tr><td colspan="5" class="empty">Loading till sales&hellip;</td></tr></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -322,6 +337,67 @@
                 return '<span class="badge badge-warning"><i class="fas fa-money-bill-wave"></i> Pending</span>';
             }
             return '<span class="badge badge-success"><i class="fas fa-check"></i> Paid</span>';
+        }
+
+
+        /*
+         * Recent sales come from the till, which records to the server, so
+         * unlike the rest of this dashboard they are fetched rather than read
+         * out of local storage.
+         */
+        function renderRecentSales() {
+            var body = document.getElementById('recentSalesTable');
+            if (!body) return;
+
+            fetch(@json(url('/staff/pos/sales')), {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Could not load till sales.');
+                    return response.json();
+                })
+                .then(function (payload) {
+                    var sales = payload.data || [];
+                    var today = new Date().toDateString();
+
+                    // The badge tracks today's takings, not the whole log.
+                    var todayTotal = sales.reduce(function (sum, sale) {
+                        if (!sale.completed_at) return sum;
+                        return new Date(sale.completed_at).toDateString() === today
+                            ? sum + Number(sale.total || 0)
+                            : sum;
+                    }, 0);
+
+                    var badge = document.getElementById('recentSalesTotal');
+                    if (badge) badge.textContent = money(todayTotal) + ' today';
+
+                    if (!sales.length) {
+                        body.innerHTML = '<tr><td colspan="5" class="empty">No counter sales yet.</td></tr>';
+                        return;
+                    }
+
+                    body.innerHTML = sales.slice(0, 12).map(function (sale) {
+                        var cups = (sale.items || []).reduce(function (n, line) { return n + line.quantity; }, 0);
+                        var when = sale.completed_at ? new Date(sale.completed_at) : null;
+                        var method = (sale.payment_method || '').toLowerCase();
+                        var badgeClass = method === 'cash' ? 'badge-warning'
+                            : (method === 'gcash' ? 'badge-info' : 'badge-success');
+
+                        return '<tr>' +
+                            '<td><strong>' + escapeHtml(sale.reference) + '</strong></td>' +
+                            '<td>' + cups + (cups === 1 ? ' cup' : ' cups') +
+                                (sale.service_type === 'take_out' ? ' · take out' : '') + '</td>' +
+                            '<td><span class="badge ' + badgeClass + '">' +
+                                escapeHtml((sale.payment_method || '').toUpperCase()) + '</span></td>' +
+                            '<td>' + money(sale.total) + '</td>' +
+                            '<td>' + (when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-') + '</td>' +
+                        '</tr>';
+                    }).join('');
+                })
+                .catch(function (error) {
+                    body.innerHTML = '<tr><td colspan="5" class="empty">' + escapeHtml(error.message) + '</td></tr>';
+                });
         }
 
         function renderDashboard() {
@@ -528,6 +604,8 @@
         setupSidebar();
         removeSeedOrders();
         renderDashboard();
+        renderRecentSales();
+        window.setInterval(function () { if (!document.hidden) renderRecentSales(); }, 20000);
         window.addEventListener('resize', renderDashboard);
     </script>
 </body>
