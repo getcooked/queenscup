@@ -84,6 +84,10 @@ class AdminPanelAccessTest extends TestCase
         $this->assertStringContainsString('.sidebar .nav-badge', $stylesheet);
         $this->assertStringContainsString('.sidebar .nav-badge.cash-pending', $stylesheet);
         $this->assertStringContainsString('.sidebar .nav-item .nav-icon svg', $stylesheet);
+
+        // The shell owns the sidebar outright so no page stylesheet can leak into it.
+        $this->assertStringContainsString('text-transform: none;', $stylesheet);
+        $this->assertStringContainsString('-webkit-text-fill-color: transparent;', $stylesheet);
     }
 
     public function test_orders_prefers_the_authenticated_staff_session_for_its_shell()
