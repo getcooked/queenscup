@@ -180,6 +180,30 @@ class PointOfSaleTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    public function test_the_till_offers_a_qr_for_the_wallet_payments()
+    {
+        $this->cashier();
+        $this->drink();
+
+        $this->get('/pos')
+            ->assertOk()
+            ->assertSee('qrPay', false)
+            ->assertSee('gcash-qr.png', false)
+            ->assertSee('maya-qr.png', false);
+    }
+
+    public function test_a_cart_line_can_be_resized_after_it_is_added()
+    {
+        $this->cashier();
+        $this->drink();
+
+        // The line keeps both prices so switching size can reprice it.
+        $this->get('/pos')
+            ->assertOk()
+            ->assertSee('changeSize', false)
+            ->assertSee('cl-size', false);
+    }
+
     public function test_the_pos_page_is_a_working_till_not_a_price_list()
     {
         $this->cashier();

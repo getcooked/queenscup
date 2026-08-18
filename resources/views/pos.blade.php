@@ -108,6 +108,18 @@
         .change{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px;font-weight:700}
         .change strong{color:var(--green);font-size:14px}
 
+        .qr-pay{display:flex;gap:10px;align-items:center;border:1px solid #d8ebdf;border-radius:12px;padding:10px;margin-bottom:10px;background:#f7fdf9}
+        .qr-pay[hidden]{display:none}
+        .qr-pay img{width:82px;height:82px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid #e6f2ea;flex-shrink:0}
+        .qr-pay-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+        .qr-pay-info strong{font-size:12px}
+        .qr-pay-info span{font-size:17px;font-weight:800;color:var(--gold)}
+        .qr-pay-info small{font-size:10px;color:var(--muted);line-height:1.35}
+        .qr-missing{font-size:11px;color:var(--pink)}
+        .cl-size{display:flex;gap:3px;margin-top:3px}
+        .cl-size button{border:1px solid #d8ebdf;background:#fff;border-radius:6px;font-size:9px;font-weight:700;padding:1px 5px;cursor:pointer;color:var(--muted);font-family:"DM Sans",sans-serif}
+        .cl-size button.on{background:rgba(22,199,106,.16);border-color:var(--green);color:var(--gold)}
+        .cl-size button:disabled{opacity:.4;cursor:not-allowed}
         .btn-complete{width:100%;height:44px;border:0;border-radius:12px;background:linear-gradient(135deg,#12864e,#16a65f);color:#fff;font-weight:800;font-size:14px;cursor:pointer;font-family:"DM Sans",sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px}
         .btn-complete:disabled{opacity:.45;cursor:not-allowed}
         .cart-note{font-size:11px;margin-top:7px;text-align:center;min-height:14px}
@@ -220,6 +232,15 @@
                     <button type="button" class="pay" data-pay="paymaya" onclick="setPay('paymaya', this)"><i class="fas fa-credit-card"></i> PayMaya</button>
                 </div>
 
+                <div class="qr-pay" id="qrPay" hidden>
+                    <img id="qrPayImage" src="" alt="Payment QR code">
+                    <div class="qr-pay-info">
+                        <strong id="qrPayTitle">Scan to pay</strong>
+                        <span id="qrPayAmount">&#8369;0.00</span>
+                        <small id="qrPayHint">Confirm the transfer on the customer's phone before completing.</small>
+                    </div>
+                </div>
+
                 <div class="tender" id="tenderRow">
                     <label>Cash received
                         <input type="number" id="tendered" min="0" step="1" inputmode="numeric" placeholder="0" oninput="renderTotals()">
@@ -280,6 +301,11 @@
     var pay = 'cash';
     var busy = false;
 
+    var QR_IMAGES = {
+        gcash: @json(asset('images/gcash-qr.png')),
+        paymaya: @json(asset('images/maya-qr.png'))
+    };
+
     function peso(value) {
         return '₱' + Number(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
@@ -307,8 +333,27 @@
         pay = value;
         document.querySelectorAll('.pay').forEach(function (b) { b.classList.remove('on'); });
         button.classList.add('on');
-        // Change is only meaningful for cash.
+        // Change is only meaningful for cash; the wallets show a QR instead.
         document.getElementById('tenderRow').style.display = value === 'cash' ? '' : 'none';
+        document.getElementById('qrPay').hidden = value === 'cash';
+        if (value !== 'cash') {
+            var image = document.getElementById('qrPayImage');
+            image.src = QR_IMAGES[value] || '';
+            image.onerror = function () {
+                image.style.display = 'none';
+                document.getElementById('qrPayHint').textContent =
+                    'No ' + value.toUpperCase() + ' QR uploaded yet. Add one in Settings.';
+                document.getElementById('qrPayHint').className = 'qr-missing';
+            };
+            image.onload = function () {
+                image.style.display = '';
+                document.getElementById('qrPayHint').className = '';
+                document.getElementById('qrPayHint').textContent =
+                    'Confirm the transfer on the phone before completing.';
+            };
+            document.getElementById('qrPayTitle').textContent =
+                'Scan to pay with ' + (value === 'gcash' ? 'GCash' : 'PayMaya');
+        }
         renderTotals();
     }
 
@@ -337,7 +382,8 @@
         if (line) {
             line.qty += 1;
         } else {
-            cart.push({ key: key, id: id, name: card.dataset.name, size: size, unit: unit, qty: 1, stock: stock });
+            cart.push({ key: key, id: id, name: card.dataset.name, size: size, unit: unit, qty: 1, stock: stock,
+                regular: Number(card.dataset.regular), large: Number(card.dataset.large) });
         }
 
         note('');
@@ -364,6 +410,37 @@
         renderCart();
     }
 
+    /**
+     * Switch a line between 16oz and 22oz after it has been added. If the
+     * basket already holds that drink in the target size the two lines are
+     * merged rather than left as duplicates.
+     */
+    function changeSize(key, size) {
+        var line = cart.filter(function (l) { return l.key === key; })[0];
+        if (!line || line.size === size) return;
+
+        var unit = size === 'large' ? line.large : line.regular;
+        if (unit <= 0) {
+            note(line.name + ' is not sold in ' + (size === 'large' ? '22oz' : '16oz') + '.', true);
+            return;
+        }
+
+        var targetKey = line.id + '-' + size;
+        var existing = cart.filter(function (l) { return l.key === targetKey; })[0];
+
+        if (existing) {
+            existing.qty += line.qty;
+            cart = cart.filter(function (l) { return l.key !== key; });
+        } else {
+            line.key = targetKey;
+            line.size = size;
+            line.unit = unit;
+        }
+
+        note('');
+        renderCart();
+    }
+
     function clearCart() {
         cart = [];
         document.getElementById('tendered').value = '';
@@ -381,6 +458,13 @@
                 return '<div class="cart-line">' +
                     '<div class="cl-name"><b>' + escapeHtml(line.name) + '</b>' +
                     '<small>' + (line.size === 'large' ? '22oz' : '16oz') + ' · ' + peso(line.unit) + '</small></div>' +
+                    '<div class="cl-size">' +
+                        '<button type="button" data-size="regular" data-key="' + line.key + '"' +
+                            (line.size === 'regular' ? ' class="on"' : '') + '>16oz</button>' +
+                        '<button type="button" data-size="large" data-key="' + line.key + '"' +
+                            (line.size === 'large' ? ' class="on"' : '') +
+                            (line.large > 0 ? '' : ' disabled title="Not sold in 22oz"') + '>22oz</button>' +
+                    '</div>' +
                     '<div class="qty">' +
                         '<button type="button" data-step="-1" data-key="' + line.key + '">−</button>' +
                         '<span>' + line.qty + '</span>' +
@@ -393,6 +477,12 @@
             box.querySelectorAll('.qty button').forEach(function (button) {
                 button.addEventListener('click', function () {
                     changeQty(button.dataset.key, Number(button.dataset.step));
+                });
+            });
+
+            box.querySelectorAll('.cl-size button').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    changeSize(button.dataset.key, button.dataset.size);
                 });
             });
         }
@@ -408,6 +498,8 @@
 
         document.getElementById('tSubtotal').textContent = peso(subtotal);
         document.getElementById('tTotal').textContent = peso(total);
+        var qrAmount = document.getElementById('qrPayAmount');
+        if (qrAmount) qrAmount.textContent = peso(total);
 
         var feeRow = document.getElementById('tFeeRow');
         feeRow.hidden = serve !== 'take_out';
