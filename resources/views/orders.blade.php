@@ -135,7 +135,10 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 .branch-select{background:var(--card);border:1px solid var(--border);color:var(--fg);padding:7px 12px;border-radius:var(--radius-sm);font-size:12px;font-family:'DM Sans';cursor:pointer;outline:none;max-width:260px;transition:all var(--transition)}
 .branch-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
 .page-content{flex:1;overflow-y:auto;padding:24px}
-.page-content{
+/* Decorative texture for the customer-facing menu only. Staff share the flat
+   shell background every other admin page uses, so the framing does not change
+   when moving between Orders and the rest of the panel. */
+body.customer-mobile .page-content{
   background:
     linear-gradient(135deg,rgba(18,134,78,.035) 25%,transparent 25%) 0 0/28px 28px,
     linear-gradient(315deg,rgba(47,158,98,.03) 25%,transparent 25%) 0 0/28px 28px,
@@ -464,7 +467,7 @@ tr:last-child td{border-bottom:none}
 .customer-mobile td{border:0;padding:6px 0}
 
 /* UI polish layer */
-body{background:radial-gradient(circle at top right,rgba(22,166,95,.08),transparent 34%),linear-gradient(180deg,#fbfefc 0%,var(--bg) 100%)}
+body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transparent 34%),linear-gradient(180deg,#fbfefc 0%,var(--bg) 100%)}
 .login-card,.modal,.notification-panel,.chatbot-window{box-shadow:0 24px 70px rgba(18,53,36,.16)}
 .topbar{box-shadow:0 8px 26px rgba(18,53,36,.05)}
 .card,.stat-card,.pos-cart{box-shadow:0 12px 34px rgba(18,53,36,.08)}

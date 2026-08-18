@@ -78,9 +78,11 @@ class AdminPanelAccessTest extends TestCase
         $this->assertStringContainsString("dashboard: '<path", $script);
         $this->assertStringContainsString("orders: '<path", $script);
         $this->assertStringContainsString('data-orders-indicator', $script);
+        $this->assertStringContainsString('data-cash-pending-indicator', $script);
         $this->assertStringNotContainsString('bootstrap-icons', $stylesheet);
         $this->assertStringNotContainsString('@import', $stylesheet);
         $this->assertStringContainsString('.sidebar .nav-badge', $stylesheet);
+        $this->assertStringContainsString('.sidebar .nav-badge.cash-pending', $stylesheet);
         $this->assertStringContainsString('.sidebar .nav-item .nav-icon svg', $stylesheet);
     }
 

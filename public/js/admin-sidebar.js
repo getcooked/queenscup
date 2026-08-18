@@ -54,10 +54,12 @@
         }
     }
 
-    function activeOrderCount() {
+    function orderCounts() {
+        var counts = { active: 0, cashPending: 0 };
+
         try {
             var orders = JSON.parse(localStorage.getItem('qc_orders') || '[]');
-            if (!Array.isArray(orders)) return 0;
+            if (!Array.isArray(orders)) return counts;
 
             /*
              * Fall back to counting every branch when no branch has been picked
@@ -66,14 +68,17 @@
              */
             var branch = selectedBranch();
 
-            return orders.filter(function (order) {
-                if (!order) return false;
-                if (branch && order.branch && order.branch !== branch) return false;
-                return order.status === 'pending' || order.status === 'preparing';
-            }).length;
+            orders.forEach(function (order) {
+                if (!order) return;
+                if (branch && order.branch && order.branch !== branch) return;
+                if (order.status === 'pending' || order.status === 'preparing') counts.active++;
+                if (order.paymentStatus === 'pending') counts.cashPending++;
+            });
         } catch (error) {
-            return 0;
+            return counts;
         }
+
+        return counts;
     }
 
     function setNavIcon(link, page) {
@@ -87,11 +92,22 @@
         icon.innerHTML = iconMarkup(page);
     }
 
-    function setOrdersIndicator(link, count) {
+    function badge(link, marker, extraClass) {
+        var el = link.querySelector('[' + marker + ']');
+        if (el) return el;
+
+        el = document.createElement('span');
+        el.className = 'nav-badge ' + extraClass;
+        el.setAttribute(marker, '');
+        link.appendChild(el);
+        return el;
+    }
+
+    function setOrdersIndicator(link, counts) {
         /*
-         * The orders page keeps its own badge in step with the signed-in user
-         * (a guest only counts their own orders), so leave that text alone and
-         * just make sure it stays visible.
+         * The orders page renders and maintains both badges itself, scoped to
+         * the signed-in user (a guest only counts their own orders). Leave its
+         * numbers alone there and only keep the pending badge visible.
          */
         var managed = link.querySelector('#pendingOrdersBadge');
         if (managed) {
@@ -100,29 +116,32 @@
             return;
         }
 
-        var indicator = link.querySelector('[data-orders-indicator]');
-
-        if (!indicator) {
-            indicator = document.createElement('span');
-            indicator.className = 'nav-badge orders-indicator';
-            indicator.setAttribute('data-orders-indicator', '');
-            link.appendChild(indicator);
-        }
-
-        var label = count + ' active order' + (count === 1 ? '' : 's');
-        if (indicator.textContent !== String(count)) indicator.textContent = String(count);
+        var indicator = badge(link, 'data-orders-indicator', 'orders-indicator');
+        var label = counts.active + ' active order' + (counts.active === 1 ? '' : 's');
+        if (indicator.textContent !== String(counts.active)) indicator.textContent = String(counts.active);
         indicator.style.display = 'inline-flex';
         indicator.setAttribute('aria-label', label);
         indicator.title = label;
+
+        /*
+         * Mirror the orders page cash-pending badge so the Orders row looks the
+         * same on every page instead of growing a second badge only there.
+         */
+        var cash = badge(link, 'data-cash-pending-indicator', 'cash-pending');
+        var cashLabel = counts.cashPending + ' order' + (counts.cashPending === 1 ? '' : 's') + ' awaiting payment';
+        if (cash.textContent !== String(counts.cashPending)) cash.textContent = String(counts.cashPending);
+        cash.style.display = counts.cashPending > 0 ? 'inline-flex' : 'none';
+        cash.setAttribute('aria-label', cashLabel);
+        cash.title = cashLabel;
     }
 
     function refresh() {
-        var count = activeOrderCount();
+        var counts = orderCounts();
 
         document.querySelectorAll('.sidebar .nav-item').forEach(function (link) {
             var page = pageForLink(link);
             setNavIcon(link, page);
-            if (page === 'orders') setOrdersIndicator(link, count);
+            if (page === 'orders') setOrdersIndicator(link, counts);
         });
     }
 
