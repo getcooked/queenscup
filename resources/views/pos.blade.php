@@ -315,6 +315,13 @@
     function addToCart(card) {
         var id = Number(card.dataset.id);
         var unit = size === 'large' ? Number(card.dataset.large) : Number(card.dataset.regular);
+
+        // Drinks that only come in 16oz leave large_price at 0. The server
+        // refuses these, so stop them at the till rather than showing a free line.
+        if (unit <= 0) {
+            note(card.dataset.name + ' is not sold in ' + (size === 'large' ? '22oz' : '16oz') + '.', true);
+            return;
+        }
         var stock = Number(card.dataset.stock);
         var key = id + '-' + size;
         var line = cart.filter(function (l) { return l.key === key; })[0];
@@ -422,6 +429,116 @@
         el.className = 'cart-note' + (message ? (isBad ? ' bad' : ' good') : '');
     }
 
+
+    /* ---------------------------------------------------------------
+     * Receipt
+     *
+     * Two copies on one sheet: the customer takes theirs, the store keeps
+     * the other for the drawer. Written into a popup so the panel behind
+     * stays untouched and the browser handles paper size.
+     * --------------------------------------------------------------- */
+    var STORE_NAME = "The Queen's Cup";
+    var STORE_TAGLINE = 'Crowned with Flavors';
+
+    function receiptRows(sale) {
+        return sale.items.map(function (line) {
+            var label = line.quantity + ' x ' + line.name + ' (' + line.size_label + ')';
+            return '<tr><td class="qty">' + escapeHtml(label) + '</td>' +
+                '<td class="amt">' + peso(line.line_total) + '</td></tr>';
+        }).join('');
+    }
+
+    function receiptCopy(sale, tendered, change, cashier, stamp, copyLabel) {
+        var feeRow = Number(sale.takeout_fee) > 0
+            ? '<tr><td>Take-out cups</td><td class="amt">' + peso(sale.takeout_fee) + '</td></tr>'
+            : '';
+
+        var cashRows = '';
+        if (sale.payment_method === 'cash' && tendered > 0) {
+            cashRows = '<tr><td>Cash</td><td class="amt">' + peso(tendered) + '</td></tr>' +
+                '<tr><td>Change</td><td class="amt">' + peso(change) + '</td></tr>';
+        }
+
+        return '<div class="copy">' +
+            '<div class="head">' +
+                '<h1>' + STORE_NAME + '</h1>' +
+                '<p>' + STORE_TAGLINE + '</p>' +
+                '<p class="copy-label">' + copyLabel + '</p>' +
+            '</div>' +
+            '<div class="meta">' +
+                '<div><span>Receipt</span><b>' + escapeHtml(sale.reference) + '</b></div>' +
+                '<div><span>Date</span><b>' + stamp + '</b></div>' +
+                '<div><span>Cashier</span><b>' + escapeHtml(cashier) + '</b></div>' +
+                '<div><span>Serving</span><b>' + (sale.service_type === 'take_out' ? 'Take out' : 'Dine in') + '</b></div>' +
+            '</div>' +
+            '<table class="lines">' + receiptRows(sale) + '</table>' +
+            '<table class="totals">' +
+                '<tr><td>Subtotal</td><td class="amt">' + peso(sale.subtotal) + '</td></tr>' +
+                feeRow +
+                '<tr class="grand"><td>TOTAL</td><td class="amt">' + peso(sale.total) + '</td></tr>' +
+                '<tr><td>Paid by</td><td class="amt">' + escapeHtml((sale.payment_method || '').toUpperCase()) + '</td></tr>' +
+                cashRows +
+            '</table>' +
+            '<div class="foot"><p>Thank you, come again!</p><p>This serves as your official receipt.</p></div>' +
+        '</div>';
+    }
+
+    function printReceipt(sale, tendered, change) {
+        var cashier = 'Counter';
+        try {
+            var session = JSON.parse(localStorage.getItem('qc_session'));
+            if (session) cashier = session.fullName || session.username || 'Counter';
+        } catch (error) { /* fall back to the generic label */ }
+
+        var stamp = new Date().toLocaleString('en-PH', {
+            year: 'numeric', month: 'short', day: '2-digit',
+            hour: '2-digit', minute: '2-digit'
+        });
+
+        var win = window.open('', 'qc-receipt', 'width=380,height=680');
+        if (!win) {
+            note('Allow pop-ups to print the receipt.', true);
+            return;
+        }
+
+        var styles = 'body{font-family:"Courier New",monospace;margin:0;padding:10px;color:#000;background:#fff;font-size:12px}' +
+            '.copy{width:74mm;margin:0 auto 6mm;padding-bottom:5mm}' +
+            '.copy+.copy{border-top:1px dashed #000;padding-top:5mm}' +
+            '.head{text-align:center;margin-bottom:8px}' +
+            '.head h1{font-size:15px;margin:0 0 2px;font-family:Georgia,serif}' +
+            '.head p{margin:0;font-size:10px}' +
+            '.copy-label{margin-top:5px;font-weight:bold;letter-spacing:1px;text-transform:uppercase}' +
+            '.meta{border-top:1px dashed #000;border-bottom:1px dashed #000;padding:5px 0;margin-bottom:6px}' +
+            '.meta div{display:flex;justify-content:space-between;font-size:10px;padding:1px 0}' +
+            'table{width:100%;border-collapse:collapse;table-layout:fixed}' +'.lines .qty{word-break:break-word}' +'.amt{width:22mm}' +
+            '.lines td{padding:2px 0;font-size:11px;vertical-align:top}' +
+            '.lines .qty{padding-right:6px}' +
+            '.amt{text-align:right;white-space:nowrap}' +
+            '.totals{border-top:1px dashed #000;margin-top:5px;padding-top:4px}' +
+            '.totals td{padding:2px 0;font-size:11px}' +
+            '.grand td{font-size:13px;font-weight:bold;border-top:1px solid #000;padding-top:4px}' +
+            '.foot{text-align:center;margin-top:8px;font-size:10px}' +
+            '.foot p{margin:2px 0}' +
+            '@media print{body{padding:0}@page{margin:4mm}}';
+
+        // Built as one string and written in a single go so the popup has the
+        // whole document before print() is called.
+        var doc = '<!doctype html><html><head><meta charset="utf-8"><title>Receipt ' +
+            escapeHtml(sale.reference) + '</title><style>' + styles + '</style></head><body>' +
+            receiptCopy(sale, tendered, change, cashier, stamp, 'Customer Copy') +
+            receiptCopy(sale, tendered, change, cashier, stamp, 'Store Copy') +
+            '</body></html>';
+
+        win.document.open();
+        win.document.write(doc);
+        win.document.close();
+
+        win.onload = function () {
+            win.focus();
+            win.print();
+        };
+    }
+
     function completeSale() {
         if (busy || !cart.length) return;
 
@@ -466,12 +583,13 @@
                 var change = pay === 'cash' && tendered ? tendered - Number(sale.total) : 0;
                 clearCart();
                 note('Sale ' + sale.reference + ' recorded' + (change > 0 ? ' · change ' + peso(change) : '') + '.');
+                printReceipt(sale, tendered, change);
 
                 var counter = document.getElementById('tillCount');
                 counter.textContent = Number(counter.textContent || 0) + 1;
 
                 // Stock has moved, so reload to show what is really left.
-                setTimeout(function () { window.location.reload(); }, 1600);
+                setTimeout(function () { window.location.reload(); }, 2600);
             })
             .catch(function (error) { note(error.message, true); })
             .finally(function () {

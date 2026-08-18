@@ -95,6 +95,38 @@ class StaffReservationController extends Controller
         return response()->json($this->present($sale), 201);
     }
 
+    /**
+     * Every walk-in sale rung up at the till, newest first, for the sales
+     * report. Optional from/to bound it to a period the report is showing.
+     */
+    public function salesLog(Request $request): JsonResponse
+    {
+        $filters = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+        ]);
+
+        $sales = Reservation::with(['items', 'paidBy'])
+            ->where('source', 'pos')
+            ->when($filters['from'] ?? null, fn ($query, $from) => $query->whereDate('completed_at', '>=', $from))
+            ->when($filters['to'] ?? null, fn ($query, $to) => $query->whereDate('completed_at', '<=', $to))
+            ->orderByDesc('completed_at')
+            ->limit(500)
+            ->get();
+
+        return response()->json([
+            'data' => $sales->map(fn (Reservation $sale) => array_merge($this->present($sale), [
+                'cashier' => $sale->paidBy?->name ?? 'Counter',
+                'completed_at' => optional($sale->completed_at)->toIso8601String(),
+            ]))->all(),
+            'totals' => [
+                'count' => $sales->count(),
+                'revenue' => round((float) $sales->sum('total'), 2),
+                'cups' => (int) $sales->sum(fn (Reservation $sale) => $sale->items->sum('quantity')),
+            ],
+        ]);
+    }
+
     private function present(Reservation $reservation): array
     {
         return [

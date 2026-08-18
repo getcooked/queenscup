@@ -367,4 +367,6 @@ Route::middleware('staff')->group(function () {
     // Walk-in sales rung up at the till. Stored as completed, paid orders so
     // there is one record of every sale rather than two parallel tables.
     Route::post('/staff/pos/sales', [StaffReservationController::class, 'storeSale'])->name('staff.pos.sales');
+    // Till log for the sales report.
+    Route::get('/staff/pos/sales', [StaffReservationController::class, 'salesLog'])->name('staff.pos.log');
 });

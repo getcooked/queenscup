@@ -97,6 +97,42 @@
                 </table>
             </div>
         </section>
+
+        <section class="card" id="posLogCard">
+            <div class="card-header">
+                <div>
+                    <h3>Point of Sale Log</h3>
+                    <p style="color:var(--muted);font-size:12px;margin-top:4px">Every walk-in sale rung up at the till.</p>
+                </div>
+                <div class="filters">
+                    <input class="field" id="posLogFrom" type="date" onchange="loadPosLog()">
+                    <input class="field" id="posLogTo" type="date" onchange="loadPosLog()">
+                    <button class="btn secondary" onclick="exportPosLog()"><i class="fas fa-file-csv"></i> Export</button>
+                </div>
+            </div>
+            <div class="stats" style="margin:0;padding:16px 18px;border-bottom:1px solid var(--line);grid-template-columns:repeat(3,minmax(0,1fr))">
+                <div class="stat"><strong id="posLogCount">0</strong><span>Sales</span></div>
+                <div class="stat"><strong id="posLogRevenue">&#8369;0.00</strong><span>Till Revenue</span></div>
+                <div class="stat"><strong id="posLogCups">0</strong><span>Cups Sold</span></div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Receipt</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Cashier</th>
+                            <th>Items</th>
+                            <th>Serving</th>
+                            <th>Payment</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="posLogRows"><tr><td colspan="8" class="empty">Loading till sales…</td></tr></tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </div>
 <script>
@@ -427,8 +463,115 @@
         });
     }
 
+
+    /* ---------------------------------------------------------------
+     * Point of Sale log
+     *
+     * Walk-in sales live on the server, not in local storage like the rest
+     * of this page, so they are fetched rather than read from qc_orders.
+     * --------------------------------------------------------------- */
+    var posLog = [];
+
+    function posMoney(value) {
+        return '₱' + Number(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function posEscape(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    function loadPosLog() {
+        var from = document.getElementById('posLogFrom').value;
+        var to = document.getElementById('posLogTo').value;
+        var query = [];
+        if (from) query.push('from=' + encodeURIComponent(from));
+        if (to) query.push('to=' + encodeURIComponent(to));
+
+        var url = @json(url('/staff/pos/sales')) + (query.length ? '?' + query.join('&') : '');
+
+        fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+            .then(function (response) {
+                if (!response.ok) throw new Error('Could not load the till log.');
+                return response.json();
+            })
+            .then(function (payload) {
+                posLog = payload.data || [];
+                document.getElementById('posLogCount').textContent = payload.totals.count;
+                document.getElementById('posLogRevenue').textContent = posMoney(payload.totals.revenue);
+                document.getElementById('posLogCups').textContent = payload.totals.cups;
+                renderPosLog();
+            })
+            .catch(function (error) {
+                document.getElementById('posLogRows').innerHTML =
+                    '<tr><td colspan="8" class="empty">' + posEscape(error.message) + '</td></tr>';
+            });
+    }
+
+    function renderPosLog() {
+        var body = document.getElementById('posLogRows');
+
+        if (!posLog.length) {
+            body.innerHTML = '<tr><td colspan="8" class="empty">No till sales in this period.</td></tr>';
+            return;
+        }
+
+        body.innerHTML = posLog.map(function (sale) {
+            var when = sale.completed_at ? new Date(sale.completed_at) : null;
+            var items = (sale.items || []).map(function (line) {
+                return line.quantity + '× ' + line.name + ' (' + line.size_label + ')';
+            }).join(', ');
+
+            return '<tr>' +
+                '<td><strong>' + posEscape(sale.reference) + '</strong></td>' +
+                '<td>' + (when ? when.toLocaleDateString() : '-') + '</td>' +
+                '<td>' + (when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-') + '</td>' +
+                '<td>' + posEscape(sale.cashier) + '</td>' +
+                '<td class="items">' + posEscape(items) + '</td>' +
+                '<td>' + (sale.service_type === 'take_out' ? 'Take out' : 'Dine in') + '</td>' +
+                '<td><span class="badge paid">' + posEscape((sale.payment_method || '').toUpperCase()) + '</span></td>' +
+                '<td class="amount">' + posMoney(sale.total) + '</td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    function exportPosLog() {
+        if (!posLog.length) return;
+
+        var headers = ['Receipt', 'Completed', 'Cashier', 'Serving', 'Payment', 'Items', 'Subtotal', 'TakeoutFee', 'Total'];
+        var rows = posLog.map(function (sale) {
+            var items = (sale.items || []).map(function (l) {
+                return l.quantity + 'x ' + l.name + ' (' + l.size_label + ')';
+            }).join('; ');
+
+            return [
+                sale.reference,
+                sale.completed_at || '',
+                sale.cashier,
+                sale.service_type === 'take_out' ? 'Take out' : 'Dine in',
+                (sale.payment_method || '').toUpperCase(),
+                items,
+                sale.subtotal,
+                sale.takeout_fee,
+                sale.total
+            ].map(function (cell) {
+                // Quote every field so commas inside item lists cannot split a column.
+                return '"' + String(cell).replace(/"/g, '""') + '"';
+            }).join(',');
+        });
+
+        var blob = new Blob([[headers.join(',')].concat(rows).join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'queens-cup-till-log.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
     setupSidebar();
     renderReports();
+    loadPosLog();
     window.addEventListener('resize', function() {
         drawYearlySalesChart(reportRows);
     });

@@ -59,6 +59,16 @@ class ReservationService
                 ? $product->large_price
                 : $product->regular_price);
 
+            // large_price defaults to 0 for drinks that only come in one size.
+            // Without this the 22oz would be handed over for nothing.
+            if ($unitPrice <= 0) {
+                throw ValidationException::withMessages([
+                    "items.{$index}.size" => $size === ReservationItem::SIZE_LARGE
+                        ? "{$product->name} is not sold in 22oz."
+                        : "{$product->name} has no price set.",
+                ]);
+            }
+
             $lineTotal = round($unitPrice * $quantity, 2);
 
             $items[] = [
