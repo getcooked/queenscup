@@ -30,8 +30,10 @@ android {
         applicationId = "ph.queenscup.customer"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        // Bump on every published build: Android only treats a new APK as an
+        // update when versionCode goes up.
+        versionCode = 2
+        versionName = "1.1"
     }
 
     // Release signing. The keystore and its passwords stay out of git; set

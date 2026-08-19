@@ -153,4 +153,22 @@ class CustomerPortalTest extends TestCase
             $this->get('/staff-login')->assertOk()->getContent()
         );
     }
+    public function test_the_landing_page_serves_the_current_apk()
+    {
+        $path = public_path('downloads/queens-cup.apk');
+
+        $this->assertFileExists($path, 'The published APK is missing.');
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        // The button is live, not the "coming soon" fallback.
+        $this->assertStringContainsString('downloads/queens-cup.apk', $html);
+        $this->assertStringNotContainsString('Coming soon', $html);
+
+        // The size on the page is read from the file, so it cannot go stale.
+        $this->assertStringContainsString(
+            (string) round(filesize($path) / 1048576, 1).' MB',
+            $html
+        );
+    }
 }
