@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -32,8 +34,30 @@ android {
         versionName = "1.0"
     }
 
+    // Release signing. The keystore and its passwords stay out of git; set
+    // them in gradle.properties (or pass -P) on whichever machine cuts a
+    // release. Without them the release build simply stays unsigned.
+    signingConfigs {
+        create("release") {
+            // Passwords come from the uncommitted keystore.properties.
+            val secrets = Properties()
+            val secretsFile = rootProject.file("keystore.properties")
+            if (secretsFile.exists()) secretsFile.inputStream().use { secrets.load(it) }
+
+            val storeFileName = (findProperty("QC_KEYSTORE_FILE") as String?) ?: "queenscup-release.jks"
+            val store = rootProject.file(storeFileName)
+            if (store.exists()) {
+                storeFile = store
+                storePassword = secrets.getProperty("QC_KEYSTORE_PASSWORD") ?: ""
+                keyAlias = (findProperty("QC_KEY_ALIAS") as String?) ?: "queenscup"
+                keyPassword = secrets.getProperty("QC_KEY_PASSWORD") ?: ""
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "API_BASE_URL", "\"$releaseApiUrl\"")
@@ -68,6 +92,16 @@ android {
 }
 
 dependencies {
+    // firebase-messaging drags in androidx.fragment 1.0.0 through
+    // play-services-base. That predates the ActivityResult API MainActivity
+    // uses to ask for notification permission, and lint fails the release
+    // build over it. Constrain the version rather than suppressing the check.
+    constraints {
+        implementation("androidx.fragment:fragment:1.8.2") {
+            because("ActivityResult needs Fragment 1.3.0 or newer")
+        }
+    }
+
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
 
