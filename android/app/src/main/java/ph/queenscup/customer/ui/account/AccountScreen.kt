@@ -8,7 +8,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import ph.queenscup.customer.data.local.ThemeMode
+import ph.queenscup.customer.ui.theme.ThemeViewModel
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
@@ -30,13 +42,29 @@ import ph.queenscup.customer.ui.peso
  * phone, which is what lets reservations and chat follow the customer.
  */
 @Composable
-fun AccountScreen(viewModel: BasketViewModel, authViewModel: AuthViewModel) {
+fun AccountScreen(
+    viewModel: BasketViewModel,
+    authViewModel: AuthViewModel,
+    themeViewModel: ThemeViewModel,
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val auth by authViewModel.state.collectAsStateWithLifecycle()
 
     val account = auth.signedIn
     if (account == null) {
-        AuthScreen(viewModel = authViewModel)
+        // Appearance is a setting for this phone, not for an account, so it
+        // stays reachable while signed out.
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+        ) {
+            AuthScreen(viewModel = authViewModel)
+            Column(Modifier.padding(horizontal = 20.dp)) {
+                AppearanceCard(themeViewModel)
+                Spacer(Modifier.height(20.dp))
+            }
+        }
         return
     }
 
@@ -47,6 +75,10 @@ fun AccountScreen(viewModel: BasketViewModel, authViewModel: AuthViewModel) {
             .padding(16.dp),
     ) {
         Text("Account", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(16.dp))
+
+        AppearanceCard(themeViewModel)
+
         Spacer(Modifier.height(16.dp))
 
         Card {
@@ -115,5 +147,60 @@ private fun Step(number: String, text: String) {
             modifier = Modifier.padding(end = 8.dp),
         )
         Text(text, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+/**
+ * Light, dark, or follow the phone.
+ *
+ * Three explicit choices rather than an on/off switch, because a plain
+ * switch cannot express "whatever the phone is doing", which is what most
+ * people want and what the app starts on.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppearanceCard(themeViewModel: ThemeViewModel) {
+    val mode by themeViewModel.mode.collectAsStateWithLifecycle()
+
+    Card {
+        Column(Modifier.padding(14.dp)) {
+            Text("Appearance", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Choose how the app looks.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(12.dp))
+
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                ThemeMode.entries.forEachIndexed { index, option ->
+                    SegmentedButton(
+                        selected = mode == option,
+                        onClick = { themeViewModel.choose(option) },
+                        shape = SegmentedButtonDefaults.itemShape(index, ThemeMode.entries.size),
+                        icon = {
+                            Icon(
+                                imageVector = when (option) {
+                                    ThemeMode.SYSTEM -> Icons.Outlined.PhoneAndroid
+                                    ThemeMode.LIGHT -> Icons.Outlined.LightMode
+                                    ThemeMode.DARK -> Icons.Outlined.DarkMode
+                                },
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        },
+                    ) {
+                        Text(
+                            when (option) {
+                                ThemeMode.SYSTEM -> "System"
+                                ThemeMode.LIGHT -> "Light"
+                                ThemeMode.DARK -> "Dark"
+                            }
+                        )
+                    }
+                }
+            }
+        }
     }
 }

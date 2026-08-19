@@ -41,7 +41,10 @@ import ph.queenscup.customer.ui.chat.ChatScreen
 import ph.queenscup.customer.ui.chat.ChatViewModel
 import ph.queenscup.customer.ui.cart.BasketScreen
 import ph.queenscup.customer.ui.menu.MenuScreen
+import androidx.compose.foundation.isSystemInDarkTheme
+import ph.queenscup.customer.data.local.ThemeMode
 import ph.queenscup.customer.ui.theme.QueensCupTheme
+import ph.queenscup.customer.ui.theme.ThemeViewModel
 import ph.queenscup.customer.ui.track.TrackScreen
 
 class MainActivity : ComponentActivity() {
@@ -61,8 +64,18 @@ class MainActivity : ComponentActivity() {
         val deepLinkReference = intent?.getStringExtra(EXTRA_REFERENCE)
 
         setContent {
-            QueensCupTheme {
-                QueensCupApp(deepLinkReference)
+            val themeViewModel: ThemeViewModel = viewModel()
+            val mode by themeViewModel.mode.collectAsStateWithLifecycle()
+
+            // SYSTEM defers to the phone; the other two override it.
+            val dark = when (mode) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
+
+            QueensCupTheme(darkTheme = dark) {
+                QueensCupApp(deepLinkReference, themeViewModel)
             }
         }
     }
@@ -85,7 +98,7 @@ private enum class Tab(
 }
 
 @Composable
-private fun QueensCupApp(deepLinkReference: String?) {
+private fun QueensCupApp(deepLinkReference: String?, themeViewModel: ThemeViewModel) {
     val navController = rememberNavController()
     val basketViewModel: BasketViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
@@ -158,7 +171,11 @@ private fun QueensCupApp(deepLinkReference: String?) {
             composable(Tab.ACCOUNT.route) {
                 // Shares the activity-scoped view models so the signed-in
                 // name and the cup fee match what Reserve is showing.
-                AccountScreen(viewModel = basketViewModel, authViewModel = authViewModel)
+                AccountScreen(
+                    viewModel = basketViewModel,
+                    authViewModel = authViewModel,
+                    themeViewModel = themeViewModel,
+                )
             }
         }
     }
