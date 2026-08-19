@@ -53,4 +53,25 @@ class CustomerPortalTest extends TestCase
             ->assertSee('customer\/register', false)
             ->assertSee('customer\/verify', false);
     }
+    public function test_the_customer_sidebar_is_not_hidden_by_script()
+    {
+        $html = $this->get('/orders')->assertOk()->getContent();
+
+        // The stylesheet swaps the sidebar for the bottom bar below 769px.
+        // Forcing either inline defeated that and left desktop customers with
+        // no side navigation at all.
+        $this->assertStringNotContainsString(
+            "appSidebar.style.display=isCustomerOrGuest()?'none':''",
+            $html
+        );
+        $this->assertStringNotContainsString(
+            "mobileNav.style.display=isCustomerOrGuest()?'grid':'none'",
+            $html
+        );
+        $this->assertStringContainsString("appSidebar.style.display=''", $html);
+
+        // Both breakpoint rules must still be in place.
+        $this->assertStringContainsString('@media(max-width:768px){.sidebar{display:none}', $html);
+        $this->assertStringContainsString('.customer-mobile .customer-mobile-nav{display:none!important}', $html);
+    }
 }

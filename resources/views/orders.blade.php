@@ -1772,11 +1772,11 @@ function enterApp(){
   document.getElementById('chatbotContainer').style.display=isCustomerOrGuest()?'block':'none';
   var chatBtn=document.getElementById('customerChatBtn');if(chatBtn)chatBtn.style.display=isCustomerOrGuest()?'flex':'none';
   var mobileNav=document.getElementById('customerMobileNav');
-  if(mobileNav)mobileNav.style.display=isCustomerOrGuest()?'grid':'none';
+  if(mobileNav)mobileNav.style.display='';
   updateInstallButton();
   updateCustomerCheckoutBar();
   var appSidebar=document.querySelector('#appLayout .sidebar');
-  if(appSidebar)appSidebar.style.display=isCustomerOrGuest()?'none':'';
+  if(appSidebar)appSidebar.style.display='';
   var ini=currentUser.fullName.split(' ').map(function(w){return w[0];}).join('').toUpperCase().substring(0,2);
   var sidebarAvatar=document.getElementById('sidebarAvatar');
   var sidebarName=document.getElementById('sidebarName');
