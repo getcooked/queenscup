@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Models\Inventory;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PointOfSaleController;
@@ -138,6 +139,14 @@ Route::post('/customer/register', [CustomerAccountController::class, 'register']
 Route::post('/customer/verify', [CustomerAccountController::class, 'verify'])->name('customer.verify');
 Route::post('/customer/resend', [CustomerAccountController::class, 'resend'])->name('customer.resend');
 Route::post('/customer/login', [CustomerAccountController::class, 'login'])->name('customer.login');
+/*
+| The customer assistant. Open to anyone so it works on the landing page,
+| but only a signed-in customer gets a stored conversation.
+*/
+Route::get('/chat', [ChatController::class, 'history'])->name('chat.history');
+Route::post('/chat', [ChatController::class, 'send'])->name('chat.send');
+Route::delete('/chat', [ChatController::class, 'clear'])->name('chat.clear');
+
 Route::post('/customer/logout', [CustomerAccountController::class, 'logout'])->name('customer.logout');
 
 Route::get('/staff-login', function () {

@@ -2552,40 +2552,106 @@ function changePassword(){
 
 /* ========== CHATBOT ========== */
 var chatOpen=false;
+/* ========== ASSISTANT ==========
+ *
+ * Replies come from the server, which knows the live menu and this
+ * customer's own reservations. A signed-in customer's conversation is
+ * stored against their account, so it is waiting for them on any device.
+ * The landing page runs the same assistant through public/js/queens-chat.js.
+ */
+var chatLoaded = false;
+var chatBusy = false;
+
 function toggleChatbot(){
-  chatOpen=!chatOpen;document.getElementById('chatWindow').classList.toggle('open',chatOpen);
-  if(chatOpen&&document.getElementById('chatMessages').children.length===0){addBotMessage("Welcome to The Queen's Cup Madridejos! \uD83D\uDC51 How can I help you today?",['View Menu','Branch Hours','Order Status','Best Sellers']);}
+  chatOpen=!chatOpen;
+  document.getElementById('chatWindow').classList.toggle('open',chatOpen);
+  if(chatOpen&&!chatLoaded)loadChatHistory();
 }
-function addBotMessage(t,qr){qr=Array.isArray(qr)?qr:[];var c=document.getElementById('chatMessages');var m=document.createElement('div');m.className='chat-msg bot';var q='';if(qr.length){q='<div class="quick-replies">'+qr.map(function(r){return '<button class="quick-reply" onclick="handleQuickReply(\''+r.replace(/'/g,"\\'")+'\')">'+r+'</button>';}).join('')+'</div>';}m.innerHTML=t+q;c.appendChild(m);c.scrollTop=c.scrollHeight;}
-function addUserMessage(t){var c=document.getElementById('chatMessages');var m=document.createElement('div');m.className='chat-msg user';m.textContent=t;c.appendChild(m);c.scrollTop=c.scrollHeight;}
-function sendChat(){var i=document.getElementById('chatInput');var t=i.value.trim();if(!t)return;addUserMessage(t);i.value='';setTimeout(function(){processChatResponse(t);},600);}
-function handleQuickReply(t){addUserMessage(t);setTimeout(function(){processChatResponse(t);},600);}
-function processChatResponse(input){
-  var l=input.toLowerCase();var info=getBranchInfo();var visitorName=(currentUser&&currentUser.fullName)?currentUser.fullName:'there';
-  if(l.indexOf('menu')!==-1||l.indexOf('view menu')!==-1||l.indexOf('items')!==-1){var cats=['Milktea Series','Fruit Teas','Milky Fruit Jams','Lemonade','Coffee & Non-Coffee','Fruit Milk Shake','Sticky Milk Drinks'];addBotMessage('We have 7 categories with '+products.length+' drinks \uD83E\uDDCB:<br><br>'+cats.map(function(c){var cnt=products.filter(function(p){return p.category===c;}).length;return '<strong>'+c+'</strong> ('+cnt+')';}).join('<br>'),['Milktea','Fruit Teas','Lemonade','Coffee','Best Sellers']);}
-  else if(l.indexOf('milktea')!==-1||l.indexOf('milk tea')!==-1){var mt=products.filter(function(p){return p.category==='Milktea Series';});addBotMessage('<strong>Milktea Series:</strong><br>'+mt.map(function(p){var pr=p.prices||{R:0,L:0};return p.icon+' <strong>'+p.name+'</strong> \u2014 '+productPriceText(pr)+(p.bestSeller?' \uD83D\uDC51':'');}).join('<br>'),['Fruit Teas','Lemonade','Order Now']);}
-  else if(l.indexOf('fruit tea')!==-1){var ft=products.filter(function(p){return p.category==='Fruit Teas';});addBotMessage('<strong>Fruit Teas:</strong><br>'+ft.map(function(p){var pr=p.prices||{R:0,L:0};return p.icon+' <strong>'+p.name+'</strong> \u2014 '+productPriceText(pr);}).join('<br>'),['Milktea','Milky Fruit Jams','Order Now']);}
-  else if(l.indexOf('milky fruit')!==-1||l.indexOf('jam')!==-1){var mf=products.filter(function(p){return p.category==='Milky Fruit Jams';});addBotMessage('<strong>Milky Fruit Jams:</strong><br>'+mf.map(function(p){var pr=p.prices||{R:0,L:0};return p.icon+' <strong>'+p.name+'</strong> \u2014 '+productPriceText(pr);}).join('<br>'),['Fruit Teas','Milktea']);}
-  else if(l.indexOf('lemonade')!==-1||l.indexOf('lemon')!==-1||l.indexOf('calamansi')!==-1){var lm=products.filter(function(p){return p.category==='Lemonade';});var subs={};lm.forEach(function(p){var sc=p.subCat||'Lemonade';if(!subs[sc])subs[sc]=[];subs[sc].push(p);});var msg='<strong>Lemonade (100% Pure Lemon Extract):</strong><br>';Object.keys(subs).forEach(function(sc){msg+='<br><em>'+sc+':</em><br>'+subs[sc].map(function(p){var pr=p.prices||{R:0,L:0};return p.icon+' <strong>'+p.name+'</strong> \u2014 '+productPriceText(pr);}).join('<br>');});addBotMessage(msg,['Milktea','Coffee','Order Now']);}
-  else if(l.indexOf('coffee')!==-1||l.indexOf('latte')!==-1||l.indexOf('mocha')!==-1){var cf=products.filter(function(p){return p.category==='Coffee & Non-Coffee';});addBotMessage('<strong>Coffee & Non-Coffee:</strong><br>'+cf.map(function(p){var pr=p.prices||{R:0,L:0};return p.icon+' <strong>'+p.name+'</strong> \u2014 '+productPriceText(pr)+(p.bestSeller?' \uD83D\uDC51':'');}).join('<br>'),['Lemonade','Sticky Milk','Order Now']);}
-  else if(l.indexOf('shake')!==-1||l.indexOf('milk shake')!==-1){var sh=products.filter(function(p){return p.category==='Fruit Milk Shake';});addBotMessage('<strong>Fruit Milk Shake:</strong><br>'+sh.map(function(p){var pr=p.prices||{R:0,L:0};return p.icon+' <strong>'+p.name+'</strong> \u2014 '+productPriceText(pr);}).join('<br>'),['Sticky Milk','Coffee']);}
-  else if(l.indexOf('sticky')!==-1){var st=products.filter(function(p){return p.category==='Sticky Milk Drinks';});addBotMessage('<strong>Sticky Milk Drinks:</strong><br>'+st.map(function(p){var pr=p.prices||{R:0,L:0};return p.icon+' <strong>'+p.name+'</strong> \u2014 '+productPriceText(pr);}).join('<br>'),['Fruit Milk Shake','Coffee','Order Now']);}
-  else if(l.indexOf('best')!==-1||l.indexOf('popular')!==-1||l.indexOf('top')!==-1||l.indexOf('seller')!==-1){var t5=products.slice().sort(function(a,b){return getBranchSold(b)-getBranchSold(a);}).slice(0,5);addBotMessage("Top 5 bestsellers at "+info.name+":<br>"+t5.map(function(p,i){return (i+1)+'. '+p.icon+' <strong>'+p.name+'</strong> \u2014 '+getBranchSold(p)+' sold'+(p.bestSeller?' \uD83D\uDC51':'');}).join('<br>'),['Order Now']);}
-  else if(l.indexOf('hours')!==-1||l.indexOf('open')!==-1){addBotMessage("The Queen's Cup hours:<br><strong>Mon-Sat:</strong> 8AM-9PM<br><strong>Sunday:</strong> 9AM-8PM<br><br>Currently at <strong>"+info.name+'</strong>',['Directions','Branches']);}
-  else if(l.indexOf('branch')!==-1||l.indexOf('location')!==-1||l.indexOf('where')!==-1){addBotMessage("We have 2 branches in Madridejos, Cebu:<br><br>1. <strong>Kota Park</strong> \u2014 Beside the famous boardwalk<br>2. <strong>MCC</strong> \u2014 Inside Madridejos Community College<br><br>Currently viewing: <strong>"+info.name+'</strong>',['Directions','Switch Branch']);}
-  else if(l.indexOf('switch branch')!==-1||l.indexOf('change branch')!==-1){addBotMessage("You can switch branches using the dropdown in the top bar. Currently at <strong>"+info.name+'</strong>.',['Branch Hours','View Menu']);}
-  else if(l.indexOf('direction')!==-1||l.indexOf('how to get')!==-1){addBotMessage("<strong>"+info.name+"</strong><br>"+info.address+'<br><br>Landmark: '+info.landmark,['Branch Hours']);}
-  else if(l.indexOf('order status')!==-1||l.indexOf('my order')!==-1){if(isCustomerOrGuest()){var act=orders.filter(function(o){return o.customer===currentUser.fullName&&o.branch===getBranch()&&o.status!=='completed'&&o.status!=='cancelled';});if(act.length){addBotMessage('Your active order(s) at '+info.name+':<br>'+act.map(function(o){return '<strong>#'+o.id+'</strong> \u2014 '+o.status.charAt(0).toUpperCase()+o.status.slice(1)+(o.paymentStatus==='pending'?' (Cash Pending)':'');}).join('<br>'),['My Orders']);}else{addBotMessage("No active orders at this branch!",['View Menu']);}}else{var act2=orders.filter(function(o){return o.branch===getBranch()&&o.status!=='completed'&&o.status!=='cancelled';});var cpCount=orders.filter(function(o){return o.branch===getBranch()&&o.payment==='Cash'&&o.paymentStatus==='pending';}).length;addBotMessage('Active orders at '+info.name+': '+act2.length+' pending/preparing/serving'+(cpCount>0?'<br><strong>'+cpCount+' cash payment(s) pending!</strong>':''),['Orders']);}}
-  else if(l.indexOf('my orders')!==-1){navigateTo('orders');addBotMessage("Opened your orders!",['View Menu']);}
-  else if(l.indexOf('order now')!==-1){navigateTo('pos');addBotMessage("Menu opened \u2014 pick your drinks! \uD83E\uDDCB",['View Menu']);}
-  else if(l.indexOf('price')!==-1||l.indexOf('how much')!==-1){addBotMessage("Pricing (Regular 16oz / Large 22oz):<br><strong>Milktea:</strong> \u20B165-79 / \u20B175-89<br><strong>Fruit Teas:</strong> \u20B185 / \u20B195<br><strong>Milky Fruit Jams:</strong> \u20B159 / \u20B169<br><strong>Lemonade:</strong> \u20B139-59 / \u20B159-79<br><strong>Coffee:</strong> \u20B165-85 / \u20B175-95<br><strong>Fruit Shake/Sticky:</strong> \u20B179 / \u20B189<br><br><em>Payments accepted: Cash, GCash QR, and Maya QR.</em>",['View Menu']);}
-  else if(l.indexOf('pay')!==-1||l.indexOf('cash')!==-1||l.indexOf('gcash')!==-1||l.indexOf('maya')!==-1||l.indexOf('payment')!==-1){addBotMessage("We accept <strong>Cash, GCash QR, and Maya QR</strong>. QR payments are confirmed by the cashier after the transfer succeeds.",['View Menu','Order Status']);}
-  else if(l.indexOf('kota')!==-1){addBotMessage("<strong>Kota Park Branch</strong><br>Kota Park, Madridejos, Cebu<br>Landmark: Beside the famous Kota Park boardwalk<br><br>Perfect spot after a scenic walk!",['Branch Hours','Switch Branch']);}
-  else if(l.indexOf('mcc')!==-1||l.indexOf('college')!==-1||l.indexOf('community')!==-1){addBotMessage("<strong>MCC Branch</strong><br>Madridejos Community College, Madridejos, Cebu<br>Landmark: Inside MCC main building<br><br>Serving students and faculty!",['Branch Hours','Switch Branch']);}
-  else if(l.indexOf('hello')!==-1||l.indexOf('hi')!==-1||l.indexOf('hey')!==-1){addBotMessage("Hello, "+visitorName+"! Welcome to Queen's Cup Madridejos! \uD83D\uDC51",['View Menu','Best Sellers','Branches']);}
-  else if(l.indexOf('thank')!==-1){addBotMessage("You're welcome! Enjoy your drinks! \uD83E\uDDCB",['View Menu']);}
-  else{addBotMessage("I can help with:",['View Menu','Best Sellers','Branch Hours','Branches','Pricing','Payment','Order Status']);}
+
+function loadChatHistory(){
+  chatLoaded=true;
+  fetch(@json(url('/chat')),{headers:{Accept:'application/json'},credentials:'same-origin'})
+    .then(function(r){return r.ok?r.json():{data:[]};})
+    .then(function(payload){
+      var messages=payload.data||[];
+      messages.forEach(function(m){
+        if(m.author==='customer')addUserMessage(m.body);
+        else addBotMessage(m.body,m.quick_replies);
+      });
+      if(!messages.length){
+        var who=(currentUser&&currentUser.fullName)?currentUser.fullName.split(' ')[0]:'there';
+        addBotMessage('Hello, '+escapeHtml(who)+"! \uD83D\uDC51 How can I help you today?",
+          ['See the menu','How do I reserve?','My reservations','Opening hours']);
+      }
+    })
+    .catch(function(){
+      addBotMessage('I could not load our chat just now. Please try again in a moment.',[]);
+    });
 }
+
+function addBotMessage(t,qr){
+  qr=Array.isArray(qr)?qr:[];
+  var c=document.getElementById('chatMessages');
+  var m=document.createElement('div');
+  m.className='chat-msg bot';
+  var q='';
+  if(qr.length){
+    q='<div class="quick-replies">'+qr.map(function(r){
+      return '<button class="quick-reply" onclick="handleQuickReply(\''+String(r).replace(/'/g,"\\'")+'\')">'+escapeHtml(r)+'</button>';
+    }).join('')+'</div>';
+  }
+  // Bot copy is composed server side and may carry simple markup.
+  m.innerHTML=t+q;
+  c.appendChild(m);c.scrollTop=c.scrollHeight;
+}
+
+function addUserMessage(t){
+  var c=document.getElementById('chatMessages');
+  var m=document.createElement('div');
+  m.className='chat-msg user';
+  m.textContent=t;
+  c.appendChild(m);c.scrollTop=c.scrollHeight;
+}
+
+function sendChat(){
+  var i=document.getElementById('chatInput');
+  var t=i.value.trim();
+  if(!t)return;
+  i.value='';
+  askAssistant(t);
+}
+
+function handleQuickReply(t){askAssistant(t);}
+
+function askAssistant(text){
+  if(chatBusy)return;
+  chatBusy=true;
+  addUserMessage(text);
+
+  var c=document.getElementById('chatMessages');
+  var typing=document.createElement('div');
+  typing.className='chat-msg bot';
+  typing.textContent='typing\u2026';
+  c.appendChild(typing);c.scrollTop=c.scrollHeight;
+
+  fetch(@json(url('/chat')),{
+    method:'POST',
+    credentials:'same-origin',
+    headers:{'Content-Type':'application/json',Accept:'application/json','X-CSRF-TOKEN':csrfToken()},
+    body:JSON.stringify({message:text})
+  })
+    .then(function(r){return r.json();})
+    .then(function(payload){
+      typing.remove();
+      addBotMessage(payload.body||'Sorry, I did not catch that.',payload.quick_replies||[]);
+    })
+    .catch(function(){
+      typing.remove();
+      addBotMessage('I could not reach the shop just now. Please try again shortly.',[]);
+    })
+    .finally(function(){chatBusy=false;});
+}
+
 
 /* ========== INIT ========== */
 function init(){

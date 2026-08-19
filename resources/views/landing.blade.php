@@ -10,6 +10,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Queen's Cup — Milktea in Madridejos, Cebu</title>
     <meta name="description" content="Reserve your milktea ahead of time at The Queen's Cup, Madridejos, Cebu. Browse the menu, reserve for dine in or take out, and pick it up when it is ready.">
@@ -450,5 +451,13 @@
         });
     });
 </script>
+
+<!-- The assistant. Open to visitors, but only a signed-in customer gets a
+     stored conversation, so it carries a CSRF token to post with. -->
+<script src="{{ asset('js/queens-chat.js') }}"
+        data-queens-chat
+        data-base="{{ url('/') }}"
+        data-csrf="{{ csrf_token() }}"
+        data-logo="{{ asset('icons/queens-cup-logo.png') }}"></script>
 </body>
 </html>
