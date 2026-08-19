@@ -235,3 +235,88 @@ body:not(.customer-mobile) .app-layout .topbar-title {
         display: none;
     }
 }
+
+/* ---------------------------------------------------------------
+ * Sign-out confirmation
+ *
+ * Injected by js/admin-sidebar.js so every panel page gets the same
+ * prompt without each view repeating the markup.
+ * --------------------------------------------------------------- */
+.qc-confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(9, 26, 17, .5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 9000;
+}
+
+.qc-confirm-backdrop.open {
+    display: flex;
+}
+
+.qc-confirm {
+    width: min(360px, 100%);
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 24px 70px rgba(18, 53, 36, .22);
+    font-family: "DM Sans", sans-serif;
+    text-align: center;
+}
+
+.qc-confirm-icon {
+    width: 46px;
+    height: 46px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(229, 49, 112, .12);
+    color: #e53170;
+    font-size: 18px;
+}
+
+.qc-confirm h3 {
+    font-family: "Playfair Display", serif;
+    font-size: 19px;
+    margin-bottom: 6px;
+    color: #123524;
+}
+
+.qc-confirm p {
+    font-size: 12.5px;
+    color: #5f7f6b;
+    margin-bottom: 18px;
+    line-height: 1.5;
+}
+
+.qc-confirm-actions {
+    display: flex;
+    gap: 9px;
+}
+
+.qc-confirm-actions button {
+    flex: 1;
+    height: 40px;
+    border-radius: 10px;
+    font-family: "DM Sans", sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid #d8ebdf;
+    background: #fff;
+    color: #123524;
+}
+
+.qc-confirm-actions button.qc-confirm-go {
+    border: 0;
+    background: linear-gradient(135deg, #c22a5e, #e53170);
+    color: #fff;
+}
+
+.qc-confirm-actions button:hover {
+    filter: brightness(1.04);
+}

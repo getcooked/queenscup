@@ -147,8 +147,73 @@
         });
     }
 
+
+    /*
+     * Sign-out confirmation.
+     *
+     * Each panel page defines its own handleLogout(). Rather than repeat a
+     * prompt in all of them, wrap whatever the page defined once this script
+     * runs, so a stray click on the sign-out button cannot end the shift.
+     */
+    function buildConfirm() {
+        var backdrop = document.createElement('div');
+        backdrop.className = 'qc-confirm-backdrop';
+        backdrop.setAttribute('role', 'dialog');
+        backdrop.setAttribute('aria-modal', 'true');
+        backdrop.innerHTML =
+            '<div class="qc-confirm">' +
+                '<div class="qc-confirm-icon"><i class="fas fa-right-from-bracket"></i></div>' +
+                '<h3>Sign out?</h3>' +
+                '<p>You will need to log in again to get back to the panel.</p>' +
+                '<div class="qc-confirm-actions">' +
+                    '<button type="button" data-qc-cancel>Stay signed in</button>' +
+                    '<button type="button" class="qc-confirm-go" data-qc-go>Sign out</button>' +
+                '</div>' +
+            '</div>';
+
+        document.body.appendChild(backdrop);
+        return backdrop;
+    }
+
+    function wrapLogout() {
+        var original = window.handleLogout;
+        if (typeof original !== 'function' || original.qcWrapped) return;
+
+        var backdrop = null;
+
+        var close = function () {
+            if (backdrop) backdrop.classList.remove('open');
+        };
+
+        var wrapped = function () {
+            if (!backdrop) {
+                backdrop = buildConfirm();
+                backdrop.querySelector('[data-qc-cancel]').addEventListener('click', close);
+                backdrop.querySelector('[data-qc-go]').addEventListener('click', function () {
+                    close();
+                    original.call(window);
+                });
+                // Clicking the dim area behind the card cancels too.
+                backdrop.addEventListener('click', function (event) {
+                    if (event.target === backdrop) close();
+                });
+            }
+
+            backdrop.classList.add('open');
+            backdrop.querySelector('[data-qc-cancel]').focus();
+        };
+
+        wrapped.qcWrapped = true;
+        window.handleLogout = wrapped;
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') close();
+        });
+    }
+
     function init() {
         refresh();
+        wrapLogout();
 
         var scheduled = false;
         var observer = new MutationObserver(function () {
