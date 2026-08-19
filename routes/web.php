@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Models\Inventory;
+use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PointOfSaleController;
 use App\Http\Controllers\ProfileController;
@@ -124,6 +125,20 @@ Route::get('/', function () {
         'categories' => $products->pluck('category')->filter()->unique()->values(),
     ]);
 })->name('landing');
+
+
+/*
+| Customer accounts.
+|
+| Registering creates the account unverified and emails a code; nothing can
+| be reserved until the address is confirmed, so every order has a contact
+| that actually reaches someone.
+*/
+Route::post('/customer/register', [CustomerAccountController::class, 'register'])->name('customer.register');
+Route::post('/customer/verify', [CustomerAccountController::class, 'verify'])->name('customer.verify');
+Route::post('/customer/resend', [CustomerAccountController::class, 'resend'])->name('customer.resend');
+Route::post('/customer/login', [CustomerAccountController::class, 'login'])->name('customer.login');
+Route::post('/customer/logout', [CustomerAccountController::class, 'logout'])->name('customer.logout');
 
 Route::get('/staff-login', function () {
     return view('staff-login');
