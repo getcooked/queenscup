@@ -1205,7 +1205,7 @@ function generateNotificationsLegacy(){
       if(myIds.indexOf(o.id)!==-1||o.customer===currentUser.fullName){
         if(o.status==='pending')notifs.push({id:'my_p_'+o.id,type:'new-order',icon:'fa-clock',msg:'Your order <strong>#'+o.id+'</strong> is pending',time:o.time,action:'myorders',orderId:o.id});
         else if(o.status==='preparing')notifs.push({id:'my_pr_'+o.id,type:'preparing',icon:'fa-blender',msg:'Your order <strong>#'+o.id+'</strong> is being prepared',time:o.time,action:'myorders',orderId:o.id});
-        else if(o.status==='serving')notifs.push({id:'my_s_'+o.id,type:'completed',icon:'fa-concierge-bell',msg:'Your order is ready to pick up',time:o.time,action:'myorders',orderId:o.id});
+        else if(o.status==='ready')notifs.push({id:'my_s_'+o.id,type:'completed',icon:'fa-concierge-bell',msg:'Your order is ready to pick up',time:o.time,action:'myorders',orderId:o.id});
         else if(o.status==='completed')notifs.push({id:'my_c_'+o.id,type:'completed',icon:'fa-check-circle',msg:'Your order <strong>#'+o.id+'</strong> is completed. Thank you!',time:o.time,action:'myorders',orderId:o.id});
         if(o.payment==='Cash'&&o.paymentStatus==='pending')notifs.push({id:'my_cp_'+o.id,type:'cash-pending',icon:'fa-money-bill-wave',msg:'Order <strong>#'+o.id+'</strong> — Please pay \u20B1'+o.total.toFixed(2)+' at the counter',time:o.time,action:'myorders'});
         else if(o.payment==='Cash'&&o.paymentStatus==='paid')notifs.push({id:'my_pd_'+o.id,type:'completed',icon:'fa-check-circle',msg:'Payment for order <strong>#'+o.id+'</strong> confirmed!',time:o.paidAt||o.time,action:'myorders'});
@@ -1239,7 +1239,7 @@ function generateNotifications(){
       if(myIds.indexOf(o.id)!==-1||o.customer===currentUser.fullName){
         if(o.status==='pending')notifs.push({id:'my_p_'+o.id,type:'new-order',icon:'fa-clock',msg:'Your order <strong>#'+o.id+'</strong> is pending',time:o.time,action:'myorders',orderId:o.id});
         else if(o.status==='preparing')notifs.push({id:'my_pr_'+o.id,type:'preparing',icon:'fa-blender',msg:'Your order <strong>#'+o.id+'</strong> is being prepared',time:o.time,action:'myorders',orderId:o.id});
-        else if(o.status==='serving')notifs.push({id:'my_s_'+o.id,type:'completed',icon:'fa-concierge-bell',msg:'Your order is ready to pick up',time:o.time,action:'myorders',orderId:o.id});
+        else if(o.status==='ready')notifs.push({id:'my_s_'+o.id,type:'completed',icon:'fa-concierge-bell',msg:'Your order is ready to pick up',time:o.time,action:'myorders',orderId:o.id});
         else if(o.status==='completed')notifs.push({id:'my_c_'+o.id,type:'completed',icon:'fa-check-circle',msg:'Your order <strong>#'+o.id+'</strong> is completed. Thank you!',time:o.time,action:'myorders',orderId:o.id});
         if(o.paymentStatus==='pending'){var pi=paymentInfo(o.payment);notifs.push({id:'my_cp_'+o.id,type:'cash-pending',icon:pi.icon,msg:'Order <strong>#'+o.id+'</strong> - '+pi.pendingLabel+' for \u20B1'+o.total.toFixed(2),time:o.time,action:'myorders',orderId:o.id});}
         else if(o.paymentStatus==='paid')notifs.push({id:'my_pd_'+o.id,type:'completed',icon:'fa-check-circle',msg:'Payment for order <strong>#'+o.id+'</strong> confirmed!',time:o.paidAt||o.time,action:'myorders',orderId:o.id});
@@ -1615,6 +1615,11 @@ function enterApp(){
   var sidebarRole=document.getElementById('sidebarRole');
   if(sidebarRole)sidebarRole.textContent=roleLabels[currentUser.role]||currentUser.role;
   buildSidebarNav();
+  if(isStaff()){
+    loadStaffOrders();
+    // Orders keep arriving from the app and the till while this page is open.
+    setInterval(function(){ if(!document.hidden&&isStaff()) loadStaffOrders(); },15000);
+  }
   updateAllLogos();
   var initialPage=(window.location.hash||'').replace('#','');
   if(initialPage&&isStaff()&&STAFF_PAGE_ROUTES[initialPage]){
@@ -1731,12 +1736,12 @@ function getPaymentStatusBadge(o){
 }
 
 function getStatusBadge(s){
-  var m={pending:'<span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>',preparing:'<span class="badge badge-info"><i class="fas fa-blender"></i> Preparing</span>',serving:'<span class="badge badge-wine"><i class="fas fa-concierge-bell"></i> Serving</span>',completed:'<span class="badge badge-success"><i class="fas fa-check"></i> Completed</span>',cancelled:'<span class="badge badge-danger"><i class="fas fa-times"></i> Cancelled</span>'};return m[s]||s;
+  var m={ready:'<span class="badge badge-success"><i class="fas fa-bell-concierge"></i> Ready</span>',pending:'<span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>',preparing:'<span class="badge badge-info"><i class="fas fa-blender"></i> Preparing</span>',serving:'<span class="badge badge-wine"><i class="fas fa-concierge-bell"></i> Serving</span>',completed:'<span class="badge badge-success"><i class="fas fa-check"></i> Completed</span>',cancelled:'<span class="badge badge-danger"><i class="fas fa-times"></i> Cancelled</span>'};return m[s]||s;
 }
 
 function renderCustomerProgress(o){
-  var statuses=['pending','preparing','serving','completed'];
-  var labels=['Placed','Preparing','Serving','Done'];
+  var statuses=['pending','preparing','ready','completed'];
+  var labels=['Placed','Preparing','Ready','Done'];
   var current=o.status==='cancelled'?0:Math.max(statuses.indexOf(o.status),0);
   var percent=o.status==='cancelled'?100:Math.round((current/(statuses.length-1))*100);
   var title=o.status==='cancelled'?'Cancelled':(labels[current]||'Placed');
@@ -1958,6 +1963,7 @@ function processPayment(){
 
 function markOrderPaid(id){
   var o=orders.find(function(or){return or.id===id;});if(!o)return;
+  if(o.serverId){patchServerOrder('/'+o.serverId+'/payment',{payment_method:'cash'},'Order '+o.serverRef+' marked paid.');return;}
   if(o.paymentStatus==='paid'){showToast('Already marked as paid','info');return;}
   o.paymentStatus='paid';o.paidBy=currentUser.fullName||currentUser.username||'staff';o.paidAt=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
   setData('orders',orders);renderOrders();updateCashPendingUI();updateNotifBadge();
@@ -2045,17 +2051,134 @@ function exportInventory(){
 
 /* ========== ORDERS ========== */
 var currentOrderFilter='all';
+
+/* ========== STAFF ORDER BOOK ==========
+ *
+ * Every order and sale the shop has taken, from both channels: reservations
+ * placed in the app or on the web, and walk-in sales rung up at the till.
+ *
+ * These used to be read out of local storage, which meant each browser saw
+ * only what it had itself recorded. A sale rung up on the counter machine was
+ * invisible on the office one, and clearing site data wiped the book.
+ */
+var STAFF_ORDER_URL = @json(url('/staff/reservations'));
+var staffOrdersLoaded = false;
+
+/** Server statuses in the order they progress. */
+var SERVER_STATUS_LABEL = {
+  pending: 'Pending',
+  preparing: 'Preparing',
+  ready: 'Ready',
+  completed: 'Completed',
+  cancelled: 'Cancelled'
+};
+
+function mapServerOrder(row) {
+  var when = row.created_at ? new Date(row.created_at) : null;
+
+  return {
+    id: row.reference,
+    serverId: row.id,
+    serverRef: row.reference,
+    channel: row.source === 'pos' ? 'Counter' : 'Reservation',
+    customer: row.customer_name || 'Walk-in',
+    username: '',
+    email: row.customer_email || '',
+    contactNumber: row.customer_contact || '',
+    type: row.service_type === 'take_out' ? 'Take Out' : 'Dine In',
+    branch: row.branch,
+    items: (row.items || []).map(function (line) {
+      return {
+        id: line.inventory_id,
+        name: line.name,
+        size: line.size_label === '22oz' ? 'L' : 'R',
+        qty: line.quantity,
+        price: Number(line.unit_price),
+        imageUrl: '',
+        icon: '🧋'
+      };
+    }),
+    subtotal: Number(row.subtotal),
+    takeoutFee: Number(row.takeout_fee || 0),
+    discount: 0,
+    total: Number(row.total),
+    status: row.status,
+    // The page's filters and Mark Paid button test for 'pending';
+    // the server calls the same state unpaid.
+    paymentStatus: row.payment_status === 'paid' ? 'paid' : 'pending',
+    payment: (row.payment_method || '').toUpperCase() || 'Unpaid',
+    cashTendered: 0,
+    change: 0,
+    date: when ? when.toLocaleDateString() : '',
+    time: when ? when.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''
+  };
+}
+
+function loadStaffOrders() {
+  if (!isStaff()) return Promise.resolve();
+
+  return fetch(STAFF_ORDER_URL, {
+    headers: { 'Accept': 'application/json' },
+    credentials: 'same-origin'
+  })
+    .then(function (response) {
+      if (!response.ok) throw new Error('Could not load the order book.');
+      return response.json();
+    })
+    .then(function (payload) {
+      orders = (payload.data || []).map(mapServerOrder);
+      staffOrdersLoaded = true;
+      if (currentPageId === 'orders') renderOrders();
+      updateCashPendingUI();
+    })
+    .catch(function (error) {
+      if (!staffOrdersLoaded) showToast(error.message, 'error');
+    });
+}
+
+/** PATCHes the server, then refreshes the book from it. */
+function patchServerOrder(path, body, success) {
+  return fetch(STAFF_ORDER_URL + path, {
+    method: 'PATCH',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrfToken()
+    },
+    body: JSON.stringify(body)
+  })
+    .then(function (response) {
+      return response.json().then(function (payload) {
+        if (!response.ok) {
+          var message = payload.message || 'That change was refused.';
+          if (payload.errors) {
+            var first = Object.keys(payload.errors)[0];
+            if (first) message = payload.errors[first][0];
+          }
+          throw new Error(message);
+        }
+        return payload;
+      });
+    })
+    .then(function () {
+      showToast(success, 'success');
+      return loadStaffOrders();
+    })
+    .catch(function (error) { showToast(error.message, 'error'); });
+}
+
 function renderOrders(){
   var br=getBranch();var f=orders;
   if(isGuest()){var myIds=getData('guest_orders_'+currentUser.fullName,[]);f=f.filter(function(o){return myIds.indexOf(o.id)!==-1||o.customer===currentUser.fullName;});}
   else if(isCustomer()){f=f.filter(function(o){return o.username===currentUser.username;});}
-  else{f=f.filter(function(o){return o.branch===br;});}
+  // Staff see the whole book: both channels, both branches.
   var s=(document.getElementById('orderSearch')?document.getElementById('orderSearch').value:'').toLowerCase();
   if(currentOrderFilter!=='all'&&currentOrderFilter!=='cash_pending')f=f.filter(function(o){return o.status===currentOrderFilter;});
   if(currentOrderFilter==='cash_pending')f=f.filter(function(o){return o.paymentStatus==='pending';});
   if(s)f=f.filter(function(o){return o.customer.toLowerCase().indexOf(s)!==-1||String(o.id).indexOf(s)!==-1;});
   var showActions=isStaff();
-  var thCols=['Order'];if(showActions)thCols.push('Customer');thCols.push('Items');thCols.push('Total');thCols.push('Payment');thCols.push('Status');thCols.push('Time');if(showActions)thCols.push('Actions');
+  var thCols=['Order'];if(showActions){thCols.push('Channel');thCols.push('Customer');}thCols.push('Items');thCols.push('Total');thCols.push('Payment');thCols.push('Status');thCols.push('Time');if(showActions)thCols.push('Actions');
   document.getElementById('ordersThead').innerHTML='<tr>'+thCols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr>';
   document.getElementById('ordersTable').innerHTML=f.slice().sort(function(a,b){return Number(a.id||0)-Number(b.id||0);}).map(function(o){
     var is=o.items.map(function(i){return '<div class="item-line" style="margin-bottom:5px">'+orderItemVisual(i)+'<span>'+escapeHtml(i.name)+(i.size==='R'?' (16oz)':' (22oz)')+' x'+i.qty+'</span></div>';}).join('');
@@ -2063,18 +2186,20 @@ function renderOrders(){
     if(showActions){
       if(o.status==='pending')ah+='<button class="btn btn-transparent-info btn-sm btn-icon" onclick="updateOrderStatus('+o.id+',\'preparing\')" title="Prepare"><i class="fas fa-blender"></i></button>';
       if(o.status==='preparing')ah+='<button class="btn btn-sm btn-icon" style="background:var(--accent);color:#fff" onclick="updateOrderStatus('+o.id+',\'serving\')" title="Serve"><i class="fas fa-concierge-bell"></i></button>';
-      if(o.status==='serving')ah+='<button class="btn btn-success btn-sm btn-icon" onclick="updateOrderStatus('+o.id+',\'completed\')" title="Complete"><i class="fas fa-check"></i></button>';
+      if(o.status==='ready')ah+='<button class="btn btn-success btn-sm btn-icon" onclick="updateOrderStatus('+o.id+',\'completed\')" title="Complete"><i class="fas fa-check"></i></button>';
       if(o.status==='pending')ah+='<button class="btn btn-danger btn-sm btn-icon" onclick="updateOrderStatus('+o.id+',\'cancelled\')" title="Cancel"><i class="fas fa-times"></i></button>';
       if(o.paymentStatus==='pending')ah+='<button class="btn btn-gold btn-sm btn-icon" onclick="markOrderPaid('+o.id+')" title="Mark as Paid"><i class="fas '+paymentInfo(o.payment).icon+'"></i></button>';
     }
     var statusCell=showActions?getStatusBadge(o.status):renderCustomerProgress(o);
-    var tdCols=['<td style="font-weight:700">#'+o.id+'</td>'];if(showActions)tdCols.push('<td>'+escapeHtml(o.customer)+'</td>');tdCols.push('<td style="font-size:11px">'+is+'</td>');tdCols.push('<td style="font-weight:700;color:var(--gold-light)">\u20B1'+o.total.toFixed(2)+'</td>');tdCols.push('<td>'+getPaymentStatusBadge(o)+'</td>');tdCols.push('<td>'+statusCell+'</td>');tdCols.push('<td style="color:var(--fg-muted)">'+o.time+'</td>');if(showActions)tdCols.push('<td><div style="display:flex;gap:4px">'+ah+'</div></td>');
+    var tdCols=['<td style="font-weight:700">'+escapeHtml(String(o.id))+'</td>'];if(showActions){tdCols.push('<td><span class="badge '+(o.channel==='Counter'?'badge-gold':'badge-info')+'">'+escapeHtml(o.channel||'Reservation')+'</span></td>');tdCols.push('<td>'+escapeHtml(o.customer)+'</td>');}tdCols.push('<td style="font-size:11px">'+is+'</td>');tdCols.push('<td style="font-weight:700;color:var(--gold-light)">\u20B1'+o.total.toFixed(2)+'</td>');tdCols.push('<td>'+getPaymentStatusBadge(o)+'</td>');tdCols.push('<td>'+statusCell+'</td>');tdCols.push('<td style="color:var(--fg-muted)">'+o.time+'</td>');if(showActions)tdCols.push('<td><div style="display:flex;gap:4px">'+ah+'</div></td>');
     return '<tr>'+tdCols.join('')+'</tr>';
   }).join('');
   updateCashPendingUI();
 }
 function filterOrders(f,btn){currentOrderFilter=f||'all';document.querySelectorAll('.order-filter').forEach(function(b){b.classList.remove('active');});if(btn)btn.classList.add('active');renderOrders();}
-function updateOrderStatus(id,s){var o=orders.find(function(or){return or.id===id;});if(!o)return;o.status=s;setData('orders',orders);renderOrders();updateNotifBadge();var m={preparing:'Being prepared',serving:'Ready for pick up',completed:'Completed!',cancelled:'Cancelled'};showToast(m[s]||'Updated',s==='cancelled'?'warning':'success');}
+function updateOrderStatus(id,s){var o=orders.find(function(or){return or.id===id;});if(!o)return;
+  if(o.serverId){patchServerOrder('/'+o.serverId+'/status',{status:s},'Order '+o.serverRef+' is now '+(SERVER_STATUS_LABEL[s]||s)+'.');return;}
+  o.status=s;setData('orders',orders);renderOrders();updateNotifBadge();var m={preparing:'Being prepared',serving:'Ready for pick up',completed:'Completed!',cancelled:'Cancelled'};showToast(m[s]||'Updated',s==='cancelled'?'warning':'success');}
 
 function viewOrderDetail(id){
   var o=orders.find(function(or){return or.id===id;});if(!o)return;var showActions=isStaff();
@@ -2096,7 +2221,7 @@ function viewOrderDetail(id){
     if(o.status!=='completed'&&o.status!=='cancelled'){
       if(o.status==='pending')fb+='<button class="btn btn-sm" style="background:var(--info);color:#fff" onclick="updateOrderStatus('+o.id+',\'preparing\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-blender"></i> Prepare</button>';
       if(o.status==='preparing')fb+='<button class="btn btn-sm" style="background:var(--accent);color:#fff" onclick="updateOrderStatus('+o.id+',\'serving\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-concierge-bell"></i> Serve</button>';
-      if(o.status==='serving')fb+='<button class="btn btn-success btn-sm" onclick="updateOrderStatus('+o.id+',\'completed\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-check"></i> Complete</button>';
+      if(o.status==='ready')fb+='<button class="btn btn-success btn-sm" onclick="updateOrderStatus('+o.id+',\'completed\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-check"></i> Complete</button>';
       if(o.status==='pending')fb+='<button class="btn btn-danger btn-sm" onclick="updateOrderStatus('+o.id+',\'cancelled\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-times"></i> Cancel</button>';
     }
   }
