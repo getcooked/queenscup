@@ -57,6 +57,9 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 .login-header h2{font-size:24px;margin-bottom:4px;background:linear-gradient(135deg,var(--accent-light),var(--gold-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .login-header p{font-size:12px;color:var(--fg-muted);letter-spacing:1.5px;text-transform:uppercase}
 .login-body{padding:28px 36px 36px}
+.link-inline{background:none;border:0;color:var(--accent-light);font-weight:800;cursor:pointer;font-family:'DM Sans';font-size:11px;text-decoration:underline}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--fg-muted);cursor:pointer;font-size:12px}
+.input-icon{position:relative}
 .login-tabs{display:flex;gap:0;margin-bottom:24px;background:rgba(255,255,255,0.92);border-radius:var(--radius-sm);padding:3px;border:1px solid var(--border)}
 .login-tab{flex:1;padding:10px;text-align:center;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:all var(--transition);color:var(--fg-muted);user-select:none;border:none;background:none;font-family:'DM Sans'}
 .login-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;box-shadow:0 2px 12px var(--accent-glow)}
@@ -546,20 +549,38 @@ body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transpa
   <div class="login-card">
     <div class="login-header"><div class="login-crown" id="loginCrown"><img src="{{ asset('icons/queens-cup-logo.png') }}" alt="Queen's Cup Logo"></div><h2>The Queen's Cup</h2><p>Crowned with Flavors</p></div>
     <div class="login-body">
-      <div class="login-tabs"><button class="login-tab active" onclick="switchLoginTab('guest')">Order Now</button><button class="login-tab" onclick="window.location.href='/staff-login'">Staff Sign In</button></div>
+      <div class="login-tabs"><button class="login-tab active" data-login-tab="signin" onclick="switchLoginTab('signin')">Sign In</button><button class="login-tab" data-login-tab="register" onclick="switchLoginTab('register')">Create Account</button><button class="login-tab" onclick="window.location.href='/staff-login'">Staff</button></div>
       <div class="login-error" id="loginError"></div>
-      <div class="login-form active" id="guestForm">
-        <div class="guest-welcome"><i class="fas fa-mug-hot"></i><p>Welcome! Enter your details to start ordering your favorite drinks from The Queen's Cup.</p></div>
-        <div class="login-field"><label>Your Name</label><div class="input-icon"><i class="fas fa-user"></i><input type="text" id="guestName" placeholder="Enter your name" autocomplete="name"></div></div>
-        <div class="login-field"><label>Email</label><div class="input-icon"><i class="fas fa-envelope"></i><input type="email" id="guestEmail" placeholder="you@example.com" autocomplete="email"></div></div>
-        <div class="login-field" id="guestOtpField"><label>Email Verification Code</label><div class="input-icon"><i class="fas fa-key"></i><input type="text" id="guestOtp" inputmode="numeric" maxlength="6" placeholder="Enter code from Gmail" autocomplete="one-time-code"></div><div style="margin-top:6px;font-size:10px;color:var(--fg-muted)">Click Send Code to Email first, then enter the 6-digit code from your inbox.</div><div id="guestOtpDebug" style="display:none;margin-top:8px;padding:9px 11px;border-radius:10px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.28);color:var(--warning);font-size:12px;font-weight:800;text-align:center"></div></div>
-        <button class="login-btn wine-btn" id="guestEntryBtn" onclick="handleGuestEntry()"><i class="fas fa-paper-plane" style="margin-right:6px"></i>Send Code to Email</button>
-        <button class="login-btn gold-btn" id="guestResendOtpBtn" onclick="resendGuestOtp()" style="display:none"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Resend OTP</button>
-        <div style="margin-top:16px;text-align:center;font-size:10px;color:var(--fg-muted)">No account needed — just your name and you're good to go!</div>
+
+      <div class="login-form active" id="signinForm">
+        <div class="guest-welcome"><i class="fas fa-mug-hot"></i><p>Welcome back! Sign in to reserve your favourite drinks.</p></div>
+        <div class="login-field"><label>Email</label><div class="input-icon"><i class="fas fa-envelope"></i><input type="email" id="signinEmail" placeholder="you@example.com" autocomplete="email"></div></div>
+        <div class="login-field"><label>Password</label><div class="input-icon"><i class="fas fa-lock"></i><input type="password" id="signinPassword" placeholder="Your password" autocomplete="current-password"><button type="button" class="pw-toggle" onclick="togglePw('signinPassword',this)"><i class="fas fa-eye"></i></button></div></div>
+        <button class="login-btn" id="signinBtn" onclick="handleCustomerSignIn()">Sign In</button>
+        <div style="margin-top:16px;text-align:center;font-size:11px;color:var(--fg-muted)">New here? <button type="button" class="link-inline" onclick="switchLoginTab('register')">Create an account</button></div>
+      </div>
+
+      <div class="login-form" id="registerForm">
+        <div class="guest-welcome"><i class="fas fa-user-plus"></i><p>Create an account to reserve drinks and keep track of every order.</p></div>
+        <div class="login-field"><label>Full Name</label><div class="input-icon"><i class="fas fa-user"></i><input type="text" id="regName" placeholder="Enter your full name" autocomplete="name"></div></div>
+        <div class="login-field"><label>Email</label><div class="input-icon"><i class="fas fa-envelope"></i><input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email"></div></div>
+        <div class="login-field"><label>Mobile Number <span style="text-transform:none;font-weight:400">(optional)</span></label><div class="input-icon"><i class="fas fa-phone"></i><input type="tel" id="regContact" placeholder="09XX XXX XXXX" autocomplete="tel"></div></div>
+        <div class="login-field"><label>Password</label><div class="input-icon"><i class="fas fa-lock"></i><input type="password" id="regPassword" placeholder="At least 8 characters" autocomplete="new-password"><button type="button" class="pw-toggle" onclick="togglePw('regPassword',this)"><i class="fas fa-eye"></i></button></div></div>
+        <div class="login-field"><label>Confirm Password</label><div class="input-icon"><i class="fas fa-lock"></i><input type="password" id="regPasswordConfirm" placeholder="Repeat your password" autocomplete="new-password"></div></div>
+        <button class="login-btn wine-btn" id="registerBtn" onclick="handleCustomerRegister()"><i class="fas fa-paper-plane" style="margin-right:6px"></i>Create Account</button>
+        <div style="margin-top:16px;text-align:center;font-size:11px;color:var(--fg-muted)">Already registered? <button type="button" class="link-inline" onclick="switchLoginTab('signin')">Sign in</button></div>
+      </div>
+
+      <div class="login-form" id="verifyForm">
+        <div class="guest-welcome"><i class="fas fa-envelope-open-text"></i><p id="verifyBlurb">We sent a 6 digit code to your email. Enter it below to finish.</p></div>
+        <div class="login-field"><label>Verification Code</label><div class="input-icon"><i class="fas fa-key"></i><input type="text" id="verifyCode" inputmode="numeric" maxlength="6" placeholder="6 digit code" autocomplete="one-time-code" style="letter-spacing:6px;font-weight:800"></div></div>
+        <button class="login-btn" id="verifyBtn" onclick="handleCustomerVerify()"><i class="fas fa-check" style="margin-right:6px"></i>Verify &amp; Continue</button>
+        <button class="login-btn gold-btn" id="resendCodeBtn" onclick="handleResendCode()" style="margin-top:10px"><i class="fas fa-rotate-right" style="margin-right:6px"></i>Send a New Code</button>
+        <div style="margin-top:16px;text-align:center;font-size:11px;color:var(--fg-muted)"><button type="button" class="link-inline" onclick="switchLoginTab('register')">Use a different email</button></div>
       </div>
       <div class="login-form" id="staffForm">
         <div class="login-field"><label>Username</label><div class="input-icon"><i class="fas fa-user"></i><input type="text" id="loginUsername" placeholder="Enter username" autocomplete="username"></div></div>
-        <div class="login-field"><label>Password</label><div class="input-icon"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password"><button class="toggle-pw" onclick="togglePw('loginPassword',this)"><i class="fas fa-eye"></i></button></div></div>
+        <div class="login-field"><label>Password</label><div class="input-icon"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password"></div></div>
         <button class="login-btn" onclick="handleLogin()">Sign In</button>
       </div>
     </div>
@@ -721,6 +742,17 @@ body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transpa
         </div>
       </div>
       <!-- PROFILE -->
+      <div class="page-section" id="page-history">
+        <div class="mb-6 fade-in flex-between">
+          <div>
+            <h3 style="font-family:'Playfair Display';font-size:22px;margin-bottom:4px">Reservation History</h3>
+            <p style="font-size:12px;color:var(--fg-muted)">Everything you have picked up or cancelled</p>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="navigateTo('pos')"><i class="fas fa-mug-hot"></i> Order Again</button>
+        </div>
+        <div id="customerHistoryList"></div>
+      </div>
+
       <div class="page-section" id="page-profile">
         <div class="grid-2 fade-in">
           <div class="card"><div class="card-header"><h3>Profile</h3></div><div class="card-body">
@@ -938,7 +970,6 @@ var currentUser=null;
 var notifReadIds=getData('notifReadIds',[]);
 var _pendingLogo=null;
 var deferredInstallPrompt=null;
-var guestOtpSent=false;
 
 function productIcon(category){
   var icons={'Milktea Series':'\uD83E\uDDCB','Fruit Teas':'\uD83C\uDF4B','Milky Fruit Jams':'\uD83C\uDF53','Lemonade':'\uD83C\uDF4B','Coffee & Non-Coffee':'\u2615','Fruit Milk Shake':'\uD83C\uDF53','Sticky Milk Drinks':'\uD83C\uDF4B'};
@@ -1409,39 +1440,70 @@ function reservationStatusBadge(status) {
   return '<span class="badge ' + entry[0] + '"><i class="fas ' + entry[1] + '"></i> ' + entry[2] + '</span>';
 }
 
+/**
+ * Finished reservations: picked up or cancelled. The active ones stay on
+ * the reservations page so the two do not crowd each other out.
+ */
+function renderReservationHistory() {
+  var list = document.getElementById('customerHistoryList');
+  if (!list) return;
+
+  loadMyReservations().then(function () {
+    var done = myReservations.filter(function (r) {
+      return r.status === 'completed' || r.status === 'cancelled';
+    });
+
+    if (!done.length) {
+      list.innerHTML = '<div class="empty-state"><i class="fas fa-clock-rotate-left"></i>' +
+        '<h3>Nothing here yet</h3><p>Reservations you have picked up will show up here.</p></div>';
+      return;
+    }
+
+    list.innerHTML = done.map(renderReservationCard).join('');
+  });
+}
+
+/** One reservation card, shared by the active list and the history page. */
+function renderReservationCard(r) {
+  var items = r.items.map(function (i) {
+    return escapeHtml(i.quantity + '× ' + i.name + ' (' + i.size_label + ')');
+  }).join('<br>');
+
+  var fee = Number(r.takeout_fee) > 0
+    ? '<div style="font-size:11px;color:var(--fg-muted)">incl. ₱' + Number(r.takeout_fee).toFixed(2) + ' take-out cups</div>'
+    : '';
+
+  return '<div class="card" style="margin-bottom:12px"><div class="card-body">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px">' +
+      '<div><div style="font-size:18px;font-weight:900;color:var(--gold-light)">' + escapeHtml(r.reference) + '</div>' +
+      '<div style="font-size:11px;color:var(--fg-muted)">' + (r.service_type === 'take_out' ? 'Take out' : 'Dine in') +
+      ' · ' + r.cup_count + (r.cup_count === 1 ? ' cup' : ' cups') + '</div></div>' +
+      reservationStatusBadge(r.status) +
+    '</div>' +
+    '<div style="font-size:12px;margin-bottom:8px">' + items + '</div>' + fee +
+    '<div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;font-weight:800">' +
+      '<span>Total</span><span>₱' + Number(r.total).toFixed(2) + '</span></div>' +
+    '<div style="font-size:11px;color:var(--fg-muted);margin-top:4px">' +
+      (r.payment_status === 'paid' ? 'Paid at the counter' : 'Pay at the counter on pick up') + '</div>' +
+  '</div></div>';
+}
+
 function renderMyReservations() {
   var list = document.getElementById('customerReservationList');
   if (!list) return;
 
-  if (!myReservations.length) {
-    list.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><h3>No reservations yet</h3>' +
+  // Finished ones live on the history page.
+  var active = myReservations.filter(function (r) {
+    return r.status !== 'completed' && r.status !== 'cancelled';
+  });
+
+  if (!active.length) {
+    list.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><h3>No active reservations</h3>' +
       '<p>Reserve from the menu and your code will appear here.</p></div>';
     return;
   }
 
-  list.innerHTML = myReservations.map(function (r) {
-    var items = r.items.map(function (i) {
-      return escapeHtml(i.quantity + '× ' + i.name + ' (' + i.size_label + ')');
-    }).join('<br>');
-
-    var fee = Number(r.takeout_fee) > 0
-      ? '<div style="font-size:11px;color:var(--fg-muted)">incl. ₱' + Number(r.takeout_fee).toFixed(2) + ' take-out cups</div>'
-      : '';
-
-    return '<div class="card" style="margin-bottom:12px"><div class="card-body">' +
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px">' +
-        '<div><div style="font-size:18px;font-weight:900;color:var(--gold-light)">' + escapeHtml(r.reference) + '</div>' +
-        '<div style="font-size:11px;color:var(--fg-muted)">' + (r.service_type === 'take_out' ? 'Take out' : 'Dine in') +
-        ' · ' + r.cup_count + (r.cup_count === 1 ? ' cup' : ' cups') + '</div></div>' +
-        reservationStatusBadge(r.status) +
-      '</div>' +
-      '<div style="font-size:12px;margin-bottom:8px">' + items + '</div>' + fee +
-      '<div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;font-weight:800">' +
-        '<span>Total</span><span>₱' + Number(r.total).toFixed(2) + '</span></div>' +
-      '<div style="font-size:11px;color:var(--fg-muted);margin-top:4px">' +
-        (r.payment_status === 'paid' ? 'Paid at the counter' : 'Pay at the counter on pick up') + '</div>' +
-    '</div></div>';
-  }).join('');
+  list.innerHTML = active.map(renderReservationCard).join('');
 }
 
 /* ========== COUNT CASH PENDING ========== */
@@ -1467,80 +1529,189 @@ function updateCashPendingUI(){
 }
 
 /* ========== GUEST / LOGIN ========== */
-function switchLoginTab(tab){
-  document.querySelectorAll('.login-tab').forEach(function(t){t.classList.remove('active');});
-  document.querySelectorAll('.login-form').forEach(function(f){f.classList.remove('active');});
-  if(tab==='guest'){document.querySelectorAll('.login-tab')[0].classList.add('active');document.getElementById('guestForm').classList.add('active');}
-  else{document.querySelectorAll('.login-tab')[1].classList.add('active');document.getElementById('staffForm').classList.add('active');}
-  document.getElementById('loginError').classList.remove('show');
+/* ========== CUSTOMER ACCOUNTS ==========
+ *
+ * Customers register with a password and confirm their address with a code
+ * before they can reserve, so every order carries a contact that reaches
+ * someone. The server owns all of it; this only drives the forms.
+ */
+var pendingVerifyEmail = '';
+
+function switchLoginTab(tab) {
+  var forms = { signin: 'signinForm', register: 'registerForm', verify: 'verifyForm' };
+
+  document.querySelectorAll('.login-form').forEach(function (f) { f.classList.remove('active'); });
+  document.querySelectorAll('.login-tab').forEach(function (t) { t.classList.remove('active'); });
+
+  var form = document.getElementById(forms[tab] || 'signinForm');
+  if (form) form.classList.add('active');
+
+  // Verifying is a step inside registering, so keep that tab lit.
+  var tabKey = tab === 'verify' ? 'register' : tab;
+  var button = document.querySelector('.login-tab[data-login-tab="' + tabKey + '"]');
+  if (button) button.classList.add('active');
+
+  var error = document.getElementById('loginError');
+  if (error) error.classList.remove('show');
+}
+
+function customerPost(url, body) {
+  return fetch(url, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrfToken()
+    },
+    body: JSON.stringify(body)
+  }).then(function (response) {
+    return response.json().then(function (payload) {
+      return { ok: response.ok, status: response.status, payload: payload };
+    });
+  });
+}
+
+/** Pulls the first message out of a Laravel validation response. */
+function firstError(payload, fallback) {
+  if (payload && payload.errors) {
+    var key = Object.keys(payload.errors)[0];
+    if (key) return payload.errors[key][0];
+  }
+  return (payload && payload.message) || fallback;
+}
+
+function busy(id, on, label) {
+  var button = document.getElementById(id);
+  if (!button) return;
+  button.disabled = on;
+  if (on) {
+    button.dataset.label = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + label;
+  } else if (button.dataset.label) {
+    button.innerHTML = button.dataset.label;
+  }
+}
+
+function handleCustomerRegister() {
+  var name = (document.getElementById('regName').value || '').trim();
+  var email = (document.getElementById('regEmail').value || '').trim();
+  var contact = (document.getElementById('regContact').value || '').trim();
+  var password = document.getElementById('regPassword').value || '';
+  var confirm = document.getElementById('regPasswordConfirm').value || '';
+
+  if (name.length < 2) return showLoginError('Please enter your full name.');
+  if (!email) return showLoginError('Please enter your email address.');
+  if (password.length < 8) return showLoginError('Your password needs at least 8 characters.');
+  if (password !== confirm) return showLoginError('Those passwords do not match.');
+
+  busy('registerBtn', true, 'Creating...');
+
+  customerPost(@json(route('customer.register')), {
+    name: name, email: email, contact_number: contact || null,
+    password: password, password_confirmation: confirm
+  }).then(function (result) {
+    busy('registerBtn', false);
+
+    if (!result.ok) return showLoginError(firstError(result.payload, 'We could not create that account.'));
+
+    pendingVerifyEmail = email;
+    document.getElementById('verifyBlurb').textContent =
+      'We sent a 6 digit code to ' + email + '. Enter it below to finish.';
+    switchLoginTab('verify');
+    showToast('Check your email for the code', 'info');
+  }).catch(function () {
+    busy('registerBtn', false);
+    showLoginError('We could not reach the server. Please try again.');
+  });
+}
+
+function handleCustomerVerify() {
+  var code = (document.getElementById('verifyCode').value || '').trim();
+  if (code.length !== 6) return showLoginError('Enter the 6 digit code from your email.');
+
+  busy('verifyBtn', true, 'Checking...');
+
+  customerPost(@json(route('customer.verify')), { email: pendingVerifyEmail, code: code })
+    .then(function (result) {
+      busy('verifyBtn', false);
+
+      if (!result.ok) return showLoginError(firstError(result.payload, 'That code was not accepted.'));
+
+      startCustomerSession(result.payload.user);
+    }).catch(function () {
+      busy('verifyBtn', false);
+      showLoginError('We could not reach the server. Please try again.');
+    });
+}
+
+function handleResendCode() {
+  if (!pendingVerifyEmail) return showLoginError('Enter your details again to get a new code.');
+
+  busy('resendCodeBtn', true, 'Sending...');
+
+  customerPost(@json(route('customer.resend')), { email: pendingVerifyEmail })
+    .then(function () {
+      busy('resendCodeBtn', false);
+      showToast('A new code is on its way', 'success');
+    }).catch(function () {
+      busy('resendCodeBtn', false);
+      showLoginError('We could not reach the server. Please try again.');
+    });
+}
+
+function handleCustomerSignIn() {
+  var email = (document.getElementById('signinEmail').value || '').trim();
+  var password = document.getElementById('signinPassword').value || '';
+
+  if (!email || !password) return showLoginError('Enter your email and password.');
+
+  busy('signinBtn', true, 'Signing in...');
+
+  customerPost(@json(route('customer.login')), { email: email, password: password })
+    .then(function (result) {
+      busy('signinBtn', false);
+
+      // An unverified account is sent back to the code step with a fresh code.
+      if (result.status === 409) {
+        pendingVerifyEmail = email;
+        document.getElementById('verifyBlurb').textContent =
+          'Confirm your email first. We sent a new code to ' + email + '.';
+        switchLoginTab('verify');
+        return;
+      }
+
+      if (!result.ok) return showLoginError(firstError(result.payload, 'We could not sign you in.'));
+
+      startCustomerSession(result.payload.user);
+    }).catch(function () {
+      busy('signinBtn', false);
+      showLoginError('We could not reach the server. Please try again.');
+    });
+}
+
+function startCustomerSession(user) {
+  currentUser = {
+    id: user.id,
+    username: user.email,
+    fullName: user.fullName,
+    email: user.email,
+    contactNumber: user.contactNumber || '',
+    role: 'customer',
+    since: new Date().toISOString().split('T')[0]
+  };
+
+  setSession(currentUser);
+  enterApp();
+  showToast('Welcome, ' + user.fullName.split(' ')[0] + '!', 'success');
 }
 function togglePw(id,btn){var inp=document.getElementById(id);var ic=btn.querySelector('i');if(inp.type==='password'){inp.type='text';ic.className='fas fa-eye-slash';}else{inp.type='password';ic.className='fas fa-eye';}}
 function showLoginError(msg){var el=document.getElementById('loginError');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},4000);}
 
 function csrfToken(){var el=document.querySelector('meta[name="csrf-token"]');return el?el.getAttribute('content'):'';}
-function resetGuestOtpForm(){
-  guestOtpSent=false;
-  var otpField=document.getElementById('guestOtpField');if(otpField)otpField.style.display='block';
-  var otp=document.getElementById('guestOtp');if(otp)otp.value='';
-  var debug=document.getElementById('guestOtpDebug');if(debug){debug.style.display='none';debug.textContent='';}
-  var resend=document.getElementById('guestResendOtpBtn');if(resend)resend.style.display='none';
-  var btn=document.getElementById('guestEntryBtn');if(btn){btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane" style="margin-right:6px"></i>Send Code to Email';btn.dataset.defaultLabel=btn.innerHTML;}
-}
-function setGuestOtpLoading(loading,label){
-  var btn=document.getElementById('guestEntryBtn');if(!btn)return;
-  btn.disabled=loading;
-  btn.innerHTML=loading?'<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>'+label:btn.dataset.defaultLabel;
-}
-function guestPayload(){
-  return {
-    name:document.getElementById('guestName').value.trim(),
-    email:document.getElementById('guestEmail').value.trim()
-  };
-}
-function validateGuestDetails(data){
-  if(!data.name){showLoginError('Please enter your name to continue.');return false;}
-  if(data.name.length<2){showLoginError('Name must be at least 2 characters.');return false;}
-  if(!data.email||!isValidEmail(data.email)){showLoginError('Please enter a valid email address.');return false;}
-  return true;
-}
-function sendGuestOtp(){
-  var data=guestPayload();if(!validateGuestDetails(data))return;
-  var btn=document.getElementById('guestEntryBtn');btn.dataset.defaultLabel=btn.innerHTML;setGuestOtpLoading(true,'Sending Code');
-  fetch('{{ url('/customer/otp/send') }}',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':csrfToken()},body:JSON.stringify(data)})
-    .then(function(r){return r.json().then(function(j){if(!r.ok)throw j;return j;});})
-    .then(function(res){
-      guestOtpSent=true;
-      document.getElementById('guestOtpField').style.display='block';
-      document.getElementById('guestResendOtpBtn').style.display='block';
-      document.getElementById('guestEntryBtn').innerHTML='<i class="fas fa-check" style="margin-right:6px"></i>Verify OTP';
-      document.getElementById('guestEntryBtn').dataset.defaultLabel=document.getElementById('guestEntryBtn').innerHTML;
-      var debug=document.getElementById('guestOtpDebug');
-      if(debug&&res.debug_otp){debug.textContent='Testing OTP: '+res.debug_otp;debug.style.display='block';}
-      else if(debug){debug.style.display='none';debug.textContent='';}
-      document.getElementById('guestOtp').focus();
-      showToast(res.debug_otp?'Test OTP: '+res.debug_otp:(res.message||'Verification code sent to your email.'),'success');
-    })
-    .catch(function(err){showLoginError((err&&err.message)||'Unable to send OTP. Please try again.');})
-    .finally(function(){setGuestOtpLoading(false,'');});
-}
-function verifyGuestOtp(){
-  var data=guestPayload();if(!validateGuestDetails(data))return;
-  var otp=document.getElementById('guestOtp').value.trim();
-  if(!/^\d{6}$/.test(otp)){showLoginError('Please enter the 6-digit OTP.');return;}
-  var btn=document.getElementById('guestEntryBtn');btn.dataset.defaultLabel=btn.innerHTML;setGuestOtpLoading(true,'Verifying');
-  fetch('{{ url('/customer/otp/verify') }}',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':csrfToken()},body:JSON.stringify({otp:otp})})
-    .then(function(r){return r.json().then(function(j){if(!r.ok)throw j;return j;});})
-    .then(function(){
-      currentUser={id:'guest_'+Date.now(),username:'',fullName:data.name,role:'guest',since:new Date().toISOString().split('T')[0],password:'',email:data.email,contactNumber:'',isGuest:true};
-      setSession(currentUser);enterApp();showToast('Welcome, '+data.name+'! Browse our menu and order away.','success');
-    })
-    .catch(function(err){showLoginError((err&&err.message)||'Unable to verify OTP. Please try again.');})
-    .finally(function(){setGuestOtpLoading(false,'');});
-}
-function resendGuestOtp(){guestOtpSent=false;document.getElementById('guestOtp').value='';sendGuestOtp();}
 function handleGuestEntry(){
-  if(guestOtpSent){verifyGuestOtp();return;}
-  sendGuestOtp();
+  // Guest ordering was replaced by real accounts.
+  switchLoginTab('register');
 }
 
 function handleLogin(){
@@ -1560,7 +1731,7 @@ function handleLogout(){
       .finally(function(){window.location.href=@json(route('login'));});
     return;
   }
-  resetGuestOtpForm();
+  // Guest OTP was replaced by customer accounts.
   document.body.classList.remove('customer-mobile');
   var mobileNav=document.getElementById('customerMobileNav');if(mobileNav)mobileNav.style.display='none';
   var checkoutBar=document.getElementById('customerCheckoutBar');if(checkoutBar)checkoutBar.style.display='none';
@@ -1568,7 +1739,7 @@ function handleLogout(){
   updateInstallButton();
   document.getElementById('appLayout').style.display='none';document.getElementById('chatbotContainer').style.display='none';
   document.getElementById('loginPage').classList.remove('hidden');
-  document.getElementById('guestName').value='';document.getElementById('loginUsername').value='';document.getElementById('loginPassword').value='';
+  document.getElementById('loginUsername').value='';document.getElementById('loginPassword').value='';
   document.getElementById('chatMessages').innerHTML='';chatOpen=false;document.getElementById('chatWindow').classList.remove('open');
   closeNotifPanel();updateAllLogos();
 }
@@ -1642,8 +1813,10 @@ function buildSidebarNav(){
   }else if(isCashier()){
     h+='<div class="nav-section"><div class="nav-section-title">Counter</div><a class="nav-item" href="{{ url('/pos') }}"><i class="fas fa-cash-register"></i> Point of Sale</a><a class="nav-item" href="{{ url('/orders') }}" data-current-page="orders"><i class="fas fa-receipt"></i> Orders <span class="nav-badge" id="pendingOrdersBadge">0</span> <span class="nav-badge cash-pending" id="cashPendingSidebarBadge" style="display:none">0</span></a></div>';
   }else{
-    h+='<div class="nav-section"><div class="nav-section-title">Menu</div><a class="nav-item" href="#pos" data-page="pos"><i class="fas fa-mug-hot"></i> Menu &amp; Reserve</a></div>';
-    h+='<div class="nav-section"><div class="nav-section-title">My Account</div><a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> My Reservations <span class="nav-badge" id="pendingOrdersBadge">0</span></a></div>';
+    h+='<div class="nav-section"><div class="nav-section-title">Order</div><a class="nav-item" href="#pos" data-page="pos"><i class="fas fa-mug-hot"></i> Menu</a></div>';
+    h+='<div class="nav-section"><div class="nav-section-title">My Reservations</div>'+
+      '<a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> Active <span class="nav-badge" id="pendingOrdersBadge">0</span></a>'+
+      '<a class="nav-item" href="#history" data-page="history"><i class="fas fa-clock-rotate-left"></i> History</a></div>';
   }
   if(isStaff())h+='<div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item" href="{{ url('/profile') }}"><i class="fas fa-user-circle"></i> My Profile</a></div>';
   else h+='<div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item" href="#profile" data-page="profile"><i class="fas fa-user-circle"></i> My Profile</a></div>';
@@ -1664,7 +1837,7 @@ function navigateTo(page){
   var el=document.getElementById('page-'+page);if(el)el.classList.add('active');
   var nv=document.querySelector('.nav-item[data-page="'+page+'"],.nav-item[data-current-page="'+page+'"]');if(nv)nv.classList.add('active');
   document.querySelectorAll('#customerMobileNav button').forEach(function(btn){btn.classList.toggle('active',btn.dataset.page===page);});
-  var titles={pos:isStaff()?'Point of Sale':'Menu & Order',inventory:'Inventory',orders:isStaff()?'Orders':'My Orders',reports:'Reports',settings:'Settings',profile:'My Profile'};
+  var titles={history:'Reservation History',pos:isStaff()?'Point of Sale':'Menu',inventory:'Inventory',orders:isStaff()?'Orders':'My Orders',reports:'Reports',settings:'Settings',profile:'My Profile'};
   var pageTitleEl=document.getElementById('pageTitle');if(pageTitleEl)pageTitleEl.textContent=titles[page]||page;
   var pageBreadcrumbEl=document.getElementById('pageBreadcrumb');if(pageBreadcrumbEl)pageBreadcrumbEl.textContent='Home / '+(titles[page]||page);
   document.getElementById('customerMenuHero').style.display=isCustomerOrGuest()?'block':'none';
@@ -1686,6 +1859,7 @@ function navigateTo(page){
   if(page==='reports')renderReports();
   if(page==='settings'){renderSettings();initLogoDragDrop();}
   if(page==='profile')renderProfile();
+  if(page==='history')renderReservationHistory();
   updateCustomerCheckoutBar();
   updateCashPendingUI();updateNotifBadge();
 }
@@ -2327,12 +2501,15 @@ function init(){
   document.getElementById('appLayout').style.display='none';
   document.getElementById('chatbotContainer').style.display='none';
   var chatBtn=document.getElementById('customerChatBtn');if(chatBtn)chatBtn.style.display='none';
-  document.getElementById('loginPassword').addEventListener('keypress',function(e){if(e.key==='Enter')handleLogin();});
-  document.getElementById('loginUsername').addEventListener('keypress',function(e){if(e.key==='Enter')handleLogin();});
-  document.getElementById('guestName').addEventListener('keypress',function(e){if(e.key==='Enter')handleGuestEntry();});
-  document.getElementById('guestEmail').addEventListener('keypress',function(e){if(e.key==='Enter')handleGuestEntry();});
-  document.getElementById('guestOtp').addEventListener('keypress',function(e){if(e.key==='Enter')handleGuestEntry();});
-  resetGuestOtpForm();
+  var onEnter=function(id,fn){var el=document.getElementById(id);if(el)el.addEventListener('keypress',function(e){if(e.key==='Enter')fn();});};
+  onEnter('loginPassword',handleLogin);
+  onEnter('loginUsername',handleLogin);
+  onEnter('signinEmail',handleCustomerSignIn);
+  onEnter('signinPassword',handleCustomerSignIn);
+  onEnter('regPasswordConfirm',handleCustomerRegister);
+  onEnter('verifyCode',handleCustomerVerify);
+  onEnter('verifyCode',handleCustomerVerify);
+  // Guest OTP was replaced by customer accounts.
   updateInstallButton();
 }
 init();

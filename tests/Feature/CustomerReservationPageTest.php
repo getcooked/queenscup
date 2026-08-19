@@ -27,7 +27,8 @@ class CustomerReservationPageTest extends TestCase
     {
         $this->get('/orders')
             ->assertOk()
-            ->assertSee('Menu &amp; Reserve', false)
+            // The nav now separates Menu from Active reservations and History.
+            ->assertSee('data-page="history"', false)
             ->assertSee('My Reservations')
             ->assertSee('Confirm reservation');
     }
