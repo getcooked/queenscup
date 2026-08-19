@@ -83,6 +83,9 @@ h1,h2,h3,h4{font-family:'Playfair Display',serif}
 .login-btn.wine-btn:hover{box-shadow:0 6px 28px var(--accent-glow-strong)}
 .login-btn.gold-btn{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--bg-deep)}
 .login-btn.gold-btn:hover{box-shadow:0 6px 28px var(--gold-glow-strong)}
+.login-home{text-align:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.login-home a{font-size:12px;font-weight:600;color:var(--fg-muted);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color .2s ease}
+.login-home a:hover{color:var(--accent-light)}
 .login-error{background:rgba(229,49,112,0.1);border:1px solid rgba(229,49,112,0.3);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--danger);margin-bottom:14px;display:none}
 .login-error.show{display:block;animation:shake 0.4s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
@@ -582,6 +585,10 @@ body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transpa
         <div class="login-field"><label>Username</label><div class="input-icon"><i class="fas fa-user"></i><input type="text" id="loginUsername" placeholder="Enter username" autocomplete="username"></div></div>
         <div class="login-field"><label>Password</label><div class="input-icon"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password"></div></div>
         <button class="login-btn" onclick="handleLogin()">Sign In</button>
+      </div>
+
+      <div class="login-home">
+        <a href="{{ url('/') }}"><i class="fas fa-house"></i> Back to home</a>
       </div>
     </div>
   </div>

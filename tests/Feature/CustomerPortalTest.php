@@ -125,4 +125,32 @@ class CustomerPortalTest extends TestCase
         $this->assertStringContainsString('subtotal += money2(line.price * line.qty)', $html);
         $this->assertStringContainsString('function money2(', $html);
     }
+    public function test_both_login_pages_offer_a_way_home()
+    {
+        // A visitor who lands on a login screen should not be stuck there.
+        $this->get('/orders')
+            ->assertOk()
+            ->assertSee('Back to home')
+            ->assertSee('login-home', false);
+
+        $this->get('/staff-login')
+            ->assertOk()
+            ->assertSee('Home')
+            ->assertSee('Customer sign in');
+    }
+
+    public function test_the_home_links_point_at_the_landing_page()
+    {
+        $root = url('/');
+
+        $this->assertStringContainsString(
+            'href="'.$root.'"',
+            $this->get('/orders')->assertOk()->getContent()
+        );
+
+        $this->assertStringContainsString(
+            'href="'.$root.'"',
+            $this->get('/staff-login')->assertOk()->getContent()
+        );
+    }
 }

@@ -66,6 +66,8 @@
         @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
         .staff-login-back{text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+        .staff-login-back{display:flex;align-items:center;justify-content:center;gap:10px}
+        .staff-login-sep{color:var(--fg-muted);font-size:12px}
         .staff-login-back a{font-size:12px;color:var(--accent-light);text-decoration:none;transition:color 0.3s}
         .staff-login-back a:hover{color:var(--gold-light)}
 
@@ -120,7 +122,9 @@
 
 
                 <div class="staff-login-back">
-                    <a href="/orders">← Back to Main Login</a>
+                    <a href="{{ url('/') }}"><i class="fas fa-house"></i> Home</a>
+                    <span class="staff-login-sep">·</span>
+                    <a href="{{ url('/orders') }}">Customer sign in</a>
                 </div>
             </div>
         </div>
