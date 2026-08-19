@@ -92,4 +92,37 @@ class CustomerPortalTest extends TestCase
         $this->assertStringContainsString('historyCountBadge', $html);
         $this->assertStringContainsString('nav-badge muted', $html);
     }
+    public function test_every_money_field_is_written_not_just_the_visible_ones()
+    {
+        $html = $this->get('/orders')->assertOk()->getContent();
+
+        // chkSubtotal, chkDiscount and cartTotal were in the markup but never
+        // written, so the checkout modal opened showing a zero subtotal.
+        foreach (['chkSubtotal', 'chkDiscount', 'chkFee', 'chkTotal', 'cartSubtotal', 'cartTotal', 'cartFee'] as $field) {
+            $this->assertStringContainsString("write('{$field}'", $html, $field);
+        }
+
+        // The writes no longer hang off whether the cart panel is on screen.
+        $this->assertStringNotContainsString("if(cs&&cs.style.display!=='none')", $html);
+    }
+
+    public function test_the_customer_basket_shows_the_take_out_surcharge()
+    {
+        $html = $this->get('/orders')->assertOk()->getContent();
+
+        // The cart panel had no surcharge line, so its total could not match
+        // what the server charges for take out.
+        $this->assertStringContainsString('id="cartFeeRow"', $html);
+        $this->assertStringContainsString('id="cartFeeLabel"', $html);
+    }
+
+    public function test_the_basket_is_priced_the_way_the_server_prices_it()
+    {
+        $html = $this->get('/orders')->assertOk()->getContent();
+
+        // Each line is rounded to centavos before being summed, matching
+        // ReservationService::quote() rather than summing raw floats.
+        $this->assertStringContainsString('subtotal += money2(line.price * line.qty)', $html);
+        $this->assertStringContainsString('function money2(', $html);
+    }
 }

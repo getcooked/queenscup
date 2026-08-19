@@ -649,7 +649,7 @@ body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transpa
           <div class="pos-cart">
             <div class="cart-header"><h3 style="font-size:15px"><i class="fas fa-shopping-cart" style="color:var(--accent-light);margin-right:7px"></i>Your Order</h3><button class="btn btn-secondary btn-sm" onclick="clearCart()"><i class="fas fa-trash"></i> Clear</button></div>
             <div class="cart-items" id="cartItems"><div style="text-align:center;padding:36px 18px;color:var(--fg-muted)"><i class="fas fa-mug-hot" style="font-size:36px;opacity:0.3;margin-bottom:10px;display:block"></i><p>No items in cart</p><p style="font-size:10px;margin-top:3px">Tap a drink to add</p></div></div>
-            <div class="cart-summary" id="cartSummary" style="display:none"><div class="cart-summary-row"><span>Subtotal</span><span id="cartSubtotal">&#8369;0.00</span></div><div class="cart-summary-row"><span>Discount</span><span id="cartDiscount" style="color:var(--success)">-&#8369;0.00</span></div><div class="cart-summary-row total"><span>Total</span><span id="cartTotal">&#8369;0.00</span></div></div>
+            <div class="cart-summary" id="cartSummary" style="display:none"><div class="cart-summary-row"><span>Subtotal</span><span id="cartSubtotal">&#8369;0.00</span></div><div class="cart-summary-row" id="cartDiscountRow"><span>Discount</span><span id="cartDiscount" style="color:var(--success)">-&#8369;0.00</span></div><div class="cart-summary-row" id="cartFeeRow" style="display:none"><span id="cartFeeLabel">Take-out cups</span><span id="cartFee">&#8369;0.00</span></div><div class="cart-summary-row total"><span>Total</span><span id="cartTotal">&#8369;0.00</span></div></div>
             <div class="cart-actions"><button class="btn btn-secondary" onclick="holdOrder()"><i class="fas fa-pause"></i> Hold</button><button class="btn btn-gold" onclick="checkout()"><i class="fas fa-credit-card"></i> Checkout</button></div>
           </div>
         </div>
@@ -2052,34 +2052,99 @@ function renderCart(){
   s.style.display='block';updateCartTotals();
 }
 
-function updateCartTotals(){
-  var sub=cart.reduce(function(s,i){return s+i.price*i.qty;},0);
-  var dp=parseFloat(document.getElementById('checkoutDiscount')?document.getElementById('checkoutDiscount').value:0)||0;
-  var disc=sub*(dp/100);var tot=sub-disc;
-  // Customers see the take-out surcharge before they commit; the server
-  // recalculates it on submit, so this is display only.
-  var takeFee=checkoutTakeoutFee();tot=tot+takeFee;
-  var feeRow=document.getElementById('chkFeeRow');
-  if(feeRow){
-    feeRow.style.display=takeFee>0?'flex':'none';
-    var lbl=document.getElementById('chkFeeLabel');
-    if(lbl)lbl.textContent='Take-out cups ('+cartCupCount()+' × ₱'+TAKEOUT_FEE_PER_CUP.toFixed(2)+')';
-    var amt=document.getElementById('chkFee');
-    if(amt)amt.textContent='₱'+takeFee.toFixed(2);
+/**
+ * Prices the basket for display.
+ *
+ * Mirrors ReservationService::quote() step for step: each line is rounded to
+ * centavos before it is added up, then the take-out surcharge is added to that
+ * rounded subtotal. Summing raw floats first and rounding once at the end can
+ * land a centavo away from what the server charges, and the server is the one
+ * that decides.
+ */
+function money2(value) {
+  return Math.round((Number(value) || 0) * 100) / 100;
+}
+
+function quoteCart() {
+  var subtotal = 0;
+  var cups = 0;
+
+  cart.forEach(function (line) {
+    subtotal += money2(line.price * line.qty);
+    cups += line.qty;
+  });
+
+  subtotal = money2(subtotal);
+
+  // Staff can discount at the counter; a customer reserving cannot.
+  var percent = 0;
+  if (isStaff()) {
+    var field = document.getElementById('checkoutDiscount');
+    percent = field ? (parseFloat(field.value) || 0) : 0;
   }
-  var f=function(v){return '\u20B1'+v.toFixed(2);};
-  var cs=document.getElementById('cartSummary');
-  if(cs&&cs.style.display!=='none'){document.getElementById('cartSubtotal').textContent=f(sub);document.getElementById('cartDiscount').textContent='-'+f(disc);document.getElementById('chkTotal').textContent=f(tot);
-    var ctInput=document.getElementById('checkoutCashTendered');var cashTendered=ctInput?(parseFloat(ctInput.value)||0):0;
-    var changeRow=document.getElementById('changeRow');var chkChange=document.getElementById('chkChange');
-    if(changeRow&&chkChange){
-      if(cashTendered>0){changeRow.style.display='flex';var change=cashTendered-tot;if(change>=0){chkChange.textContent=f(change);chkChange.style.color='var(--success)';}else{chkChange.textContent='-'+f(Math.abs(change));chkChange.style.color='var(--danger)';}}
-      else{changeRow.style.display='none';}
+
+  var discount = money2(subtotal * (percent / 100));
+  var takeoutFee = checkoutIsTakeOut() ? money2(TAKEOUT_FEE_PER_CUP * cups) : 0;
+  var total = money2(subtotal - discount + takeoutFee);
+
+  return { subtotal: subtotal, discount: discount, takeoutFee: takeoutFee, cups: cups, total: total };
+}
+
+function updateCartTotals() {
+  var q = quoteCart();
+  var peso = function (value) { return '₱' + value.toFixed(2); };
+
+  var write = function (id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  var toggle = function (id, on, how) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = on ? (how || 'flex') : 'none';
+  };
+
+  // Every field is written whether or not the cart panel happens to be on
+  // screen. These used to sit behind a check on the panel's visibility, which
+  // is why the checkout modal could open showing zeroes.
+  write('cartSubtotal', peso(q.subtotal));
+  write('cartDiscount', '-' + peso(q.discount));
+  write('cartFee', peso(q.takeoutFee));
+  write('cartTotal', peso(q.total));
+
+  write('chkSubtotal', peso(q.subtotal));
+  write('chkDiscount', '-' + peso(q.discount));
+  write('chkFee', peso(q.takeoutFee));
+  write('chkTotal', peso(q.total));
+
+  var feeLabel = 'Take-out cups (' + q.cups + ' × ' + peso(TAKEOUT_FEE_PER_CUP) + ')';
+  write('cartFeeLabel', feeLabel);
+  write('chkFeeLabel', feeLabel);
+
+  toggle('cartFeeRow', q.takeoutFee > 0);
+  toggle('chkFeeRow', q.takeoutFee > 0);
+  toggle('cartDiscountRow', isStaff());
+  toggle('discountField', isStaff(), 'block');
+
+  var tenderField = document.getElementById('checkoutCashTendered');
+  var tendered = tenderField ? (parseFloat(tenderField.value) || 0) : 0;
+  var changeRow = document.getElementById('changeRow');
+  var changeCell = document.getElementById('chkChange');
+
+  if (changeRow && changeCell) {
+    if (tendered > 0) {
+      changeRow.style.display = 'flex';
+      var change = money2(tendered - q.total);
+      changeCell.textContent = change >= 0 ? peso(change) : '-' + peso(Math.abs(change));
+      changeCell.style.color = change >= 0 ? 'var(--success)' : 'var(--danger)';
+    } else {
+      changeRow.style.display = 'none';
     }
   }
-  var qrAmount=document.getElementById('qrPaymentAmount');if(qrAmount)qrAmount.textContent=f(tot);
+
+  write('qrPaymentAmount', peso(q.total));
   updateCustomerCheckoutBar();
 }
+
 
 function renderQrPayment(method){
   var panel=document.getElementById('qrPaymentPanel');if(!panel)return;
