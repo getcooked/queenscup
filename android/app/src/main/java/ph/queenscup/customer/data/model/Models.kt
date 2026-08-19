@@ -143,11 +143,60 @@ data class AuthRequest(
     val name: String? = null,
     val email: String,
     val password: String,
+    @SerialName("contact_number") val contactNumber: String? = null,
+    @SerialName("device_name") val deviceName: String = "android",
+)
+
+/** Confirming the six digit code that was emailed on sign up. */
+@Serializable
+data class VerifyRequest(
+    val email: String,
+    val code: String,
     @SerialName("device_name") val deviceName: String = "android",
 )
 
 @Serializable
-data class AuthUser(val id: Long, val name: String, val email: String, val role: String)
+data class EmailRequest(val email: String)
+
+/**
+ * Sign up does not hand back a token: the address has to be confirmed
+ * first, so only status and email come back at that point.
+ */
+@Serializable
+data class VerificationStarted(
+    val status: String,
+    val email: String,
+    val message: String? = null,
+)
 
 @Serializable
-data class AuthResponse(val token: String, val user: AuthUser)
+data class ChatMessagePayload(
+    val author: String,
+    val body: String,
+    @SerialName("quick_replies") val quickReplies: List<String> = emptyList(),
+)
+
+@Serializable
+data class ChatHistory(val data: List<ChatMessagePayload> = emptyList(), val stored: Boolean = false)
+
+@Serializable
+data class ChatRequest(val message: String)
+
+@Serializable
+data class ChatReply(
+    val body: String,
+    @SerialName("quick_replies") val quickReplies: List<String> = emptyList(),
+    val stored: Boolean = false,
+)
+
+@Serializable
+data class AuthUser(
+    val id: Long,
+    @SerialName("fullName") val fullName: String,
+    val email: String,
+    @SerialName("contactNumber") val contactNumber: String? = null,
+    val role: String,
+)
+
+@Serializable
+data class AuthResponse(val status: String? = null, val token: String, val user: AuthUser)

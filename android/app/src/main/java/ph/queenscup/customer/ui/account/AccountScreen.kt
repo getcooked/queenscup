@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,9 +22,23 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ph.queenscup.customer.ui.BasketViewModel
 import ph.queenscup.customer.ui.peso
 
+/**
+ * The account tab.
+ *
+ * Signed out it is the sign in and sign up flow, matching the website.
+ * Signed in it shows the real account rather than a name typed into this
+ * phone, which is what lets reservations and chat follow the customer.
+ */
 @Composable
-fun AccountScreen(viewModel: BasketViewModel) {
+fun AccountScreen(viewModel: BasketViewModel, authViewModel: AuthViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val auth by authViewModel.state.collectAsStateWithLifecycle()
+
+    val account = auth.signedIn
+    if (account == null) {
+        AuthScreen(viewModel = authViewModel)
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -36,21 +51,21 @@ fun AccountScreen(viewModel: BasketViewModel) {
 
         Card {
             Column(Modifier.padding(14.dp)) {
-                Text("Reserving as", style = MaterialTheme.typography.labelSmall)
-                Text(
-                    state.customerName.ifBlank { "Guest" },
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                if (state.customerContact.isNotBlank()) {
-                    Text(state.customerContact, style = MaterialTheme.typography.bodyMedium)
+                Text("Signed in as", style = MaterialTheme.typography.labelSmall)
+                Text(account.fullName, style = MaterialTheme.typography.titleMedium)
+                Text(account.email, style = MaterialTheme.typography.bodyMedium)
+                if (!account.contactNumber.isNullOrBlank()) {
+                    Text(account.contactNumber, style = MaterialTheme.typography.bodyMedium)
                 }
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(10.dp))
                 Text(
-                    "You don't need an account. Your name is saved on this phone and " +
-                        "your reservations are tracked by their reference code.",
+                    "The same account works on the website, so your reservations " +
+                        "and chat are waiting wherever you sign in.",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Spacer(Modifier.height(10.dp))
+                OutlinedButton(onClick = { authViewModel.signOut() }) { Text("Sign out") }
             }
         }
 

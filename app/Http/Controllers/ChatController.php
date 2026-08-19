@@ -79,9 +79,26 @@ class ChatController extends Controller
         return response()->json(['cleared' => true]);
     }
 
-    /** The signed-in customer, or null for a landing-page visitor. */
+    /**
+     * The signed-in customer, or null for a visitor.
+     *
+     * The browser carries a session and the app carries a Sanctum token, so
+     * both are accepted and the conversation is the same account either way.
+     */
     private function customer(Request $request): ?User
     {
+        // Named explicitly: the chat routes are open to visitors, so there is
+        // no auth middleware to resolve a bearer token for us.
+        $viaToken = $request->user('sanctum');
+        if ($viaToken && $viaToken->role === 'customer') {
+            return $viaToken;
+        }
+
+        // API routes are stateless, so there may be no session to consult.
+        if (! $request->hasSession()) {
+            return null;
+        }
+
         $id = $request->session()->get('customer_user_id');
 
         return $id ? User::find($id) : null;

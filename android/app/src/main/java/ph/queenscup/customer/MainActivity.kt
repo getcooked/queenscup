@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.LocalCafe
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.ShoppingBag
@@ -35,6 +36,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ph.queenscup.customer.ui.BasketViewModel
 import ph.queenscup.customer.ui.account.AccountScreen
+import ph.queenscup.customer.ui.account.AuthViewModel
+import ph.queenscup.customer.ui.chat.ChatScreen
+import ph.queenscup.customer.ui.chat.ChatViewModel
 import ph.queenscup.customer.ui.cart.BasketScreen
 import ph.queenscup.customer.ui.menu.MenuScreen
 import ph.queenscup.customer.ui.theme.QueensCupTheme
@@ -75,7 +79,8 @@ private enum class Tab(
 ) {
     MENU("menu", "Menu", Icons.Outlined.LocalCafe),
     BASKET("basket", "Reserve", Icons.Outlined.ShoppingBag),
-    TRACK("track", "Track", Icons.Outlined.Receipt),
+    TRACK("track", "Orders", Icons.Outlined.Receipt),
+    CHAT("chat", "Help", Icons.Outlined.ChatBubbleOutline),
     ACCOUNT("account", "Account", Icons.Outlined.AccountCircle),
 }
 
@@ -83,6 +88,8 @@ private enum class Tab(
 private fun QueensCupApp(deepLinkReference: String?) {
     val navController = rememberNavController()
     val basketViewModel: BasketViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
+    val chatViewModel: ChatViewModel = viewModel()
     val basket by basketViewModel.state.collectAsStateWithLifecycle()
 
     // A push tap lands straight on the tracker for that reservation.
@@ -145,10 +152,13 @@ private fun QueensCupApp(deepLinkReference: String?) {
             composable(Tab.TRACK.route) {
                 TrackScreen(initialReference = deepLinkReference)
             }
+            composable(Tab.CHAT.route) {
+                ChatScreen(viewModel = chatViewModel)
+            }
             composable(Tab.ACCOUNT.route) {
-                // Shares the activity-scoped view model so the saved name and
-                // the cup fee match what the Reserve tab is showing.
-                AccountScreen(viewModel = basketViewModel)
+                // Shares the activity-scoped view models so the signed-in
+                // name and the cup fee match what Reserve is showing.
+                AccountScreen(viewModel = basketViewModel, authViewModel = authViewModel)
             }
         }
     }

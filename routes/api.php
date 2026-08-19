@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReservationController;
@@ -32,9 +33,16 @@ Route::prefix('v1')->group(function () {
     // Accounts are optional; they only persist a customer's history.
     Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+    Route::post('/auth/verify', [AuthController::class, 'verify'])->middleware('throttle:10,1');
+    Route::post('/auth/resend', [AuthController::class, 'resend'])->middleware('throttle:5,1');
 
     // Reserving and tracking. The reference code is the secret, so tracking
     // stays open while still being unguessable.
+    // The assistant. Open to anyone, but a token identifies the customer so
+    // the phone sees the same conversation as the website.
+    Route::get('/chat', [ChatController::class, 'history']);
+    Route::post('/chat', [ChatController::class, 'send'])->middleware('throttle:30,1');
+
     Route::post('/reservations/quote', [ReservationController::class, 'quote']);
     Route::post('/reservations', [ReservationController::class, 'store'])->middleware('throttle:30,1');
     Route::get('/reservations/{reference}', [ReservationController::class, 'show']);

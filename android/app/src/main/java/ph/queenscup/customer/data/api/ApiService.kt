@@ -2,7 +2,14 @@ package ph.queenscup.customer.data.api
 
 import ph.queenscup.customer.data.model.AuthRequest
 import ph.queenscup.customer.data.model.AuthResponse
+import ph.queenscup.customer.data.model.AuthUser
+import ph.queenscup.customer.data.model.ChatHistory
+import ph.queenscup.customer.data.model.ChatReply
+import ph.queenscup.customer.data.model.ChatRequest
 import ph.queenscup.customer.data.model.DeviceTokenRequest
+import ph.queenscup.customer.data.model.EmailRequest
+import ph.queenscup.customer.data.model.VerificationStarted
+import ph.queenscup.customer.data.model.VerifyRequest
 import ph.queenscup.customer.data.model.ProductsResponse
 import ph.queenscup.customer.data.model.QuoteRequest
 import ph.queenscup.customer.data.model.QuoteResponse
@@ -41,6 +48,27 @@ interface ApiService {
     @POST("auth/login")
     suspend fun login(@Body body: AuthRequest): AuthResponse
 
+    // Sign up sends a code and waits; the token only arrives once the
+    // address is confirmed, exactly as on the website.
     @POST("auth/register")
-    suspend fun register(@Body body: AuthRequest): AuthResponse
+    suspend fun register(@Body body: AuthRequest): VerificationStarted
+
+    @POST("auth/verify")
+    suspend fun verify(@Body body: VerifyRequest): AuthResponse
+
+    @POST("auth/resend")
+    suspend fun resendCode(@Body body: EmailRequest)
+
+    @GET("auth/me")
+    suspend fun me(): AuthUser
+
+    @POST("auth/logout")
+    suspend fun logout()
+
+    // The assistant. Works signed out too, it just is not kept then.
+    @GET("chat")
+    suspend fun chatHistory(): ChatHistory
+
+    @POST("chat")
+    suspend fun chatSend(@Body body: ChatRequest): ChatReply
 }
