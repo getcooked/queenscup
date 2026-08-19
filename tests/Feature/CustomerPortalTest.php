@@ -74,4 +74,22 @@ class CustomerPortalTest extends TestCase
         $this->assertStringContainsString('@media(max-width:768px){.sidebar{display:none}', $html);
         $this->assertStringContainsString('.customer-mobile .customer-mobile-nav{display:none!important}', $html);
     }
+    public function test_the_customer_counters_hide_when_there_is_nothing_to_count()
+    {
+        $html = $this->get('/orders')->assertOk()->getContent();
+
+        // Both start hidden and are only shown once a count is above zero.
+        $this->assertStringContainsString('id="pendingOrdersBadge" style="display:none"', $html);
+        $this->assertStringContainsString('id="historyCountBadge" style="display:none"', $html);
+        $this->assertStringContainsString('updateCustomerNavBadges', $html);
+    }
+
+    public function test_history_gets_its_own_counter()
+    {
+        $html = $this->get('/orders')->assertOk()->getContent();
+
+        // History had no indicator at all before.
+        $this->assertStringContainsString('historyCountBadge', $html);
+        $this->assertStringContainsString('nav-badge muted', $html);
+    }
 }

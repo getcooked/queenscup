@@ -165,4 +165,32 @@ class AdminPanelAccessTest extends TestCase
 
         $this->get('/dashboard')->assertRedirect('/staff-login');
     }
+    public function test_signing_out_lands_on_the_public_page()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->withSession(['staff_user_id' => $admin->id]);
+
+        foreach (['/dashboard', '/pos', '/inventory', '/reports', '/settings', '/profile', '/reservations'] as $uri) {
+            $html = $this->get($uri)->assertOk()->getContent();
+
+            // Signing out drops you on the landing page, not back at a login form.
+            // Spacing around the assignment differs between views.
+            $this->assertMatchesRegularExpression(
+                '/location\\.href\\s*=\\s*'.preg_quote(json_encode(url('/')), '/').'/',
+                $html,
+                $uri
+            );
+            $this->assertStringNotContainsString('staff-login"', $html, $uri);
+        }
+    }
+
+    public function test_a_customer_signing_out_clears_the_server_session_too()
+    {
+        $html = $this->get('/orders')->assertOk()->getContent();
+
+        // The customer branch used to skip the server entirely, leaving
+        // customer_user_id in the session after an apparent sign-out.
+        $this->assertStringContainsString('customer\/logout', $html);
+        $this->assertStringContainsString('staff-logout', $html);
+    }
 }

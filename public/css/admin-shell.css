@@ -320,3 +320,9 @@ body:not(.customer-mobile) .app-layout .topbar-title {
 .qc-confirm-actions button:hover {
     filter: brightness(1.04);
 }
+
+/* A count that is context, not an alert: history totals rather than a queue. */
+.sidebar .nav-badge.muted {
+    background: rgba(95, 127, 107, .16);
+    color: var(--fg-muted, var(--muted, #5f7f6b));
+}

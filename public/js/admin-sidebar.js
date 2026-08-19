@@ -114,7 +114,12 @@
         var managed = link.querySelector('#pendingOrdersBadge');
         if (managed) {
             managed.classList.add('nav-badge', 'orders-indicator');
-            managed.style.display = 'inline-flex';
+
+            // The page owns this number. Forcing it visible put a red zero
+            // beside a customer's Active link with nothing queued, so respect
+            // a zero and leave it hidden.
+            var shown = parseInt(managed.textContent, 10);
+            managed.style.display = shown > 0 ? 'inline-flex' : 'none';
             return;
         }
 

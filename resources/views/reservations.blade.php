@@ -420,7 +420,7 @@
             credentials: 'same-origin',
             headers: { 'X-CSRF-TOKEN': CSRF }
         }).finally(function () {
-            window.location.href = @json(route('login'));
+            window.location.href = @json(url('/'));
         });
     }
 

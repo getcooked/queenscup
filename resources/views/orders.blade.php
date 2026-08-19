@@ -1488,7 +1488,44 @@ function renderReservationCard(r) {
   '</div></div>';
 }
 
+
+/**
+ * Keeps the customer navigation counters honest.
+ *
+ * These used to be derived from the old local-storage order list, which a
+ * customer no longer writes to, so Active sat at a permanent red zero and
+ * History had no counter at all. Both now come from the reservations the
+ * server actually returned, and a zero simply hides.
+ */
+function updateCustomerNavBadges() {
+  if (!isCustomerOrGuest()) return;
+
+  var active = 0;
+  var past = 0;
+
+  (myReservations || []).forEach(function (r) {
+    if (r.status === 'completed' || r.status === 'cancelled') past++;
+    else active++;
+  });
+
+  var setBadge = function (id, count) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = String(count);
+    el.style.display = count > 0 ? 'inline-flex' : 'none';
+  };
+
+  setBadge('pendingOrdersBadge', active);
+  setBadge('historyCountBadge', past);
+
+  // The phone's bottom bar carries the same active count.
+  var dot = document.getElementById('mobileActiveDot');
+  if (dot) dot.style.display = active > 0 ? 'grid' : 'none';
+  if (dot) dot.textContent = String(active);
+}
+
 function renderMyReservations() {
+  updateCustomerNavBadges();
   var list = document.getElementById('customerReservationList');
   if (!list) return;
 
@@ -1515,7 +1552,10 @@ function updateCashPendingUI(){
   var topEl=document.getElementById('topCashPending');var topCount=document.getElementById('topCashPendingCount');
   if(topEl&&topCount){if(c>0&&isStaff()){topEl.style.display='inline-flex';topCount.textContent=c;}else{topEl.style.display='none';}}
   var br=getBranch();
-  var pb=document.getElementById('pendingOrdersBadge');
+  // Customers are counted from their reservations instead; see
+  // updateCustomerNavBadges().
+  if(isCustomerOrGuest()){updateCustomerNavBadges();}
+  var pb=isCustomerOrGuest()?null:document.getElementById('pendingOrdersBadge');
   if(pb){
     if(isGuest()){var myIds=getData('guest_orders_'+currentUser.fullName,[]);pb.textContent=orders.filter(function(o){return (myIds.indexOf(o.id)!==-1||o.customer===currentUser.fullName)&&(o.status==='pending'||o.status==='preparing');}).length;}
     else{pb.textContent=orders.filter(function(o){return o.branch===br&&(o.status==='pending'||o.status==='preparing');}).length;}
@@ -1726,23 +1766,16 @@ function handleLogin(){
 function handleLogout(){
   var staffSession=isStaff();
   currentUser=null;clearSession();cart=[];
-  if(staffSession){
-    fetch(@json(route('staff.logout')),{method:'POST',credentials:'same-origin',headers:{'X-CSRF-TOKEN':@json(csrf_token())}})
-      .finally(function(){window.location.href=@json(route('login'));});
-    return;
-  }
-  // Guest OTP was replaced by customer accounts.
-  document.body.classList.remove('customer-mobile');
-  var mobileNav=document.getElementById('customerMobileNav');if(mobileNav)mobileNav.style.display='none';
-  var checkoutBar=document.getElementById('customerCheckoutBar');if(checkoutBar)checkoutBar.style.display='none';
-  var chatBtn=document.getElementById('customerChatBtn');if(chatBtn)chatBtn.style.display='none';
-  updateInstallButton();
-  document.getElementById('appLayout').style.display='none';document.getElementById('chatbotContainer').style.display='none';
-  document.getElementById('loginPage').classList.remove('hidden');
-  document.getElementById('loginUsername').value='';document.getElementById('loginPassword').value='';
-  document.getElementById('chatMessages').innerHTML='';chatOpen=false;document.getElementById('chatWindow').classList.remove('open');
-  closeNotifPanel();updateAllLogos();
+
+  // Both roles end up on the public page. The customer branch used to skip
+  // the server entirely, which left customer_user_id sitting in the session
+  // even though the browser thought it had signed out.
+  var endpoint=staffSession?@json(route('staff.logout')):@json(route('customer.logout'));
+
+  fetch(endpoint,{method:'POST',credentials:'same-origin',headers:{'X-CSRF-TOKEN':@json(csrf_token())}})
+    .finally(function(){window.location.href=@json(url('/'));});
 }
+
 
 /* ========== ADMIN CREATE STAFF ========== */
 function createStaffAccount(){
@@ -1815,8 +1848,8 @@ function buildSidebarNav(){
   }else{
     h+='<div class="nav-section"><div class="nav-section-title">Order</div><a class="nav-item" href="#pos" data-page="pos"><i class="fas fa-mug-hot"></i> Menu</a></div>';
     h+='<div class="nav-section"><div class="nav-section-title">My Reservations</div>'+
-      '<a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> Active <span class="nav-badge" id="pendingOrdersBadge">0</span></a>'+
-      '<a class="nav-item" href="#history" data-page="history"><i class="fas fa-clock-rotate-left"></i> History</a></div>';
+      '<a class="nav-item" href="#orders" data-page="orders"><i class="fas fa-receipt"></i> Active <span class="nav-badge" id="pendingOrdersBadge" style="display:none">0</span></a>'+
+      '<a class="nav-item" href="#history" data-page="history"><i class="fas fa-clock-rotate-left"></i> History <span class="nav-badge muted" id="historyCountBadge" style="display:none">0</span></a></div>';
   }
   if(isStaff())h+='<div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item" href="{{ url('/profile') }}"><i class="fas fa-user-circle"></i> My Profile</a></div>';
   else h+='<div class="nav-section"><div class="nav-section-title">Account</div><a class="nav-item" href="#profile" data-page="profile"><i class="fas fa-user-circle"></i> My Profile</a></div>';

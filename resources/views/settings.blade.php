@@ -147,7 +147,7 @@ function csrfToken(){var token=document.querySelector('meta[name="csrf-token"]')
 function handleLogout(){
     localStorage.removeItem('qc_session');
     fetch(@json(route('staff.logout')),{method:'POST',credentials:'same-origin',headers:{'X-CSRF-TOKEN':csrfToken()}})
-        .finally(function(){window.location.href=@json(route('login'));});
+        .finally(function(){window.location.href=@json(url('/'));});
 }
 function isValidEmail(value){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value||'').trim());}
 function showStaffMessage(message,type){
