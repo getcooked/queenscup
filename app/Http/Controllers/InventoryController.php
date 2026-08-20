@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Inventory;
+use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
@@ -55,7 +57,16 @@ class InventoryController extends Controller
         }
 
         try {
-            Inventory::create($data);
+            $item = Inventory::create($data);
+
+            ActivityLog::record(
+                'inventory.created',
+                "Added {$item->name}",
+                $this->staff($request),
+                ['stock' => (int) $item->stock, 'regular' => (float) $item->regular_price],
+                'inventory',
+                $item->id,
+            );
         } catch (QueryException $exception) {
             return back()
                 ->withInput()
@@ -90,11 +101,27 @@ class InventoryController extends Controller
                 ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
+        ActivityLog::record(
+            'inventory.updated',
+            "Updated {$inventory->name}",
+            $this->staff($request),
+            [
+                'stock' => (int) $inventory->stock,
+                'regular' => (float) $inventory->regular_price,
+                'large' => (float) $inventory->large_price,
+            ],
+            'inventory',
+            $inventory->id,
+        );
+
         return redirect('/inventory')->with('success', 'Inventory item updated.');
     }
 
-    public function destroy(Inventory $inventory)
+    public function destroy(Request $request, Inventory $inventory)
     {
+        // Captured before the row goes, so the line still names it.
+        $name = $inventory->name;
+
         if ($inventory->image_path) {
             Storage::disk('public')->delete($inventory->image_path);
         }
@@ -106,7 +133,24 @@ class InventoryController extends Controller
                 ->withErrors(['database' => 'We could not connect to the database. Please try again later.']);
         }
 
+        ActivityLog::record(
+            'inventory.deleted',
+            "Removed {$name}",
+            $this->staff($request),
+            [],
+            'inventory',
+            $inventory->id,
+        );
+
         return redirect('/inventory')->with('success', 'Inventory item deleted.');
+    }
+
+    /** The signed-in staff member, handed over by the staff middleware. */
+    private function staff(Request $request): ?User
+    {
+        $staff = $request->attributes->get('staff_user');
+
+        return $staff instanceof User ? $staff : null;
     }
 
     private function validatedData(Request $request)

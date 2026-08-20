@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\ActivityLog;
 use App\Models\User;
 use App\Models\Inventory;
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\InventoryController;
@@ -178,6 +180,8 @@ Route::post('/staff-login', function (Request $request) {
     $request->session()->regenerate();
     $request->session()->put('staff_user_id', $user->id);
 
+    ActivityLog::record('staff.login', "{$user->name} signed in", $user);
+
     return response()->json([
         'redirect_to' => $user->role === 'admin'
             ? route('dashboard')
@@ -194,6 +198,13 @@ Route::post('/staff-login', function (Request $request) {
 })->middleware('throttle:10,1')->name('staff.login');
 
 Route::post('/staff-logout', function (Request $request) {
+    // Read before the session goes, so the line still names who left.
+    $leaving = User::find($request->session()->get('staff_user_id'));
+
+    if ($leaving) {
+        ActivityLog::record('staff.logout', "{$leaving->name} signed out", $leaving);
+    }
+
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
@@ -329,6 +340,11 @@ Route::middleware(['staff', 'admin'])->group(function () {
 
     Route::resource('inventory', InventoryController::class)
         ->only(['index', 'store', 'update', 'destroy']);
+
+    // The activity log. Admin only: it names who did what, which is not
+    // something every cashier needs to read.
+    Route::get('/activity', [ActivityLogController::class, 'index'])
+        ->middleware('admin')->name('activity');
 
     Route::get('/reports', function () {
         return view('reports');

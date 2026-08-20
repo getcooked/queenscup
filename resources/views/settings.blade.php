@@ -32,7 +32,7 @@
             <a class="nav-item" href="{{ url('/reservations') }}"><i class="fas fa-calendar-check"></i> Reservations</a><a class="nav-item" href="{{ url('/inventory') }}"><i class="fas fa-boxes-stacked"></i> Inventory</a>
             <div class="nav-section-title">System</div>
             <a class="nav-item" href="{{ url('/reports') }}"><i class="fas fa-chart-bar"></i> Reports</a>
-            <a class="nav-item active" href="{{ url('/settings') }}"><i class="fas fa-gear"></i> Settings</a>
+            <a class="nav-item" href="{{ url('/activity') }}"><i class="fas fa-clock-rotate-left"></i> Activity</a><a class="nav-item active" href="{{ url('/settings') }}"><i class="fas fa-gear"></i> Settings</a>
             <div class="nav-section-title">Account</div>
             <a class="nav-item" href="{{ url('/profile') }}"><i class="fas fa-user-circle"></i> My Profile</a>
         </nav>

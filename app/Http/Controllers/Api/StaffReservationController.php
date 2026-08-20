@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Services\ReservationService;
@@ -46,7 +47,17 @@ class StaffReservationController extends Controller
             'status' => ['required', Rule::in(Reservation::STATUSES)],
         ]);
 
+        $was = $reservation->status;
         $this->reservations->transition($reservation, $data['status']);
+
+        ActivityLog::record(
+            'order.status',
+            "Moved {$reservation->reference} from {$was} to {$data['status']}",
+            $this->actor($request),
+            ['from' => $was, 'to' => $data['status']],
+            'reservation',
+            $reservation->reference,
+        );
 
         return response()->json($this->present($reservation->fresh('items')));
     }
@@ -58,6 +69,15 @@ class StaffReservationController extends Controller
         ]);
 
         $this->reservations->recordPayment($reservation, $data['payment_method'], $this->actor($request));
+
+        ActivityLog::record(
+            'order.payment',
+            "Took ".number_format((float) $reservation->total, 2)." for {$reservation->reference} by ".strtoupper($data['payment_method']),
+            $this->actor($request),
+            ['method' => $data['payment_method'], 'total' => (float) $reservation->total],
+            'reservation',
+            $reservation->reference,
+        );
 
         return response()->json($this->present($reservation->fresh('items')));
     }
@@ -91,6 +111,20 @@ class StaffReservationController extends Controller
         ]);
 
         $sale = $this->reservations->recordWalkInSale($data, $this->actor($request));
+
+        ActivityLog::record(
+            'sale.recorded',
+            "Rang up {$sale->reference} for ".number_format((float) $sale->total, 2)." by ".strtoupper($data['payment_method']),
+            $this->actor($request),
+            [
+                'method' => $data['payment_method'],
+                'total' => (float) $sale->total,
+                'cups' => (int) $sale->items->sum('quantity'),
+                'service' => $data['service_type'],
+            ],
+            'sale',
+            $sale->reference,
+        );
 
         return response()->json($this->present($sale), 201);
     }
