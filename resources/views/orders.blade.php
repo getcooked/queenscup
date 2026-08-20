@@ -2241,7 +2241,7 @@ function processPayment(){
 }
 
 function markOrderPaid(id){
-  var o=orders.find(function(or){return or.id===id;});if(!o)return;
+  var o=orders.find(function(or){return String(or.id)===String(id);});if(!o)return;
   if(o.serverId){patchServerOrder('/'+o.serverId+'/payment',{payment_method:'cash'},'Order '+o.serverRef+' marked paid.');return;}
   if(o.paymentStatus==='paid'){showToast('Already marked as paid','info');return;}
   o.paymentStatus='paid';o.paidBy=currentUser.fullName||currentUser.username||'staff';o.paidAt=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
@@ -2261,7 +2261,7 @@ function generateReceipt(o){
 }
 
 function openOrderReceipt(id){
-  var o=orders.find(function(or){return or.id===id;});if(!o)return;
+  var o=orders.find(function(or){return String(or.id)===String(id);});if(!o)return;
   generateReceipt(o);openModal('receiptModal');
 }
 
@@ -2461,13 +2461,27 @@ function renderOrders(){
   document.getElementById('ordersThead').innerHTML='<tr>'+thCols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr>';
   document.getElementById('ordersTable').innerHTML=f.slice().sort(function(a,b){return Number(a.id||0)-Number(b.id||0);}).map(function(o){
     var is=o.items.map(function(i){return '<div class="item-line" style="margin-bottom:5px">'+orderItemVisual(i)+'<span>'+escapeHtml(i.name)+(i.size==='R'?' (16oz)':' (22oz)')+' x'+i.qty+'</span></div>';}).join('');
-    var ah='<button class="btn btn-secondary btn-sm btn-icon" onclick="viewOrderDetail('+o.id+')" title="View"><i class="fas fa-eye"></i></button><button class="btn btn-secondary btn-sm btn-icon" onclick="openOrderReceipt('+o.id+')" title="Receipt"><i class="fas fa-receipt"></i></button>';
+    // Quoted so a reference id such as QC-8F2K4D is passed as a string
+    // rather than being read as a variable name.
+    var oid="'"+String(o.id).replace(/'/g,'')+"'";
+    var ah='<button class="btn btn-secondary btn-sm btn-icon" onclick="viewOrderDetail('+oid+')" title="View"><i class="fas fa-eye"></i></button><button class="btn btn-secondary btn-sm btn-icon" onclick="openOrderReceipt('+oid+')" title="Receipt"><i class="fas fa-receipt"></i></button>';
     if(showActions){
-      if(o.status==='pending')ah+='<button class="btn btn-transparent-info btn-sm btn-icon" onclick="updateOrderStatus('+o.id+',\'preparing\')" title="Prepare"><i class="fas fa-blender"></i></button>';
-      if(o.status==='preparing')ah+='<button class="btn btn-sm btn-icon" style="background:var(--accent);color:#fff" onclick="updateOrderStatus('+o.id+',\'serving\')" title="Serve"><i class="fas fa-concierge-bell"></i></button>';
-      if(o.status==='ready')ah+='<button class="btn btn-success btn-sm btn-icon" onclick="updateOrderStatus('+o.id+',\'completed\')" title="Complete"><i class="fas fa-check"></i></button>';
-      if(o.status==='pending')ah+='<button class="btn btn-danger btn-sm btn-icon" onclick="updateOrderStatus('+o.id+',\'cancelled\')" title="Cancel"><i class="fas fa-times"></i></button>';
-      if(o.paymentStatus==='pending')ah+='<button class="btn btn-gold btn-sm btn-icon" onclick="markOrderPaid('+o.id+')" title="Mark as Paid"><i class="fas '+paymentInfo(o.payment).icon+'"></i></button>';
+      if(o.status==='pending')ah+='<button class="btn btn-transparent-info btn-sm btn-icon" onclick="updateOrderStatus('+oid+',\'preparing\')" title="Prepare"><i class="fas fa-blender"></i></button>';
+      /*
+       * The two kinds of order do not share a vocabulary. A reservation on
+       * the server runs preparing -> ready, while an older local order used
+       * its own 'serving' step. Sending 'serving' to the server is refused,
+       * so a server order used to strand at preparing with no button that
+       * could move it forward.
+       */
+      if(o.status==='preparing'){
+        var afterPreparing=o.serverId?'ready':'serving';
+        ah+='<button class="btn btn-sm btn-icon" style="background:var(--accent);color:#fff" onclick="updateOrderStatus('+oid+',\''+afterPreparing+'\')" title="'+(o.serverId?'Mark ready':'Serve')+'"><i class="fas fa-concierge-bell"></i></button>';
+      }
+      if(o.status==='ready'||o.status==='serving')ah+='<button class="btn btn-success btn-sm btn-icon" onclick="updateOrderStatus('+oid+',\'completed\')" title="Complete"><i class="fas fa-check"></i></button>';
+      // The server permits cancelling while preparing, so offer it there too.
+      if(o.status==='pending'||o.status==='preparing')ah+='<button class="btn btn-danger btn-sm btn-icon" onclick="updateOrderStatus('+oid+',\'cancelled\')" title="Cancel"><i class="fas fa-times"></i></button>';
+      if(o.paymentStatus==='pending')ah+='<button class="btn btn-gold btn-sm btn-icon" onclick="markOrderPaid('+oid+')" title="Mark as Paid"><i class="fas '+paymentInfo(o.payment).icon+'"></i></button>';
     }
     var statusCell=showActions?getStatusBadge(o.status):renderCustomerProgress(o);
     var tdCols=['<td style="font-weight:700">'+escapeHtml(String(o.id))+'</td>'];if(showActions){tdCols.push('<td><span class="badge '+(o.channel==='Counter'?'badge-gold':'badge-info')+'">'+escapeHtml(o.channel||'Reservation')+'</span></td>');tdCols.push('<td>'+escapeHtml(o.customer)+'</td>');}tdCols.push('<td style="font-size:11px">'+is+'</td>');tdCols.push('<td style="font-weight:700;color:var(--gold-light)">\u20B1'+o.total.toFixed(2)+'</td>');tdCols.push('<td>'+getPaymentStatusBadge(o)+'</td>');tdCols.push('<td>'+statusCell+'</td>');tdCols.push('<td style="color:var(--fg-muted)">'+o.time+'</td>');if(showActions)tdCols.push('<td><div style="display:flex;gap:4px">'+ah+'</div></td>');
@@ -2476,12 +2490,12 @@ function renderOrders(){
   updateCashPendingUI();
 }
 function filterOrders(f,btn){currentOrderFilter=f||'all';document.querySelectorAll('.order-filter').forEach(function(b){b.classList.remove('active');});if(btn)btn.classList.add('active');renderOrders();}
-function updateOrderStatus(id,s){var o=orders.find(function(or){return or.id===id;});if(!o)return;
+function updateOrderStatus(id,s){var o=orders.find(function(or){return String(or.id)===String(id);});if(!o)return;
   if(o.serverId){patchServerOrder('/'+o.serverId+'/status',{status:s},'Order '+o.serverRef+' is now '+(SERVER_STATUS_LABEL[s]||s)+'.');return;}
   o.status=s;setData('orders',orders);renderOrders();updateNotifBadge();var m={preparing:'Being prepared',serving:'Ready for pick up',completed:'Completed!',cancelled:'Cancelled'};showToast(m[s]||'Updated',s==='cancelled'?'warning':'success');}
 
 function viewOrderDetail(id){
-  var o=orders.find(function(or){return or.id===id;});if(!o)return;var showActions=isStaff();
+  var o=orders.find(function(or){return String(or.id)===String(id);});if(!o)return;var showActions=isStaff();
   var ss=['pending','preparing','serving','completed'];var sl=['Pending','Preparing','Serving','Completed'];var si=ss.indexOf(o.status);var tl='';
   if(showActions&&o.status!=='cancelled'){tl='<div class="order-timeline" style="margin-bottom:20px">'+ss.map(function(s,i){var c=i<si?'done':i===si?'current':'';return '<div class="timeline-step '+c+'"><div class="timeline-dot '+c+'">'+(i<si?'<i class="fas fa-check"></i>':(i+1))+'</div><div class="timeline-label">'+sl[i]+'</div></div>';}).join('')+'</div>';}
   if(!showActions){tl='<div style="margin-bottom:20px">'+renderCustomerProgress(o)+'</div>';}
@@ -2495,13 +2509,14 @@ function viewOrderDetail(id){
   document.getElementById('orderDetailContent').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><span style="font-size:22px;font-weight:900;font-family:\'Playfair Display\'">#'+o.id+'</span>'+getStatusBadge(o.status)+'</div>'+tl+'<div class="grid-2" style="gap:10px;margin-bottom:14px"><div style="background:rgba(255,255,255,0.92);padding:10px;border-radius:var(--radius-sm)"><div style="font-size:9px;color:var(--fg-muted);text-transform:uppercase;margin-bottom:3px">Customer</div><div style="font-weight:600;font-size:13px">'+escapeHtml(o.customer)+'</div></div><div style="background:rgba(255,255,255,0.92);padding:10px;border-radius:var(--radius-sm)"><div style="font-size:9px;color:var(--fg-muted);text-transform:uppercase;margin-bottom:3px">Branch</div><div style="font-weight:600;font-size:13px">'+brInfo.name+'</div></div></div>'+contactHtml+'<div class="grid-2" style="gap:10px;margin-bottom:14px"><div style="background:rgba(255,255,255,0.92);padding:10px;border-radius:var(--radius-sm)"><div style="font-size:9px;color:var(--fg-muted);text-transform:uppercase;margin-bottom:3px">Type / Payment</div><div style="font-weight:600;font-size:13px">'+o.type+' \u2014 '+p.label+'</div></div><div style="background:rgba(255,255,255,0.92);padding:10px;border-radius:var(--radius-sm)"><div style="font-size:9px;color:var(--fg-muted);text-transform:uppercase;margin-bottom:3px">Time</div><div style="font-weight:600;font-size:13px">'+o.time+'</div></div></div><div style="background:rgba(255,255,255,0.92);padding:12px;border-radius:var(--radius-sm)"><div style="font-size:9px;color:var(--fg-muted);text-transform:uppercase;margin-bottom:8px">Items</div>'+ih+dh+'<div style="display:flex;justify-content:space-between;padding:8px 0;margin-top:4px"><span style="font-weight:700">Total</span><span style="font-weight:900;color:var(--gold-light);font-size:15px">\u20B1'+o.total.toFixed(2)+'</span></div>'+cashInfo+payStatusHtml+'</div>';
   var fb='';
   if(showActions){
-    fb+='<button class="btn btn-secondary btn-sm" onclick="openOrderReceipt('+o.id+')"><i class="fas fa-receipt"></i> Receipt</button>';
-    if(o.paymentStatus==='pending')fb+='<button class="btn btn-gold btn-sm" onclick="markOrderPaid('+o.id+');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas '+p.icon+'"></i> Mark Paid</button>';
+    var oid="'"+String(o.id).replace(/'/g,'')+"'";
+    fb+='<button class="btn btn-secondary btn-sm" onclick="openOrderReceipt('+oid+')"><i class="fas fa-receipt"></i> Receipt</button>';
+    if(o.paymentStatus==='pending')fb+='<button class="btn btn-gold btn-sm" onclick="markOrderPaid('+oid+');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas '+p.icon+'"></i> Mark Paid</button>';
     if(o.status!=='completed'&&o.status!=='cancelled'){
-      if(o.status==='pending')fb+='<button class="btn btn-sm" style="background:var(--info);color:#fff" onclick="updateOrderStatus('+o.id+',\'preparing\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-blender"></i> Prepare</button>';
-      if(o.status==='preparing')fb+='<button class="btn btn-sm" style="background:var(--accent);color:#fff" onclick="updateOrderStatus('+o.id+',\'serving\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-concierge-bell"></i> Serve</button>';
-      if(o.status==='ready')fb+='<button class="btn btn-success btn-sm" onclick="updateOrderStatus('+o.id+',\'completed\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-check"></i> Complete</button>';
-      if(o.status==='pending')fb+='<button class="btn btn-danger btn-sm" onclick="updateOrderStatus('+o.id+',\'cancelled\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-times"></i> Cancel</button>';
+      if(o.status==='pending')fb+='<button class="btn btn-sm" style="background:var(--info);color:#fff" onclick="updateOrderStatus('+oid+',\'preparing\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-blender"></i> Prepare</button>';
+      if(o.status==='preparing')fb+='<button class="btn btn-sm" style="background:var(--accent);color:#fff" onclick="updateOrderStatus('+oid+',\'serving\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-concierge-bell"></i> Serve</button>';
+      if(o.status==='ready')fb+='<button class="btn btn-success btn-sm" onclick="updateOrderStatus('+oid+',\'completed\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-check"></i> Complete</button>';
+      if(o.status==='pending')fb+='<button class="btn btn-danger btn-sm" onclick="updateOrderStatus('+oid+',\'cancelled\');closeModal(\'orderDetailModal\');renderOrders()"><i class="fas fa-times"></i> Cancel</button>';
     }
   }
   fb+='<button class="btn btn-secondary btn-sm" onclick="closeModal(\'orderDetailModal\')">Close</button>';
