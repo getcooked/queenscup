@@ -45,14 +45,24 @@
         return '';
     }
 
+    /*
+     * Which branch the badge is counting.
+     *
+     * Falls back to the same branch the Orders screen and the server both
+     * default to. Counting every branch here while that screen counted only
+     * one would put a different number in each place, which is the confusion
+     * this badge already caused once.
+     */
+    var DEFAULT_BRANCH = 'kotapark';
+
     function selectedBranch() {
         try {
             var stored = localStorage.getItem('qc_branch');
-            if (!stored) return '';
+            if (!stored) return DEFAULT_BRANCH;
             var branch = JSON.parse(stored);
-            return typeof branch === 'string' ? branch : '';
+            return typeof branch === 'string' && branch ? branch : DEFAULT_BRANCH;
         } catch (error) {
-            return '';
+            return DEFAULT_BRANCH;
         }
     }
 
