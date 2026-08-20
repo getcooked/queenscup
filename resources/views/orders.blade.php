@@ -808,7 +808,7 @@ body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transpa
 <div class="modal-overlay" id="receiptModal"><div class="modal" style="max-width:370px"><div class="modal-header"><h3>Receipt</h3><button class="modal-close" onclick="closeModal('receiptModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="receiptContent"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('receiptModal')">Close</button><button class="btn btn-primary" onclick="printReceipt()"><i class="fas fa-print"></i> Print</button></div></div></div>
 <div class="modal-overlay" id="orderDetailModal"><div class="modal" style="max-width:540px"><div class="modal-header"><h3>Order Details</h3><button class="modal-close" onclick="closeModal('orderDetailModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="orderDetailContent"></div><div class="modal-footer" id="orderDetailFooter"></div></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ asset('vendor/chartjs/chart.umd.min.js') }}"></script>
 <script>
 /* ========== LOGO URL ========== */
 var LOGO_URL='{{ asset('icons/queens-cup-logo.png') }}';
