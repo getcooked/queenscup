@@ -56,30 +56,48 @@
         }
     }
 
+    /*
+     * The counter's real orders live on the server, not in local storage.
+     * Counting the browser copy left this badge showing a permanent zero
+     * while the Orders screen, which fetches, showed the true number.
+     *
+     * The last good answer is kept so the badge does not blink back to zero
+     * between polls or during a brief network hiccup.
+     */
+    var counts = { active: 0, cashPending: 0 };
+    var countsLoaded = false;
+
+    function countsUrl() {
+        var branch = selectedBranch();
+
+        return '/staff/reservations/counts' + (branch ? '?branch=' + encodeURIComponent(branch) : '');
+    }
+
+    function fetchCounts() {
+        if (typeof window.fetch !== 'function') return Promise.resolve(counts);
+
+        return window.fetch(countsUrl(), {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin'
+        })
+            .then(function (response) {
+                // A signed-out page redirects to the login screen; leave the
+                // badge alone rather than showing a misleading zero.
+                if (!response.ok) throw new Error('unavailable');
+                return response.json();
+            })
+            .then(function (payload) {
+                counts = {
+                    active: Number(payload.active) || 0,
+                    cashPending: Number(payload.cash_pending) || 0
+                };
+                countsLoaded = true;
+                return counts;
+            })
+            .catch(function () { return counts; });
+    }
+
     function orderCounts() {
-        var counts = { active: 0, cashPending: 0 };
-
-        try {
-            var orders = JSON.parse(localStorage.getItem('qc_orders') || '[]');
-            if (!Array.isArray(orders)) return counts;
-
-            /*
-             * Fall back to counting every branch when no branch has been picked
-             * yet. The old code hard-coded 'kotapark', so an MCC order never
-             * reached the badge and the count silently sat at zero.
-             */
-            var branch = selectedBranch();
-
-            orders.forEach(function (order) {
-                if (!order) return;
-                if (branch && order.branch && order.branch !== branch) return;
-                if (order.status === 'pending' || order.status === 'preparing') counts.active++;
-                if (order.paymentStatus === 'pending') counts.cashPending++;
-            });
-        } catch (error) {
-            return counts;
-        }
-
         return counts;
     }
 
@@ -126,7 +144,11 @@
         var indicator = badge(link, 'data-orders-indicator', 'orders-indicator');
         var label = counts.active + ' active order' + (counts.active === 1 ? '' : 's');
         if (indicator.textContent !== String(counts.active)) indicator.textContent = String(counts.active);
-        indicator.style.display = 'inline-flex';
+
+        // Stay hidden until the first answer arrives, so the badge never
+        // flashes a zero it has not actually checked, and hide a real zero
+        // rather than sitting there as a red nought.
+        indicator.style.display = countsLoaded && counts.active > 0 ? 'inline-flex' : 'none';
         indicator.setAttribute('aria-label', label);
         indicator.title = label;
 
@@ -137,7 +159,7 @@
         var cash = badge(link, 'data-cash-pending-indicator', 'cash-pending');
         var cashLabel = counts.cashPending + ' order' + (counts.cashPending === 1 ? '' : 's') + ' awaiting payment';
         if (cash.textContent !== String(counts.cashPending)) cash.textContent = String(counts.cashPending);
-        cash.style.display = counts.cashPending > 0 ? 'inline-flex' : 'none';
+        cash.style.display = countsLoaded && counts.cashPending > 0 ? 'inline-flex' : 'none';
         cash.setAttribute('aria-label', cashLabel);
         cash.title = cashLabel;
     }
@@ -216,8 +238,14 @@
         });
     }
 
+    /** Fetches the live numbers, then repaints. */
+    function sync() {
+        return fetchCounts().then(refresh);
+    }
+
     function init() {
         refresh();
+        sync();
         wrapLogout();
 
         var scheduled = false;
@@ -236,19 +264,21 @@
 
         /* A storage event only fires in other tabs, so poll for same-tab edits. */
         window.addEventListener('storage', function (event) {
-            if (!event.key || event.key === 'qc_orders' || event.key === 'qc_branch') refresh();
+            // A branch change moves which orders are counted.
+            if (!event.key || event.key === 'qc_branch') sync();
         });
 
         document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) refresh();
+            if (!document.hidden) sync();
         });
 
-        window.addEventListener('pageshow', function () { refresh(); });
+        window.addEventListener('pageshow', function () { sync(); });
+        // Polls the server, so a longer gap than the old local read.
         window.setInterval(function () {
-            if (!document.hidden) refresh();
-        }, 5000);
+            if (!document.hidden) sync();
+        }, 15000);
 
-        window.refreshAdminSidebar = refresh;
+        window.refreshAdminSidebar = sync;
     }
 
     if (document.readyState === 'loading') {

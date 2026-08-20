@@ -190,6 +190,36 @@ class StaffReservationController extends Controller
         ]);
     }
 
+    /**
+     * Counts for the sidebar badges.
+     *
+     * Deliberately tiny: the sidebar polls this on every panel page, and it
+     * only ever needs two numbers. Reading the whole order list to count it
+     * in the browser is what left the badge showing a stale zero, since the
+     * counter's real orders live here rather than in local storage.
+     */
+    public function counts(Request $request): JsonResponse
+    {
+        $branch = $request->query('branch');
+
+        $scoped = fn () => Reservation::query()
+            ->when($branch, fn ($query) => $query->where('branch', $branch));
+
+        return response()->json([
+            // Deliberately the same two the Orders screen counts, so the
+            // sidebar badge and that page can never disagree.
+            'active' => $scoped()->whereIn('status', [
+                Reservation::STATUS_PENDING,
+                Reservation::STATUS_PREPARING,
+            ])->count(),
+
+            'cash_pending' => $scoped()
+                ->where('payment_status', '!=', 'paid')
+                ->whereNotIn('status', [Reservation::STATUS_CANCELLED, Reservation::STATUS_COMPLETED])
+                ->count(),
+        ]);
+    }
+
     private function present(Reservation $reservation): array
     {
         return [

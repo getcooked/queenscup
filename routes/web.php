@@ -384,6 +384,7 @@ Route::middleware('staff')->group(function () {
 
     Route::prefix('staff/reservations')->name('staff.reservations.')->group(function () {
         Route::get('/', [StaffReservationController::class, 'index'])->name('index');
+        Route::get('/counts', [StaffReservationController::class, 'counts'])->name('counts');
         Route::patch('/{reservation}/status', [StaffReservationController::class, 'updateStatus'])->name('status');
         Route::patch('/{reservation}/payment', [StaffReservationController::class, 'recordPayment'])->name('payment');
     });
