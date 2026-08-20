@@ -140,18 +140,26 @@
          * numbers alone there and only keep the pending badge visible.
          */
         var managed = link.querySelector('#pendingOrdersBadge');
-        if (managed) {
-            managed.classList.add('nav-badge', 'orders-indicator');
 
-            // The page owns this number. Forcing it visible put a red zero
-            // beside a customer's Active link with nothing queued, so respect
-            // a zero and leave it hidden.
+        /*
+         * A customer sees a count of their own reservations, which only
+         * that page can work out, so leave its number alone.
+         */
+        if (managed && document.body.classList.contains('customer-mobile')) {
+            managed.classList.add('nav-badge', 'orders-indicator');
             var shown = parseInt(managed.textContent, 10);
             managed.style.display = shown > 0 ? 'inline-flex' : 'none';
             return;
         }
 
-        var indicator = badge(link, 'data-orders-indicator', 'orders-indicator');
+        /*
+         * For staff the server count is the only one. The Orders screen used
+         * to work its own out from the 200 most recent rows it had fetched,
+         * so once completed sales filled that window the two disagreed.
+         */
+        var indicator = managed || badge(link, 'data-orders-indicator', 'orders-indicator');
+        indicator.classList.add('nav-badge', 'orders-indicator');
+
         var label = counts.active + ' active order' + (counts.active === 1 ? '' : 's');
         if (indicator.textContent !== String(counts.active)) indicator.textContent = String(counts.active);
 
@@ -166,7 +174,9 @@
          * Mirror the orders page cash-pending badge so the Orders row looks the
          * same on every page instead of growing a second badge only there.
          */
-        var cash = badge(link, 'data-cash-pending-indicator', 'cash-pending');
+        var cash = link.querySelector('#cashPendingSidebarBadge') ||
+            badge(link, 'data-cash-pending-indicator', 'cash-pending');
+        cash.classList.add('nav-badge', 'cash-pending');
         var cashLabel = counts.cashPending + ' order' + (counts.cashPending === 1 ? '' : 's') + ' awaiting payment';
         if (cash.textContent !== String(counts.cashPending)) cash.textContent = String(counts.cashPending);
         cash.style.display = countsLoaded && counts.cashPending > 0 ? 'inline-flex' : 'none';

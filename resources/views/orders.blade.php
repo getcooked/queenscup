@@ -1562,13 +1562,14 @@ function updateCashPendingUI(){
   // Customers are counted from their reservations instead; see
   // updateCustomerNavBadges().
   if(isCustomerOrGuest()){updateCustomerNavBadges();}
-  var pb=isCustomerOrGuest()?null:document.getElementById('pendingOrdersBadge');
+  // The staff badge is filled from the server by js/admin-sidebar.js, which
+  // counts the whole table rather than the page's most recent 200 rows.
+  var pb=isGuest()?document.getElementById('pendingOrdersBadge'):null;
   if(pb){
-    if(isGuest()){var myIds=getData('guest_orders_'+currentUser.fullName,[]);pb.textContent=orders.filter(function(o){return (myIds.indexOf(o.id)!==-1||o.customer===currentUser.fullName)&&(o.status==='pending'||o.status==='preparing');}).length;}
-    else{pb.textContent=orders.filter(function(o){return o.branch===br&&(o.status==='pending'||o.status==='preparing');}).length;}
+    var myIds=getData('guest_orders_'+currentUser.fullName,[]);
+    pb.textContent=orders.filter(function(o){return (myIds.indexOf(o.id)!==-1||o.customer===currentUser.fullName)&&(o.status==='pending'||o.status==='preparing');}).length;
   }
-  var cpb=document.getElementById('cashPendingSidebarBadge');
-  if(cpb){cpb.textContent=c;if(c>0)cpb.style.display='inline';else cpb.style.display='none';}
+  // cashPendingSidebarBadge is filled by js/admin-sidebar.js from the server.
   var banner=document.getElementById('cashPendingBanner');var bannerTitle=document.getElementById('cashPendingBannerTitle');var bannerDesc=document.getElementById('cashPendingBannerDesc');
   if(banner&&isStaff()){if(c>0){banner.style.display='flex';bannerTitle.textContent=c+' Payment Pending Order'+(c>1?'s':'');bannerDesc.textContent='\u20B1'+a.toFixed(2)+' awaiting cash or QR confirmation.';}else{banner.style.display='none';}}
   else if(banner){banner.style.display='none';}
@@ -2407,6 +2408,7 @@ function loadStaffOrders() {
     .then(function (payload) {
       orders = (payload.data || []).map(mapServerOrder);
       staffOrdersLoaded = true;
+      if (window.refreshAdminSidebar) window.refreshAdminSidebar();
       if (currentPageId === 'orders') renderOrders();
       updateCashPendingUI();
     })
