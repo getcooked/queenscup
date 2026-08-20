@@ -202,8 +202,15 @@ class StaffReservationController extends Controller
     {
         $branch = $request->query('branch');
 
+        // An order with no branch recorded still belongs to whoever is looking
+        // at the counter. Filtering it out is how a badge ends up reading nought
+        // while orders are waiting, so those rows are always included.
         $scoped = fn () => Reservation::query()
-            ->when($branch, fn ($query) => $query->where('branch', $branch));
+            ->when($branch, fn ($query) => $query->where(
+                fn ($sub) => $sub->where('branch', $branch)
+                    ->orWhereNull('branch')
+                    ->orWhere('branch', '')
+            ));
 
         return response()->json([
             // Deliberately the same two the Orders screen counts, so the

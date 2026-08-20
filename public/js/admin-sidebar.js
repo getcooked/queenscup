@@ -48,21 +48,18 @@
     /*
      * Which branch the badge is counting.
      *
-     * Falls back to the same branch the Orders screen and the server both
-     * default to. Counting every branch here while that screen counted only
-     * one would put a different number in each place, which is the confusion
-     * this badge already caused once.
+     * Empty means every branch. Defaulting to one was worse than counting
+     * them all: any order stored under a different or empty branch was
+     * silently dropped and the badge sat at nought while orders waited.
      */
-    var DEFAULT_BRANCH = 'kotapark';
-
     function selectedBranch() {
         try {
             var stored = localStorage.getItem('qc_branch');
-            if (!stored) return DEFAULT_BRANCH;
+            if (!stored) return '';
             var branch = JSON.parse(stored);
-            return typeof branch === 'string' && branch ? branch : DEFAULT_BRANCH;
+            return typeof branch === 'string' ? branch : '';
         } catch (error) {
-            return DEFAULT_BRANCH;
+            return '';
         }
     }
 

@@ -131,4 +131,38 @@ class SidebarOrderCountTest extends TestCase
         // Counting the browser copy is what produced the permanent zero.
         $this->assertStringNotContainsString("localStorage.getItem('qc_orders')", $script);
     }
+
+    public function test_an_order_with_a_blank_branch_is_still_counted()
+    {
+        $this->asStaff();
+
+        $reservation = $this->reserve('pending');
+        // The column is not nullable, but nothing stops a blank being stored.
+        $reservation->forceFill(['branch' => ''])->save();
+
+        // Filtering to a branch must not make a waiting order disappear, which
+        // is how the badge ended up reading nought while orders were waiting.
+        $this->getJson('/staff/reservations/counts?branch=kotapark')
+            ->assertOk()
+            ->assertJsonPath('active', 1);
+    }
+
+    public function test_an_order_at_another_branch_is_still_counted_when_no_branch_is_asked_for()
+    {
+        $this->asStaff();
+        $this->reserve('pending', 'mcc');
+
+        $this->getJson('/staff/reservations/counts')
+            ->assertOk()
+            ->assertJsonPath('active', 1);
+    }
+
+    public function test_the_sidebar_does_not_assume_a_branch()
+    {
+        $script = file_get_contents(public_path('js/admin-sidebar.js'));
+
+        // Defaulting to one branch silently dropped every order stored under
+        // any other, leaving the badge stuck at nought.
+        $this->assertStringNotContainsString('DEFAULT_BRANCH', $script);
+    }
 }
