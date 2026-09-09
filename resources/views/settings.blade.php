@@ -117,6 +117,7 @@
                 </div>
                 <div class="card-body">
                     <div class="upload-box">
+                        <div id="staffAccountMessage" class="alert" role="status" aria-live="polite" hidden></div>
                         <div class="field">
                             <label>Full Name</label>
                             <input type="text" id="staffName" placeholder="Enter full name">
@@ -140,6 +141,7 @@
                     </div>
                 </div>
             </section>
+        </div>
     </main>
 </div>
 <script>
@@ -151,15 +153,10 @@ function handleLogout(){
 }
 function isValidEmail(value){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value||'').trim());}
 function showStaffMessage(message,type){
-    var existing=document.getElementById('staffAccountMessage');
-    if(existing)existing.remove();
-    var el=document.createElement('div');
-    el.id='staffAccountMessage';
+    var el=document.getElementById('staffAccountMessage');
     el.className='alert '+(type==='error'?'error':'');
     el.textContent=message;
-    var target=document.querySelector('.grid.spaced');
-    target.parentNode.insertBefore(el,target);
-    setTimeout(function(){el.remove();},5000);
+    el.hidden=false;
 }
 function createStaffAccount(){
     var name=document.getElementById('staffName').value.trim();
