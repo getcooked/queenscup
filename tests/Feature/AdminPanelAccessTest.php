@@ -1,0 +1,196 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Tests\TestCase;
+
+class AdminPanelAccessTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_guests_are_redirected_from_staff_and_admin_pages()
+    {
+        foreach (['/dashboard', '/inventory', '/reports', '/settings', '/pos', '/cashier-portal', '/profile'] as $uri) {
+            $this->get($uri)->assertRedirect('/staff-login');
+        }
+
+        $this->postJson('/inventory')->assertUnauthorized();
+        $this->postJson('/pos')->assertUnauthorized();
+        $this->postJson('/staff')->assertUnauthorized();
+        $this->postJson('/settings/qr-code')->assertUnauthorized();
+    }
+
+    public function test_cashiers_can_use_staff_pages_but_not_admin_pages()
+    {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        $this->withSession(['staff_user_id' => $cashier->id]);
+
+        $this->get('/pos')
+            ->assertOk()
+            ->assertDontSee('href="'.route('dashboard').'"', false)
+            ->assertDontSee('href="'.route('inventory.index').'"', false);
+        $this->get('/profile')
+            ->assertOk()
+            ->assertDontSee('href="'.route('dashboard').'"', false)
+            ->assertDontSee('href="'.route('settings').'"', false);
+
+        foreach (['/dashboard', '/inventory', '/reports', '/settings'] as $uri) {
+            $this->get($uri)->assertRedirect('/cashier-portal');
+        }
+
+        $this->postJson('/staff')->assertForbidden();
+        $this->postJson('/inventory')->assertForbidden();
+    }
+
+    public function test_admins_can_open_every_panel_page()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->withSession(['staff_user_id' => $admin->id]);
+
+        foreach (['/dashboard', '/inventory', '/reports', '/settings', '/pos', '/profile'] as $uri) {
+            $this->get($uri)
+                ->assertOk()
+                ->assertSee('css/admin-shell.css', false)
+                ->assertSee('js/admin-sidebar.js', false);
+        }
+    }
+
+    public function test_staff_orders_sidebar_uses_server_routes_for_admin_pages()
+    {
+        $this->get('/orders')
+            ->assertOk()
+            ->assertSee('js/admin-sidebar.js', false)
+            ->assertSee('data-current-page="orders"', false)
+            ->assertDontSee('href="#inventory" data-page="inventory"', false)
+            ->assertDontSee('href="#reports" data-page="reports"', false)
+            ->assertDontSee('href="#settings" data-page="settings"', false);
+    }
+
+    public function test_shared_sidebar_assets_inline_their_icons_and_the_orders_indicator()
+    {
+        $script = file_get_contents(public_path('js/admin-sidebar.js'));
+        $stylesheet = file_get_contents(public_path('css/admin-shell.css'));
+
+        // Icons ship as inline SVG so the sidebar paints without a webfont round trip.
+        $this->assertStringContainsString("dashboard: '<path", $script);
+        $this->assertStringContainsString("orders: '<path", $script);
+        $this->assertStringContainsString('data-orders-indicator', $script);
+        $this->assertStringContainsString('data-cash-pending-indicator', $script);
+        $this->assertStringNotContainsString('bootstrap-icons', $stylesheet);
+        $this->assertStringNotContainsString('@import', $stylesheet);
+        $this->assertStringContainsString('.sidebar .nav-badge', $stylesheet);
+        $this->assertStringContainsString('.sidebar .nav-badge.cash-pending', $stylesheet);
+        $this->assertStringContainsString('.sidebar .nav-item .nav-icon svg', $stylesheet);
+
+        // The shell owns the sidebar outright so no page stylesheet can leak into it.
+        $this->assertStringContainsString('text-transform: none;', $stylesheet);
+        $this->assertStringContainsString('-webkit-text-fill-color: transparent;', $stylesheet);
+
+        // Font Awesome is served locally; a blocked CDN made every icon vanish
+        // outright because the face declares font-display: block.
+        $this->assertFileExists(public_path('vendor/fontawesome/css/all.min.css'));
+        $this->assertFileExists(public_path('vendor/fontawesome/webfonts/fa-solid-900.woff2'));
+        // The landing page uses the Android brand mark on its download button.
+        $this->assertFileExists(public_path('vendor/fontawesome/webfonts/fa-brands-400.woff2'));
+
+        foreach (['dashboard', 'orders', 'pos', 'inventory', 'reports', 'settings', 'profile', 'staff-login'] as $view) {
+            $blade = file_get_contents(resource_path("views/{$view}.blade.php"));
+            $this->assertStringNotContainsString('cdnjs.cloudflare.com/ajax/libs/font-awesome', $blade);
+            $this->assertStringContainsString('vendor/fontawesome/css/all.min.css', $blade);
+        }
+    }
+
+    public function test_orders_prefers_the_authenticated_staff_session_for_its_shell()
+    {
+        $admin = User::factory()->create([
+            'name' => 'Sidebar Admin',
+            'email' => 'sidebar@example.com',
+            'role' => 'admin',
+        ]);
+
+        $payload = [
+            'id' => $admin->id,
+            'username' => $admin->email,
+            'role' => 'admin',
+            'fullName' => $admin->name,
+            'email' => $admin->email,
+        ];
+
+        $this->withSession(['staff_user_id' => $admin->id])
+            ->get('/orders')
+            ->assertOk()
+            ->assertSee('var AUTHENTICATED_STAFF='.json_encode($payload).';', false);
+    }
+
+    public function test_login_returns_the_correct_destination_for_each_staff_role()
+    {
+        $admin = User::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => Hash::make('secret123'),
+            'role' => 'admin',
+        ]);
+
+        $this->postJson('/staff-login', [
+            'email' => $admin->email,
+            'password' => 'secret123',
+        ])->assertOk()
+            ->assertJsonPath('redirect_to', route('dashboard'))
+            ->assertSessionHas('staff_user_id', $admin->id);
+
+        $cashier = User::factory()->create([
+            'email' => 'cashier@example.com',
+            'password' => Hash::make('secret123'),
+            'role' => 'cashier',
+        ]);
+
+        $this->postJson('/staff-login', [
+            'email' => $cashier->email,
+            'password' => 'secret123',
+        ])->assertOk()
+            ->assertJsonPath('redirect_to', route('cashier.portal'))
+            ->assertSessionHas('staff_user_id', $cashier->id);
+    }
+
+    public function test_logout_invalidates_the_staff_session()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->withSession(['staff_user_id' => $admin->id])
+            ->post('/staff-logout')
+            ->assertRedirect('/staff-login')
+            ->assertSessionMissing('staff_user_id');
+
+        $this->get('/dashboard')->assertRedirect('/staff-login');
+    }
+    public function test_signing_out_lands_on_the_public_page()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->withSession(['staff_user_id' => $admin->id]);
+
+        foreach (['/dashboard', '/pos', '/inventory', '/reports', '/settings', '/profile', '/reservations'] as $uri) {
+            $html = $this->get($uri)->assertOk()->getContent();
+
+            // Signing out drops you on the landing page, not back at a login form.
+            // Spacing around the assignment differs between views.
+            $this->assertMatchesRegularExpression(
+                '/location\\.href\\s*=\\s*'.preg_quote(json_encode(url('/')), '/').'/',
+                $html,
+                $uri
+            );
+            $this->assertStringNotContainsString('staff-login"', $html, $uri);
+        }
+    }
+
+    public function test_a_customer_signing_out_clears_the_server_session_too()
+    {
+        $html = $this->get('/orders')->assertOk()->getContent();
+
+        // The customer branch used to skip the server entirely, leaving
+        // customer_user_id in the session after an apparent sign-out.
+        $this->assertStringContainsString('customer\/logout', $html);
+        $this->assertStringContainsString('staff-logout', $html);
+    }
+}

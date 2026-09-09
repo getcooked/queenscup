@@ -1,0 +1,328 @@
+.sidebar {
+    width: 260px;
+    background: #fff;
+    border-right: 1px solid var(--border, var(--line, #cfe7d7));
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    box-shadow: 0 12px 32px rgba(18, 53, 36, .07);
+}
+
+.sidebar .sidebar-brand {
+    min-height: 91px;
+    padding: 22px 18px;
+    border-bottom: 1px solid var(--border, var(--line, #cfe7d7));
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.sidebar .crown-icon,
+.sidebar .sidebar-brand .crown-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid rgba(18, 134, 78, .3);
+    background: linear-gradient(135deg, #0c6f3f, #12864e);
+    box-shadow: none;
+}
+
+.sidebar .crown-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sidebar .sidebar-brand h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #16a65f, #2f9e62);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sidebar .tagline,
+.sidebar .sidebar-brand span {
+    display: block;
+    margin-top: 0;
+    color: var(--fg-muted, var(--muted, #5f7f6b));
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: .5px;
+    text-transform: none;
+}
+
+.sidebar .sidebar-nav {
+    flex: 1;
+    padding: 14px 10px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.sidebar .sidebar-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.sidebar .nav-section {
+    margin-bottom: 0;
+}
+
+.sidebar .nav-section-title {
+    padding: 12px 10px 7px;
+    color: var(--fg-muted, var(--muted, #5f7f6b));
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.sidebar .nav-item {
+    min-height: 40px;
+    padding: 0 12px;
+    gap: 10px;
+    border-radius: 10px;
+    color: var(--fg-muted, var(--muted, #5f7f6b));
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    text-decoration: none;
+    user-select: none;
+    transition: background .2s ease, color .2s ease;
+}
+
+.sidebar .nav-item i {
+    width: 20px;
+    font-size: 14px;
+    text-align: center;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+/* Inline SVG nav icons injected by js/admin-sidebar.js. */
+.sidebar .nav-item .nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar .nav-item .nav-icon svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
+.sidebar .nav-item:hover,
+.sidebar .nav-item.active {
+    background: rgba(18, 134, 78, .13);
+    color: var(--accent-light, var(--green, #16a65f));
+}
+
+.sidebar .nav-item.active {
+    box-shadow: inset 3px 0 0 var(--accent, var(--green, #12864e));
+}
+
+.sidebar .nav-badge {
+    min-width: 20px;
+    height: 20px;
+    margin-left: auto;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--danger, #e53170);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.sidebar .nav-badge + .nav-badge {
+    margin-left: 4px;
+}
+
+.sidebar .nav-badge.cash-pending {
+    background: var(--warning, var(--yellow, #f5a623));
+    color: #fff;
+}
+
+.sidebar .sidebar-footer {
+    min-height: 63px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--border, var(--line, #cfe7d7));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar .avatar,
+.sidebar .sidebar-footer .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #16c76a, #2f9e62);
+    color: #fff;
+}
+
+.sidebar .user-info,
+.sidebar .sidebar-footer .user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sidebar .user-info .name,
+.sidebar .sidebar-footer .user-info .name {
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar .user-info .role,
+.sidebar .sidebar-footer .user-info .role {
+    margin-top: 0;
+    color: var(--fg-muted, var(--muted, #5f7f6b));
+    font-size: 10px;
+}
+
+.sidebar .logout-btn,
+.sidebar .sidebar-footer .logout-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border, var(--line, #cfe7d7));
+    background: var(--card, #fff);
+    color: var(--fg-muted, var(--muted, #5f7f6b));
+    cursor: pointer;
+    transition: border-color .2s ease, color .2s ease;
+}
+
+body:not(.customer-mobile) .app-layout .topbar {
+    height: 74px;
+}
+
+body:not(.customer-mobile) .app-layout .topbar-title {
+    font-size: 24px;
+}
+
+@media (min-width: 961px) {
+    .sidebar {
+        display: flex;
+    }
+}
+
+@media (max-width: 960px) {
+    .sidebar {
+        display: none;
+    }
+}
+
+/* ---------------------------------------------------------------
+ * Sign-out confirmation
+ *
+ * Injected by js/admin-sidebar.js so every panel page gets the same
+ * prompt without each view repeating the markup.
+ * --------------------------------------------------------------- */
+.qc-confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(9, 26, 17, .5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 9000;
+}
+
+.qc-confirm-backdrop.open {
+    display: flex;
+}
+
+.qc-confirm {
+    width: min(360px, 100%);
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 24px 70px rgba(18, 53, 36, .22);
+    font-family: "DM Sans", sans-serif;
+    text-align: center;
+}
+
+.qc-confirm-icon {
+    width: 46px;
+    height: 46px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(229, 49, 112, .12);
+    color: #e53170;
+    font-size: 18px;
+}
+
+.qc-confirm h3 {
+    font-family: "Playfair Display", serif;
+    font-size: 19px;
+    margin-bottom: 6px;
+    color: #123524;
+}
+
+.qc-confirm p {
+    font-size: 12.5px;
+    color: #5f7f6b;
+    margin-bottom: 18px;
+    line-height: 1.5;
+}
+
+.qc-confirm-actions {
+    display: flex;
+    gap: 9px;
+}
+
+.qc-confirm-actions button {
+    flex: 1;
+    height: 40px;
+    border-radius: 10px;
+    font-family: "DM Sans", sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid #d8ebdf;
+    background: #fff;
+    color: #123524;
+}
+
+.qc-confirm-actions button.qc-confirm-go {
+    border: 0;
+    background: linear-gradient(135deg, #c22a5e, #e53170);
+    color: #fff;
+}
+
+.qc-confirm-actions button:hover {
+    filter: brightness(1.04);
+}
+
+/* A count that is context, not an alert: history totals rather than a queue. */
+.sidebar .nav-badge.muted {
+    background: rgba(95, 127, 107, .16);
+    color: var(--fg-muted, var(--muted, #5f7f6b));
+}

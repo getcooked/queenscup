@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Queen's Cup logo">
+  <defs>
+    <linearGradient id="bg" x1="96" y1="56" x2="432" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f9fff9"/>
+      <stop offset="1" stop-color="#dff2e5"/>
+    </linearGradient>
+    <linearGradient id="green" x1="148" y1="128" x2="368" y2="410" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#16a65f"/>
+      <stop offset="1" stop-color="#0c6f3f"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="156" y1="84" x2="356" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#58c77e"/>
+      <stop offset="1" stop-color="#2f9e62"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#123524" flood-opacity=".18"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="194" fill="#ffffff" opacity=".78"/>
+  <circle cx="256" cy="256" r="174" fill="none" stroke="#cfe7d7" stroke-width="10"/>
+
+  <g filter="url(#shadow)">
+    <path d="M158 196h196l-20 132c-6 42-41 73-84 73h-16c-43 0-78-31-84-73l-20-132h28Z" fill="url(#green)"/>
+    <path d="M176 226h160l-14 92c-5 31-31 54-63 54h-6c-32 0-58-23-63-54l-14-92Z" fill="#f7fbf8" opacity=".18"/>
+    <path d="M354 224h20c30 0 54 24 54 54s-24 54-54 54h-28l8-48h20c4 0 8-3 8-8s-4-8-8-8h-28l8-44Z" fill="#12864e"/>
+    <path d="M148 180h216c12 0 22 10 22 22s-10 22-22 22H148c-12 0-22-10-22-22s10-22 22-22Z" fill="#123524"/>
+  </g>
+
+  <path d="M150 136l52 32 54-76 54 76 52-32 14 76H136l14-76Z" fill="url(#gold)"/>
+  <circle cx="256" cy="91" r="18" fill="#45b873"/>
+  <circle cx="202" cy="162" r="12" fill="#f7fbf8" opacity=".9"/>
+  <circle cx="310" cy="162" r="12" fill="#f7fbf8" opacity=".9"/>
+
+  <circle cx="218" cy="304" r="14" fill="#123524" opacity=".22"/>
+  <circle cx="256" cy="326" r="14" fill="#123524" opacity=".22"/>
+  <circle cx="294" cy="304" r="14" fill="#123524" opacity=".22"/>
+
+  <text x="256" y="451" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="38" font-weight="700" fill="#123524">Queen's Cup</text>
+</svg>
