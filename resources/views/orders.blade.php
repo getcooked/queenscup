@@ -356,6 +356,13 @@ tr:last-child td{border-bottom:none}
 .search-box input{padding:8px 12px 8px 32px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--fg);font-size:12px;font-family:'DM Sans';outline:none;width:220px;transition:all var(--transition)}
 .search-box input:focus{border-color:var(--accent);width:280px;box-shadow:0 0 0 3px var(--accent-glow)}
 .order-timeline{display:flex;align-items:center;margin:10px 0}
+.orders-pagination{display:flex;align-items:center;justify-content:center;gap:5px;padding:16px;border-top:1px solid var(--border);background:rgba(255,255,255,.72)}
+.orders-pagination[hidden]{display:none}
+.orders-page-btn{width:38px;height:38px;border:1px solid var(--border);background:#fff;color:var(--fg-muted);font:700 12px 'DM Sans',sans-serif;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .18s ease,border-color .18s ease,color .18s ease}
+.orders-page-btn:hover:not(:disabled):not(.active){border-color:var(--accent);color:var(--accent)}
+.orders-page-btn.active{border-color:var(--accent);background:var(--accent);color:#fff}
+.orders-page-btn:disabled{cursor:not-allowed;opacity:.45}
+.orders-page-gap{width:24px;text-align:center;color:var(--fg-muted);font-size:12px}
 .timeline-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
 .timeline-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--fg-muted);z-index:1;transition:all var(--transition)}
 .timeline-dot.done{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -664,7 +671,7 @@ body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transpa
       <!-- ORDERS -->
       <div class="page-section" id="page-orders">
         <div id="cashPendingBanner" style="display:none" class="cash-pending-banner fade-in"><i class="fas fa-money-bill-wave"></i><div class="info"><h4 id="cashPendingBannerTitle">Payment Pending Orders</h4><p id="cashPendingBannerDesc">These orders are awaiting cash or QR payment confirmation.</p></div><button class="btn btn-warning btn-sm" onclick="filterOrders('cash_pending',document.querySelector('.order-filter[data-filter=cash_pending]'))"><i class="fas fa-filter"></i> View Pending</button></div>
-        <div id="adminOrderFilters" style="display:none" class="flex-between mb-6 fade-in"><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm order-filter active" data-filter="all" onclick="filterOrders('all',this)">All</button><button class="btn btn-secondary btn-sm order-filter" data-filter="pending" onclick="filterOrders('pending',this)">Pending</button><button class="btn btn-secondary btn-sm order-filter" data-filter="preparing" onclick="filterOrders('preparing',this)">Preparing</button><button class="btn btn-secondary btn-sm order-filter" data-filter="serving" onclick="filterOrders('serving',this)">Serving</button><button class="btn btn-secondary btn-sm order-filter" data-filter="completed" onclick="filterOrders('completed',this)">Completed</button><button class="btn btn-secondary btn-sm order-filter" data-filter="cancelled" onclick="filterOrders('cancelled',this)">Cancelled</button><button class="btn btn-secondary btn-sm order-filter" data-filter="cash_pending" onclick="filterOrders('cash_pending',this)" style="border-color:rgba(245,166,35,0.4);color:var(--warning)"><i class="fas fa-money-bill-wave"></i> Payment Pending</button></div><div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search orders..." id="orderSearch" oninput="renderOrders()"></div></div>
+        <div id="adminOrderFilters" style="display:none" class="flex-between mb-6 fade-in"><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm order-filter active" data-filter="all" onclick="filterOrders('all',this)">All</button><button class="btn btn-secondary btn-sm order-filter" data-filter="pending" onclick="filterOrders('pending',this)">Pending</button><button class="btn btn-secondary btn-sm order-filter" data-filter="preparing" onclick="filterOrders('preparing',this)">Preparing</button><button class="btn btn-secondary btn-sm order-filter" data-filter="serving" onclick="filterOrders('serving',this)">Serving</button><button class="btn btn-secondary btn-sm order-filter" data-filter="completed" onclick="filterOrders('completed',this)">Completed</button><button class="btn btn-secondary btn-sm order-filter" data-filter="cancelled" onclick="filterOrders('cancelled',this)">Cancelled</button><button class="btn btn-secondary btn-sm order-filter" data-filter="cash_pending" onclick="filterOrders('cash_pending',this)" style="border-color:rgba(245,166,35,0.4);color:var(--warning)"><i class="fas fa-money-bill-wave"></i> Payment Pending</button></div><div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search orders..." id="orderSearch" oninput="currentOrderPage=1;renderOrders()"></div></div>
         <div id="customerOrderHeader" style="display:none" class="mb-6 fade-in flex-between">
           <div>
             <h3 style="font-family:'Playfair Display';font-size:22px;margin-bottom:4px">My Reservations</h3>
@@ -673,7 +680,7 @@ body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transpa
           <button class="btn btn-gold btn-sm" onclick="navigateTo('pos')"><i class="fas fa-mug-hot"></i> Back to Menu</button>
         </div>
         <div id="customerReservationList" style="display:none"></div>
-        <div class="card fade-in" id="staffOrdersCard"><div class="card-body" style="padding:0"><div class="table-wrap"><table><thead id="ordersThead"></thead><tbody id="ordersTable"></tbody></table></div></div></div>
+        <div class="card fade-in" id="staffOrdersCard"><div class="card-body" style="padding:0"><div class="table-wrap"><table><thead id="ordersThead"></thead><tbody id="ordersTable"></tbody></table></div><nav class="orders-pagination" id="ordersPagination" aria-label="Orders pagination" hidden></nav></div></div>
       </div>
       <!-- INVENTORY -->
       <div class="page-section" id="page-inventory">
@@ -2331,6 +2338,8 @@ function exportInventory(){
 
 /* ========== ORDERS ========== */
 var currentOrderFilter='all';
+var currentOrderPage=1;
+var ordersPerPage=10;
 
 /* ========== STAFF ORDER BOOK ==========
  *
@@ -2458,10 +2467,15 @@ function renderOrders(){
   if(currentOrderFilter!=='all'&&currentOrderFilter!=='cash_pending')f=f.filter(function(o){return o.status===currentOrderFilter;});
   if(currentOrderFilter==='cash_pending')f=f.filter(function(o){return o.paymentStatus==='pending';});
   if(s)f=f.filter(function(o){return o.customer.toLowerCase().indexOf(s)!==-1||String(o.id).indexOf(s)!==-1;});
+  f=f.slice().sort(function(a,b){return Number(b.serverId||0)-Number(a.serverId||0);});
+  var totalPages=Math.max(1,Math.ceil(f.length/ordersPerPage));
+  currentOrderPage=Math.min(Math.max(1,currentOrderPage),totalPages);
+  var pageStart=(currentOrderPage-1)*ordersPerPage;
+  var pageOrders=f.slice(pageStart,pageStart+ordersPerPage);
   var showActions=isStaff();
   var thCols=['Order'];if(showActions){thCols.push('Channel');thCols.push('Customer');}thCols.push('Items');thCols.push('Total');thCols.push('Payment');thCols.push('Status');thCols.push('Time');if(showActions)thCols.push('Actions');
   document.getElementById('ordersThead').innerHTML='<tr>'+thCols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr>';
-  document.getElementById('ordersTable').innerHTML=f.slice().sort(function(a,b){return Number(a.id||0)-Number(b.id||0);}).map(function(o){
+  document.getElementById('ordersTable').innerHTML=pageOrders.map(function(o){
     var is=o.items.map(function(i){return '<div class="item-line" style="margin-bottom:5px">'+orderItemVisual(i)+'<span>'+escapeHtml(i.name)+(i.size==='R'?' (16oz)':' (22oz)')+' x'+i.qty+'</span></div>';}).join('');
     // Quoted so a reference id such as QC-8F2K4D is passed as a string
     // rather than being read as a variable name.
@@ -2489,9 +2503,24 @@ function renderOrders(){
     var tdCols=['<td style="font-weight:700">'+escapeHtml(String(o.id))+'</td>'];if(showActions){tdCols.push('<td><span class="badge '+(o.channel==='Counter'?'badge-gold':'badge-info')+'">'+escapeHtml(o.channel||'Reservation')+'</span></td>');tdCols.push('<td>'+escapeHtml(o.customer)+'</td>');}tdCols.push('<td style="font-size:11px">'+is+'</td>');tdCols.push('<td style="font-weight:700;color:var(--gold-light)">\u20B1'+o.total.toFixed(2)+'</td>');tdCols.push('<td>'+getPaymentStatusBadge(o)+'</td>');tdCols.push('<td>'+statusCell+'</td>');tdCols.push('<td style="color:var(--fg-muted)">'+o.time+'</td>');if(showActions)tdCols.push('<td><div style="display:flex;gap:4px">'+ah+'</div></td>');
     return '<tr>'+tdCols.join('')+'</tr>';
   }).join('');
+  renderOrdersPagination(totalPages,f.length);
   updateCashPendingUI();
 }
-function filterOrders(f,btn){currentOrderFilter=f||'all';document.querySelectorAll('.order-filter').forEach(function(b){b.classList.remove('active');});if(btn)btn.classList.add('active');renderOrders();}
+function renderOrdersPagination(totalPages,totalOrders){
+  var nav=document.getElementById('ordersPagination');if(!nav)return;
+  nav.hidden=totalOrders<=ordersPerPage;
+  if(nav.hidden){nav.innerHTML='';return;}
+  var pages=[];var first=Math.max(1,currentOrderPage-2);var last=Math.min(totalPages,first+4);first=Math.max(1,last-4);
+  if(first>1){pages.push(1);if(first>2)pages.push('gap');}
+  for(var page=first;page<=last;page++)pages.push(page);
+  if(last<totalPages){if(last<totalPages-1)pages.push('gap');pages.push(totalPages);}
+  var html='<button type="button" class="orders-page-btn" aria-label="Previous page" '+(currentOrderPage===1?'disabled':'')+' onclick="goToOrderPage('+(currentOrderPage-1)+')"><i class="fas fa-chevron-left"></i></button>';
+  html+=pages.map(function(page){if(page==='gap')return '<span class="orders-page-gap">&hellip;</span>';return '<button type="button" class="orders-page-btn'+(page===currentOrderPage?' active':'')+'" '+(page===currentOrderPage?'aria-current="page"':'')+' onclick="goToOrderPage('+page+')">'+page+'</button>';}).join('');
+  html+='<button type="button" class="orders-page-btn" aria-label="Next page" '+(currentOrderPage===totalPages?'disabled':'')+' onclick="goToOrderPage('+(currentOrderPage+1)+')"><i class="fas fa-chevron-right"></i></button>';
+  nav.innerHTML=html;
+}
+function goToOrderPage(page){currentOrderPage=page;renderOrders();var card=document.getElementById('staffOrdersCard');if(card)card.scrollIntoView({behavior:'smooth',block:'start'});}
+function filterOrders(f,btn){currentOrderFilter=f||'all';currentOrderPage=1;document.querySelectorAll('.order-filter').forEach(function(b){b.classList.remove('active');});if(btn)btn.classList.add('active');renderOrders();}
 function updateOrderStatus(id,s){var o=orders.find(function(or){return String(or.id)===String(id);});if(!o)return;
   if(o.serverId){patchServerOrder('/'+o.serverId+'/status',{status:s},'Order '+o.serverRef+' is now '+(SERVER_STATUS_LABEL[s]||s)+'.');return;}
   o.status=s;setData('orders',orders);renderOrders();updateNotifBadge();var m={preparing:'Being prepared',serving:'Ready for pick up',completed:'Completed!',cancelled:'Cancelled'};showToast(m[s]||'Updated',s==='cancelled'?'warning':'success');}
@@ -2719,4 +2748,3 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
-
