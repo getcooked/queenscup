@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\DeviceToken;
 use App\Models\Reservation;
+use App\Models\User;
 use App\Services\ReservationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,7 +48,7 @@ class ReservationController extends Controller
             'customer_name' => ['required', 'string', 'max:120'],
             'customer_email' => ['nullable', 'email', 'max:180'],
             'customer_contact' => ['nullable', 'string', 'max:40'],
-            'branch' => ['nullable', 'string', 'max:40'],
+            'branch' => ['nullable', Rule::in(['kotapark', 'mcc'])],
             'notes' => ['nullable', 'string', 'max:500'],
             'source' => ['nullable', Rule::in(['web', 'android'])],
             'device_token' => ['nullable', 'string', 'max:4096'],
@@ -74,6 +75,36 @@ class ReservationController extends Controller
                 'platform' => $data['source'] ?? 'web',
             ]);
         }
+
+        return response()->json($this->present($reservation), 201);
+    }
+
+    /**
+     * Browser checkout. The customer middleware supplies the identity from
+     * the signed-in session, so a page script cannot create a guest order or
+     * claim another customer's name/email.
+     */
+    public function storeForCustomer(Request $request): JsonResponse
+    {
+        /** @var User $customer */
+        $customer = $request->attributes->get('customer_user');
+
+        $data = $this->validateBasket($request, [
+            'branch' => ['nullable', Rule::in(['kotapark', 'mcc'])],
+            'notes' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $reservation = $this->reservations->create([
+            'user_id' => $customer->id,
+            'customer_name' => $customer->name,
+            'customer_email' => $customer->email,
+            'customer_contact' => $customer->contact_number,
+            'branch' => $data['branch'] ?? 'kotapark',
+            'service_type' => $data['service_type'],
+            'items' => $data['items'],
+            'notes' => $data['notes'] ?? null,
+            'source' => 'web',
+        ]);
 
         return response()->json($this->present($reservation), 201);
     }

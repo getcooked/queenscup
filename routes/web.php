@@ -10,6 +10,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PointOfSaleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Api\StaffReservationController;
+use App\Http\Controllers\Api\ReservationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -150,6 +151,10 @@ Route::post('/chat', [ChatController::class, 'send'])->name('chat.send');
 Route::delete('/chat', [ChatController::class, 'clear'])->name('chat.clear');
 
 Route::post('/customer/logout', [CustomerAccountController::class, 'logout'])->name('customer.logout');
+// Orders started in the browser always belong to an authenticated customer.
+Route::post('/customer/reservations', [ReservationController::class, 'storeForCustomer'])
+    ->middleware('customer')
+    ->name('customer.reservations.store');
 
 Route::get('/staff-login', function () {
     return view('staff-login');

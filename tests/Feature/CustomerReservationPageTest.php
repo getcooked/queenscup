@@ -33,6 +33,15 @@ class CustomerReservationPageTest extends TestCase
             ->assertSee('Confirm reservation');
     }
 
+    public function test_the_customer_can_choose_a_branch_at_checkout()
+    {
+        $this->get('/orders')
+            ->assertOk()
+            ->assertSee('ensureCheckoutBranchChoice', false)
+            ->assertSee('Kota Park, Madridejos')
+            ->assertSee('Madridejos Community College');
+    }
+
     public function test_the_customer_checkout_posts_to_the_reservation_api()
     {
         // The basket is sent to the API rather than written to local storage,
@@ -42,7 +51,7 @@ class CustomerReservationPageTest extends TestCase
         $this->get('/orders')
             ->assertOk()
             ->assertSee('submitReservation', false)
-            ->assertSee('api\/v1\/reservations', false);
+            ->assertSee('customer\/reservations', false);
     }
 
     public function test_the_page_knows_the_take_out_surcharge()

@@ -1335,7 +1335,7 @@ document.addEventListener('click',function(e){var wrapper=document.querySelector
  * reference code. Payment is taken in person at the counter.
  */
 var TAKEOUT_FEE_PER_CUP = {{ $takeoutFeePerCup ?? 5 }};
-var RESERVE_URL = @json(url('/api/v1/reservations'));
+var RESERVE_URL = @json(route('customer.reservations.store'));
 
 function reservedReferences() {
   var stored = getData('my_reservations', []);
@@ -1365,19 +1365,25 @@ function checkoutTakeoutFee() {
 }
 
 function submitReservation() {
+  if (!isCustomer()) {
+    closeModal('checkoutModal');
+    currentUser = null;
+    clearSession();
+    document.getElementById('appLayout').style.display = 'none';
+    document.getElementById('loginPage').classList.remove('hidden');
+    showLoginError('Please sign in before placing an order.');
+    return;
+  }
   var button = document.getElementById('reserveConfirmBtn');
   if (button) { button.disabled = true; button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reserving...'; }
 
   fetch(RESERVE_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
     body: JSON.stringify({
       service_type: checkoutIsTakeOut() ? 'take_out' : 'dine_in',
-      customer_name: currentUser.fullName,
-      customer_email: currentUser.email || null,
-      customer_contact: currentUser.contactNumber || null,
-      branch: getBranch(),
-      source: 'web',
+      branch: document.getElementById('checkoutBranch').value,
       items: cart.map(function (i) {
         return { inventory_id: i.id, size: i.size === 'L' ? 'large' : 'regular', quantity: i.qty };
       })
@@ -2184,12 +2190,25 @@ function selectPaymentMethod(method){
   renderQrPayment(method);updateCartTotals();
 }
 
+function ensureCheckoutBranchChoice(){
+  var field=document.getElementById('checkoutBranchField');
+  if(field)return field;
+  var typeField=document.getElementById('checkoutType').closest('.form-group');
+  field=document.createElement('div');
+  field.className='form-group';field.id='checkoutBranchField';
+  field.innerHTML='<label for="checkoutBranch">Which branch would you like to reserve from?</label><select class="form-select" id="checkoutBranch"><option value="kotapark">Kota Park, Madridejos</option><option value="mcc">Madridejos Community College</option></select><div style="margin-top:6px;font-size:11px;color:var(--fg-muted)">Choose the branch where you will collect your reservation.</div>';
+  typeField.parentNode.insertBefore(field,typeField);
+  return field;
+}
+
 function checkout(){
   if(cart.length===0){showToast('Cart is empty','warning');return;}
   var reserving=isCustomerOrGuest();
+  var branchField=ensureCheckoutBranchChoice();
   // A customer reserves and pays in person, so none of the till controls apply.
   var show=function(id,on){var el=document.getElementById(id);if(el)el.style.display=on?'':'none';};
   show('checkoutTypePickup',!reserving);
+  if(branchField)branchField.style.display=reserving?'':'none';
   show('takeoutFeeHint',reserving);
   var pickup=document.getElementById('checkoutTypePickup');
   if(pickup&&reserving&&document.getElementById('checkoutType').value==='Pick Up')document.getElementById('checkoutType').value='Dine In';
