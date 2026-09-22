@@ -1819,6 +1819,16 @@ function createStaffAccount(){
 }
 
 /* ========== ENTER APP ========== */
+function ensureCustomerBranchChoice(){
+  if(!isCustomer())return;
+  var hero=document.getElementById('customerMenuHero');
+  if(!hero||document.getElementById('reservationBranch'))return;
+  var choice=document.createElement('div');
+  choice.className='form-group';choice.style.cssText='max-width:360px;margin:16px auto 0;text-align:left';
+  choice.innerHTML='<label for="reservationBranch" style="display:block;margin-bottom:6px;font-weight:700">Which branch would you like to reserve from?</label><select class="form-select" id="reservationBranch"><option value="kotapark">Kota Park, Madridejos</option><option value="mcc">Madridejos Community College</option></select>';
+  hero.appendChild(choice);
+}
+
 function enterApp(){
   document.getElementById('loginPage').classList.add('hidden');
   document.body.classList.toggle('customer-mobile',isCustomerOrGuest());
@@ -1846,6 +1856,7 @@ function enterApp(){
     setInterval(function(){ if(!document.hidden&&isStaff()) loadStaffOrders(); },15000);
   }
   updateAllLogos();
+  ensureCustomerBranchChoice();
   var initialPage=(window.location.hash||'').replace('#','');
   if(initialPage&&isStaff()&&STAFF_PAGE_ROUTES[initialPage]){
     window.location.replace(STAFF_PAGE_ROUTES[initialPage]);
@@ -2198,6 +2209,8 @@ function ensureCheckoutBranchChoice(){
   field.className='form-group';field.id='checkoutBranchField';
   field.innerHTML='<label for="checkoutBranch">Which branch would you like to reserve from?</label><select class="form-select" id="checkoutBranch"><option value="kotapark">Kota Park, Madridejos</option><option value="mcc">Madridejos Community College</option></select><div style="margin-top:6px;font-size:11px;color:var(--fg-muted)">Choose the branch where you will collect your reservation.</div>';
   typeField.parentNode.insertBefore(field,typeField);
+  var menuBranch=document.getElementById('reservationBranch');
+  if(menuBranch){field.querySelector('#checkoutBranch').value=menuBranch.value;}
   return field;
 }
 
@@ -2205,6 +2218,9 @@ function checkout(){
   if(cart.length===0){showToast('Cart is empty','warning');return;}
   var reserving=isCustomerOrGuest();
   var branchField=ensureCheckoutBranchChoice();
+  var menuBranch=document.getElementById('reservationBranch');
+  var checkoutBranch=document.getElementById('checkoutBranch');
+  if(reserving&&menuBranch&&checkoutBranch)checkoutBranch.value=menuBranch.value;
   // A customer reserves and pays in person, so none of the till controls apply.
   var show=function(id,on){var el=document.getElementById(id);if(el)el.style.display=on?'':'none';};
   show('checkoutTypePickup',!reserving);

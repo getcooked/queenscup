@@ -38,6 +38,7 @@ class CustomerReservationPageTest extends TestCase
         $this->get('/orders')
             ->assertOk()
             ->assertSee('ensureCheckoutBranchChoice', false)
+            ->assertSee('ensureCustomerBranchChoice', false)
             ->assertSee('Kota Park, Madridejos')
             ->assertSee('Madridejos Community College');
     }
