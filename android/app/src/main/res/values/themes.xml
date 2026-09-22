@@ -1,3 +1,9 @@
 <resources>
     <style name="Theme.QueensCup" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Pre-Android 12 launch screen. The activity switches to the normal
+         theme as soon as Compose draws its first frame. -->
+    <style name="Theme.QueensCup.Splash" parent="Theme.QueensCup">
+        <item name="android:windowBackground">@drawable/queens_cup_splash</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
 </resources>
