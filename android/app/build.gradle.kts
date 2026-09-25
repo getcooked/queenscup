@@ -32,8 +32,8 @@ android {
         targetSdk = 34
         // Bump on every published build: Android only treats a new APK as an
         // update when versionCode goes up.
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
     }
 
     // Release signing. The keystore and its passwords stay out of git; set
@@ -57,9 +57,12 @@ android {
         }
     }
 
-    buildTypes {
+      buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            // Only sign when the private release keystore is present. CI and
+            // local source builds can still produce an unsigned artifact.
+            val releaseStore = rootProject.file((findProperty("QC_KEYSTORE_FILE") as String?) ?: "queenscup-release.jks")
+            if (releaseStore.exists()) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "API_BASE_URL", "\"$releaseApiUrl\"")
