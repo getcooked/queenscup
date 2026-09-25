@@ -30,6 +30,8 @@ data class AuthState(
     val error: String? = null,
     val notice: String? = null,
     val signedIn: AuthUser? = null,
+    /** True until a stored token has been checked, so the app does not flash the sign-in form. */
+    val restoring: Boolean = true,
 )
 
 /**
@@ -60,6 +62,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                     session.saveToken(null)
                 }
             }
+            _state.value = _state.value.copy(restoring = false)
         }
     }
 
@@ -152,7 +155,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             runCatching { api.logout() }
             session.saveToken(null)
-            _state.value = AuthState()
+            _state.value = AuthState(restoring = false)
         }
     }
 

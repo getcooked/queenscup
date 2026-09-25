@@ -33,8 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ph.queenscup.customer.data.model.ServiceType
 import ph.queenscup.customer.ui.BasketViewModel
-import ph.queenscup.customer.ui.account.AuthScreen
 import ph.queenscup.customer.ui.account.AuthViewModel
+import ph.queenscup.customer.ui.branch.BranchChips
 import ph.queenscup.customer.ui.peso
 
 @Composable
@@ -53,13 +53,6 @@ fun BasketScreen(
             viewModel.setCustomerName(it.fullName)
             viewModel.setCustomerContact(it.contactNumber.orEmpty())
         }
-    }
-
-    if (auth.signedIn == null) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            AuthScreen(viewModel = authViewModel)
-        }
-        return
     }
 
     state.placed?.let { reservation ->
@@ -111,15 +104,7 @@ fun BasketScreen(
         Spacer(Modifier.height(16.dp))
 
         Text("Pick-up branch", style = MaterialTheme.typography.titleMedium)
-        listOf("kotapark" to "Kota Park, Madridejos", "mcc" to "Madridejos Community College").forEach { (value, label) ->
-            FilterChip(
-                selected = state.branch == value,
-                onClick = { viewModel.setBranch(value) },
-                enabled = !state.submitting,
-                label = { Text(label) },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        BranchChips(selected = state.branch, enabled = !state.submitting, onChoose = viewModel::setBranch)
         Spacer(Modifier.height(16.dp))
 
         // ---- How they want it served -------------------------------------

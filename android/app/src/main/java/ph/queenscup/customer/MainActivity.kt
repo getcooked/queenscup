@@ -6,7 +6,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
@@ -14,16 +20,19 @@ import androidx.compose.material.icons.outlined.LocalCafe
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material3.Badge
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,9 +45,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ph.queenscup.customer.ui.BasketViewModel
 import ph.queenscup.customer.ui.account.AccountScreen
+import ph.queenscup.customer.ui.account.AuthScreen
 import ph.queenscup.customer.ui.account.AuthViewModel
 import ph.queenscup.customer.ui.chat.ChatScreen
 import ph.queenscup.customer.ui.chat.ChatViewModel
+import ph.queenscup.customer.ui.branch.BranchScreen
 import ph.queenscup.customer.ui.cart.BasketScreen
 import ph.queenscup.customer.ui.menu.MenuScreen
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -75,7 +86,7 @@ class MainActivity : ComponentActivity() {
             }
 
             QueensCupTheme(darkTheme = dark) {
-                QueensCupApp(deepLinkReference, themeViewModel)
+                AppGate(deepLinkReference, themeViewModel)
             }
         }
     }
@@ -97,11 +108,39 @@ private enum class Tab(
     ACCOUNT("account", "Account", Icons.Outlined.AccountCircle),
 }
 
+/**
+ * Nothing can be ordered until the customer has signed in and chosen the
+ * branch that will make their drinks, so those come before the tabs.
+ */
 @Composable
-private fun QueensCupApp(deepLinkReference: String?, themeViewModel: ThemeViewModel) {
-    val navController = rememberNavController()
+private fun AppGate(deepLinkReference: String?, themeViewModel: ThemeViewModel) {
     val basketViewModel: BasketViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
+    val auth by authViewModel.state.collectAsStateWithLifecycle()
+    val basket by basketViewModel.state.collectAsStateWithLifecycle()
+
+    Surface(Modifier.fillMaxSize().safeDrawingPadding()) {
+        when {
+            auth.restoring || !basket.branchRestored -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            auth.signedIn == null -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                AuthScreen(viewModel = authViewModel)
+            }
+            basket.branch == null -> BranchScreen(onChoose = basketViewModel::setBranch)
+            else -> QueensCupApp(deepLinkReference, themeViewModel, basketViewModel, authViewModel)
+        }
+    }
+}
+
+@Composable
+private fun QueensCupApp(
+    deepLinkReference: String?,
+    themeViewModel: ThemeViewModel,
+    basketViewModel: BasketViewModel,
+    authViewModel: AuthViewModel,
+) {
+    val navController = rememberNavController()
     val chatViewModel: ChatViewModel = viewModel()
     val basket by basketViewModel.state.collectAsStateWithLifecycle()
 

@@ -41,12 +41,16 @@ class SessionStore(private val context: Context) {
         val REFERENCES = stringSetPreferencesKey("reservation_references")
         val FCM_TOKEN = stringPreferencesKey("fcm_token")
         val THEME = stringPreferencesKey("theme_mode")
+        val BRANCH = stringPreferencesKey("branch")
     }
 
     val token: Flow<String?> = context.dataStore.data.map { it[Keys.TOKEN] }
     val customerName: Flow<String?> = context.dataStore.data.map { it[Keys.NAME] }
     val customerContact: Flow<String?> = context.dataStore.data.map { it[Keys.CONTACT] }
     val fcmToken: Flow<String?> = context.dataStore.data.map { it[Keys.FCM_TOKEN] }
+
+    /** The pick-up branch chosen on this phone, or null before the first choice. */
+    val branch: Flow<String?> = context.dataStore.data.map { it[Keys.BRANCH] }
 
     /** Light, dark, or follow the phone. Defaults to following the phone. */
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map {
@@ -70,6 +74,10 @@ class SessionStore(private val context: Context) {
 
     suspend fun saveThemeMode(mode: ThemeMode) {
         context.dataStore.edit { it[Keys.THEME] = mode.name }
+    }
+
+    suspend fun saveBranch(value: String) {
+        context.dataStore.edit { it[Keys.BRANCH] = value }
     }
 
     suspend fun saveFcmToken(value: String) {

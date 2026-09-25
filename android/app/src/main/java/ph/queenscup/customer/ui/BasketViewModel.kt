@@ -17,6 +17,7 @@ import ph.queenscup.customer.data.model.Product
 import ph.queenscup.customer.data.model.QuoteResponse
 import ph.queenscup.customer.data.model.Reservation
 import ph.queenscup.customer.data.model.ServiceType
+import ph.queenscup.customer.ui.branch.Branch
 
 /** One line in the basket: a drink at a size, with a quantity. */
 data class BasketEntry(
@@ -29,7 +30,9 @@ data class BasketEntry(
 }
 
 data class BasketUiState(
-    val branch: String = "kotapark",
+    /** Null until the customer picks one; the app asks before showing the menu. */
+    val branch: String? = null,
+    val branchRestored: Boolean = false,
     val products: List<Product> = emptyList(),
     val categories: List<String> = emptyList(),
     val selectedCategory: String? = null,
@@ -75,6 +78,8 @@ class BasketViewModel(app: Application) : AndroidViewModel(app) {
                 it.copy(
                     customerName = session.customerName.first().orEmpty(),
                     customerContact = session.customerContact.first().orEmpty(),
+                    branch = Branch.from(session.branch.first())?.wire,
+                    branchRestored = true,
                 )
             }
         }
@@ -140,8 +145,9 @@ class BasketViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setCustomerName(value: String) = _state.update { it.copy(customerName = value) }
 
-    fun setBranch(value: String) {
-        if (value in listOf("kotapark", "mcc")) _state.update { it.copy(branch = value) }
+    fun setBranch(branch: Branch) {
+        _state.update { it.copy(branch = branch.wire) }
+        viewModelScope.launch { session.saveBranch(branch.wire) }
     }
 
     fun setCustomerContact(value: String) = _state.update { it.copy(customerContact = value) }
@@ -177,6 +183,11 @@ class BasketViewModel(app: Application) : AndroidViewModel(app) {
         val current = _state.value
 
         if (current.isEmpty || current.submitting) return
+        val branch = current.branch
+        if (branch == null) {
+            _state.update { it.copy(error = "Choose a pick-up branch first.") }
+            return
+        }
         if (current.customerName.isBlank()) {
             _state.update { it.copy(error = "Please tell us the name for this reservation.") }
             return
@@ -186,7 +197,7 @@ class BasketViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(submitting = true, error = null) }
             runCatching {
                 repository.reserve(
-                    branch = current.branch,
+                    branch = branch,
                     lines = current.toLines(),
                     serviceType = current.serviceType,
                     name = current.customerName.trim(),

@@ -32,14 +32,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ph.queenscup.customer.ui.BasketViewModel
+import ph.queenscup.customer.ui.branch.BranchChips
 import ph.queenscup.customer.ui.peso
 
 /**
- * The account tab.
- *
- * Signed out it is the sign in and sign up flow, matching the website.
- * Signed in it shows the real account rather than a name typed into this
- * phone, which is what lets reservations and chat follow the customer.
+ * The account tab. It shows the real account rather than a name typed into
+ * this phone, which is what lets reservations and chat follow the customer.
  */
 @Composable
 fun AccountScreen(
@@ -50,23 +48,9 @@ fun AccountScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val auth by authViewModel.state.collectAsStateWithLifecycle()
 
-    val account = auth.signedIn
-    if (account == null) {
-        // Appearance is a setting for this phone, not for an account, so it
-        // stays reachable while signed out.
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-        ) {
-            AuthScreen(viewModel = authViewModel)
-            Column(Modifier.padding(horizontal = 20.dp)) {
-                AppearanceCard(themeViewModel)
-                Spacer(Modifier.height(20.dp))
-            }
-        }
-        return
-    }
+    // The app only shows the tabs once signed in; this covers the moment
+    // between tapping sign out and the sign-in screen taking over.
+    val account = auth.signedIn ?: return
 
     Column(
         modifier = Modifier
@@ -98,6 +82,16 @@ fun AccountScreen(
                 )
                 Spacer(Modifier.height(10.dp))
                 OutlinedButton(onClick = { authViewModel.signOut() }) { Text("Sign out") }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Card {
+            Column(Modifier.padding(14.dp)) {
+                Text("Pick-up branch", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+                BranchChips(selected = state.branch, onChoose = viewModel::setBranch)
             }
         }
 
