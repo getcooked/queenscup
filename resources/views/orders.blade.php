@@ -1335,7 +1335,7 @@ document.addEventListener('click',function(e){var wrapper=document.querySelector
  * reference code. Payment is taken in person at the counter.
  */
 var TAKEOUT_FEE_PER_CUP = {{ $takeoutFeePerCup ?? 5 }};
-var RESERVE_URL = @json(route('customer.reservations.store'));
+var RESERVE_URL = @json(route('customer.reservations.store', [], false));
 
 function reservedReferences() {
   var stored = getData('my_reservations', []);
@@ -1377,18 +1377,29 @@ function submitReservation() {
   var button = document.getElementById('reserveConfirmBtn');
   if (button) { button.disabled = true; button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reserving...'; }
 
-  fetch(RESERVE_URL, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
-    body: JSON.stringify({
-      service_type: checkoutIsTakeOut() ? 'take_out' : 'dine_in',
-      branch: document.getElementById('checkoutBranch').value,
-      items: cart.map(function (i) {
-        return { inventory_id: i.id, size: i.size === 'L' ? 'large' : 'regular', quantity: i.qty };
-      })
+  // The page can stay open across session rotation or expiration. Ask the
+  // current session for its token immediately before submitting.
+  fetch(@json(route('customer.csrf-token', [], false)), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+    .then(function (response) {
+      if (!response.ok) throw new Error('Your session expired. Please sign in again.');
+      return response.json();
     })
-  })
+    .then(function (tokenPayload) {
+      var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+      if (tokenMeta && tokenPayload.csrf_token) tokenMeta.setAttribute('content', tokenPayload.csrf_token);
+      return fetch(RESERVE_URL, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+        body: JSON.stringify({
+          service_type: checkoutIsTakeOut() ? 'take_out' : 'dine_in',
+          branch: document.getElementById('checkoutBranch').value,
+          items: cart.map(function (i) {
+            return { inventory_id: i.id, size: i.size === 'L' ? 'large' : 'regular', quantity: i.qty };
+          })
+        })
+      });
+    })
     .then(function (response) {
       return response.json().then(function (payload) {
         if (!response.ok) {

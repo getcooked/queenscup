@@ -151,6 +151,9 @@ Route::post('/chat', [ChatController::class, 'send'])->name('chat.send');
 Route::delete('/chat', [ChatController::class, 'clear'])->name('chat.clear');
 
 Route::post('/customer/logout', [CustomerAccountController::class, 'logout'])->name('customer.logout');
+Route::get('/customer/csrf-token', function (Request $request) {
+    return response()->json(['csrf_token' => $request->session()->token()]);
+})->name('customer.csrf-token');
 // Orders started in the browser always belong to an authenticated customer.
 Route::post('/customer/reservations', [ReservationController::class, 'storeForCustomer'])
     ->middleware('customer')
