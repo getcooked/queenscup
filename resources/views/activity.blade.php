@@ -199,7 +199,7 @@
     </main>
 </div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     function setupSidebar() {
         var defaultLogo = @json(asset('icons/queens-cup-logo.png'));
         var session = null;

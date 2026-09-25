@@ -189,7 +189,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     var reservations = [];
     var filter = 'active';
     var payingId = null;

@@ -138,16 +138,16 @@ Route::get('/', function () {
 | be reserved until the address is confirmed, so every order has a contact
 | that actually reaches someone.
 */
-Route::post('/customer/register', [CustomerAccountController::class, 'register'])->name('customer.register');
-Route::post('/customer/verify', [CustomerAccountController::class, 'verify'])->name('customer.verify');
-Route::post('/customer/resend', [CustomerAccountController::class, 'resend'])->name('customer.resend');
-Route::post('/customer/login', [CustomerAccountController::class, 'login'])->name('customer.login');
+Route::post('/customer/register', [CustomerAccountController::class, 'register'])->middleware('throttle:10,1')->name('customer.register');
+Route::post('/customer/verify', [CustomerAccountController::class, 'verify'])->middleware('throttle:10,1')->name('customer.verify');
+Route::post('/customer/resend', [CustomerAccountController::class, 'resend'])->middleware('throttle:5,1')->name('customer.resend');
+Route::post('/customer/login', [CustomerAccountController::class, 'login'])->middleware('throttle:10,1')->name('customer.login');
 /*
 | The customer assistant. Open to anyone so it works on the landing page,
 | but only a signed-in customer gets a stored conversation.
 */
 Route::get('/chat', [ChatController::class, 'history'])->name('chat.history');
-Route::post('/chat', [ChatController::class, 'send'])->name('chat.send');
+Route::post('/chat', [ChatController::class, 'send'])->middleware('throttle:30,1')->name('chat.send');
 Route::delete('/chat', [ChatController::class, 'clear'])->name('chat.clear');
 
 Route::post('/customer/logout', [CustomerAccountController::class, 'logout'])->name('customer.logout');
@@ -156,7 +156,7 @@ Route::get('/customer/csrf-token', function (Request $request) {
 })->name('customer.csrf-token');
 // Orders started in the browser always belong to an authenticated customer.
 Route::post('/customer/reservations', [ReservationController::class, 'storeForCustomer'])
-    ->middleware('customer')
+    ->middleware(['customer', 'throttle:30,1'])
     ->name('customer.reservations.store');
 
 Route::get('/staff-login', function () {
@@ -302,7 +302,7 @@ Route::post('/customer/otp/send', function (Request $request) {
     return response()->json([
         'message' => 'Verification code sent to your email address.',
     ]);
-});
+})->middleware('throttle:5,1');
 
 Route::post('/customer/otp/verify', function (Request $request) {
     $data = $request->validate([
@@ -335,7 +335,7 @@ Route::post('/customer/otp/verify', function (Request $request) {
     $request->session()->forget('customer_otp');
 
     return response()->json(['message' => 'OTP verified.']);
-});
+})->middleware('throttle:10,1');
 
 Route::get('/orders', $ordersView)->name('orders');
 

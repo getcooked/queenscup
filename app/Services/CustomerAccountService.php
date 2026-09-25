@@ -63,8 +63,8 @@ class CustomerAccountService
     /**
      * Checks a code and marks the address confirmed.
      *
-     * An already verified account passes straight through so a repeated
-     * submission is not an error.
+     * Verified accounts must use password login. Verification must never
+     * issue a session or token without validating an outstanding code.
      */
     public function verifyCode(string $email, string $code): User
     {
@@ -75,7 +75,7 @@ class CustomerAccountService
         }
 
         if ($user->email_verified_at) {
-            return $user;
+            throw ValidationException::withMessages(['code' => 'Please sign in with your email and password.']);
         }
 
         $record = EmailVerificationCode::where('user_id', $user->id)->latest('id')->first();

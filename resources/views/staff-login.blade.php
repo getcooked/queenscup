@@ -130,7 +130,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         function toggleStaffPassword(event) {
             const input = document.getElementById('staffPassword');
             const icon = event.target.closest('button').querySelector('i');

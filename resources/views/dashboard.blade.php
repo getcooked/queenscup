@@ -261,7 +261,7 @@
         ];
     @endphp
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         var staffUser = @json($staffUserPayload);
         var LOGO_URL = '{{ asset('icons/queens-cup-logo.png') }}';
         var todayStr = new Date().toLocaleDateString();

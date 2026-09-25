@@ -143,7 +143,7 @@
         </section>
     </main>
 </div>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     var defaultLogo = '{{ asset('icons/queens-cup-logo.png') }}';
     var reportRows = [];
 

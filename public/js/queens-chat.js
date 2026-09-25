@@ -153,7 +153,7 @@
         // Bot copy is composed server side and may carry simple markup; what a
         // person typed is inserted as text so it can never become markup.
         if (author === 'customer') message.textContent = body;
-        else message.innerHTML = body;
+        else window.QueenSecurity.appendChatMarkup(message, body);
 
         this.body.appendChild(message);
 

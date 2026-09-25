@@ -144,7 +144,7 @@
         </div>
     </main>
 </div>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 function csrfToken(){var token=document.querySelector('meta[name="csrf-token"]');return token?token.getAttribute('content'):'{{ csrf_token() }}';}
 function handleLogout(){
     localStorage.removeItem('qc_session');

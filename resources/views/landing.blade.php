@@ -173,6 +173,7 @@
             .foot-grid,.foot-bottom{flex-direction:column;align-items:flex-start}
         }
     </style>
+<script src="{{ asset('js/security.js') }}"></script>
 </head>
 <body>
 
@@ -435,7 +436,7 @@
     </div>
 </footer>
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     // Category filter. Plain DOM work; the menu is already server rendered so
     // the page is complete and indexable before this runs.
     document.querySelectorAll('.cat').forEach(function (button) {

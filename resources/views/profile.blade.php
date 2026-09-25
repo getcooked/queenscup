@@ -107,7 +107,7 @@
         </div>
     </main>
 </div>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     var defaultLogo = '{{ asset('icons/queens-cup-logo.png') }}';
     document.getElementById('sidebarCrown').innerHTML = '<img src="' + (localStorage.getItem('qc_logo') || defaultLogo) + '" alt="Logo">';
     localStorage.setItem('qc_session', JSON.stringify({

@@ -400,7 +400,7 @@
         </form>
     </main>
 </div>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     var inventoryItems = @json($items->items());
     var categories = @json($categories);
     var storeUrl = '{{ url('/inventory') }}';
