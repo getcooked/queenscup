@@ -39,17 +39,18 @@ Route::prefix('v1')->group(function () {
     // stays open while still being unguessable.
     // The assistant. Open to anyone, but a token identifies the customer so
     // the phone sees the same conversation as the website.
-    Route::get('/chat', [ChatController::class, 'history']);
+    Route::get('/chat', [ChatController::class, 'history'])->middleware('throttle:30,1');
     Route::post('/chat', [ChatController::class, 'send'])->middleware('throttle:30,1');
 
-    Route::post('/reservations/quote', [ReservationController::class, 'quote']);
+    Route::post('/reservations/quote', [ReservationController::class, 'quote'])->middleware('throttle:30,1');
     Route::post('/reservations', [ReservationController::class, 'store'])->middleware(['auth:sanctum', 'throttle:30,1']);
-    Route::get('/reservations/{reference}', [ReservationController::class, 'show']);
-    Route::post('/reservations/{reference}/cancel', [ReservationController::class, 'cancel']);
+    // Tighter limits on reference lookups slow down guessing references.
+    Route::get('/reservations/{reference}', [ReservationController::class, 'show'])->middleware('throttle:20,1');
+    Route::post('/reservations/{reference}/cancel', [ReservationController::class, 'cancel'])->middleware('throttle:10,1');
 
     // Push registration works for guests too, keyed to the reference.
-    Route::post('/device-tokens', [DeviceTokenController::class, 'store']);
-    Route::delete('/device-tokens', [DeviceTokenController::class, 'destroy']);
+    Route::post('/device-tokens', [DeviceTokenController::class, 'store'])->middleware('throttle:20,1');
+    Route::delete('/device-tokens', [DeviceTokenController::class, 'destroy'])->middleware('throttle:20,1');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);

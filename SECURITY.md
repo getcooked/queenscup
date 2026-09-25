@@ -14,6 +14,18 @@ toasts is HTML-escaped. Quick replies use textContent and event listeners.
 The service worker caches only explicitly listed public assets and removes old
 Queen's Cup caches, which could contain private customer or staff responses.
 
+Responses also send COOP/CORP same-origin, `frame-src 'none'`, and (over HTTPS)
+`upgrade-insecure-requests`. `public/.htaccess` mirrors the headers on static
+files, applies a strict CSP to directly opened SVG/HTML/XML, refuses dotfiles and
+backup/config files, and blocks TRACE/TRACK.
+
+Because every proxy is trusted with `X-Forwarded-Host`, `TrustHosts` restricts
+the host to `APP_URL` and its subdomains outside local/testing. **`APP_URL` must be
+the real public URL in production**, or requests are rejected with 400.
+
+Unauthenticated reservation lookup/cancel, quote, device-token and chat
+endpoints have their own tighter rate limits to slow reference guessing.
+
 Customer login, registration, verification, OTP and chat endpoints are throttled.
 Already-verified accounts must use password login; the verification endpoint
 cannot issue a session or API token merely from a known email address.

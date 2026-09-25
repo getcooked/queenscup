@@ -146,9 +146,9 @@ Route::post('/customer/login', [CustomerAccountController::class, 'login'])->mid
 | The customer assistant. Open to anyone so it works on the landing page,
 | but only a signed-in customer gets a stored conversation.
 */
-Route::get('/chat', [ChatController::class, 'history'])->name('chat.history');
+Route::get('/chat', [ChatController::class, 'history'])->middleware('throttle:30,1')->name('chat.history');
 Route::post('/chat', [ChatController::class, 'send'])->middleware('throttle:30,1')->name('chat.send');
-Route::delete('/chat', [ChatController::class, 'clear'])->name('chat.clear');
+Route::delete('/chat', [ChatController::class, 'clear'])->middleware('throttle:10,1')->name('chat.clear');
 
 Route::post('/customer/logout', [CustomerAccountController::class, 'logout'])->name('customer.logout');
 Route::get('/customer/csrf-token', function (Request $request) {

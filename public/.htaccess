@@ -5,6 +5,13 @@
 
     RewriteEngine On
 
+    # Block TRACE/TRACK (cross-site tracing).
+    RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)$ [NC]
+    RewriteRule ^ - [F]
+
+    # Never serve dotfiles (.env, .git, ...) except ACME challenges.
+    RewriteRule (^|/)\.(?!well-known/) - [F]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -18,4 +25,26 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+# Refuse backups, dumps and config files that end up in the web root.
+<FilesMatch "(?i)\.(env|log|sql|sqlite|bak|old|orig|swp|ini|sh|lock|git.*)$|^(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml)$">
+    Require all denied
+</FilesMatch>
+
+# Static files bypass Laravel, so mirror the middleware's security headers.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+    Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on' || %{HTTP:X-Forwarded-Proto} == 'https'"
+    Header always unset X-Powered-By
+    Header unset X-Powered-By
+
+    # SVG/HTML/XML can carry script; lock them down when opened directly.
+    <FilesMatch "(?i)\.(svg|html?|xml)$">
+        Header always set Content-Security-Policy "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'"
+    </FilesMatch>
 </IfModule>
