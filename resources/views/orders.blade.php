@@ -1628,6 +1628,12 @@ function customerPost(url, body) {
     body: JSON.stringify(body)
   }).then(function (response) {
     return response.json().then(function (payload) {
+      // Sign in regenerates the session and therefore the CSRF token. Keep
+      // the token in this long-lived page in sync with the new session.
+      if (payload && payload.csrf_token) {
+        var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+        if (tokenMeta) tokenMeta.setAttribute('content', payload.csrf_token);
+      }
       return { ok: response.ok, status: response.status, payload: payload };
     });
   });

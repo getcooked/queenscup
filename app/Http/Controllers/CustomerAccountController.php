@@ -99,6 +99,10 @@ class CustomerAccountController extends Controller
 
         return response()->json([
             'status' => 'signed_in',
+            // The browser keeps this page open after signing in. Session
+            // regeneration rotates Laravel's CSRF token, so send the new one
+            // with the response for subsequent reservation requests.
+            'csrf_token' => csrf_token(),
             'user' => [
                 'id' => $user->id,
                 'fullName' => $user->name,
