@@ -100,7 +100,7 @@ class ChatAssistantTest extends TestCase
         $customer = $this->customer();
         $drink = Inventory::create(['name' => 'Wintermelon', 'category' => 'Milktea', 'regular_price' => 100, 'large_price' => 120, 'stock' => 50]);
 
-        $reference = $this->postJson('/api/v1/reservations', [
+        $reference = $this->withToken($customer->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Ana Reyes',
             'items' => [['inventory_id' => $drink->id, 'quantity' => 2]],

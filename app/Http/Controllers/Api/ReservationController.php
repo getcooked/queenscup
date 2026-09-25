@@ -66,8 +66,7 @@ class ReservationController extends Controller
             'source' => $data['source'] ?? 'web',
         ]);
 
-        // Bind the device straight away so this reservation can be pushed to
-        // even when the customer never signed in.
+        // Bind the device straight away for reservation status notifications.
         if (! empty($data['device_token'])) {
             DeviceToken::register($data['device_token'], [
                 'user_id' => $request->user()?->id,

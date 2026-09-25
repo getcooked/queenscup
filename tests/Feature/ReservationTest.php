@@ -14,6 +14,43 @@ class ReservationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_guests_cannot_place_reservations()
+    {
+        $drink = $this->drink();
+
+        $this->postJson('/api/v1/reservations', [
+            'customer_name' => 'Guest',
+            'service_type' => 'dine_in',
+            'branch' => 'mcc',
+            'items' => [['inventory_id' => $drink->id, 'quantity' => 1]],
+        ])->assertUnauthorized();
+
+        $this->assertDatabaseCount('reservations', 0);
+    }
+
+    public function test_signed_in_customers_can_reserve_at_either_branch()
+    {
+        $customer = User::factory()->create(['role' => 'customer']);
+        $drink = $this->drink();
+        $this->withToken($customer->createToken('android')->plainTextToken);
+
+        foreach (['kotapark', 'mcc'] as $branch) {
+            $reference = $this->postJson('/api/v1/reservations', [
+                'customer_name' => $customer->name,
+                'service_type' => 'dine_in',
+                'branch' => $branch,
+                'source' => 'android',
+                'items' => [['inventory_id' => $drink->id, 'quantity' => 1]],
+            ])->assertCreated()->assertJsonPath('branch', $branch)->json('reference');
+
+            $this->assertDatabaseHas('reservations', [
+                'reference' => $reference,
+                'branch' => $branch,
+                'user_id' => $customer->id,
+            ]);
+        }
+    }
+
     private function drink(array $overrides = []): Inventory
     {
         return Inventory::create(array_merge([
@@ -81,7 +118,7 @@ class ReservationTest extends TestCase
     {
         $drink = $this->drink();
 
-        $this->postJson('/api/v1/reservations', [
+        $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Bargain Hunter',
             'items' => [[
@@ -102,7 +139,7 @@ class ReservationTest extends TestCase
     {
         $drink = $this->drink();
 
-        $reference = $this->postJson('/api/v1/reservations', [
+        $reference = $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'take_out',
             'customer_name' => 'Jay',
             'items' => [['inventory_id' => $drink->id, 'quantity' => 1]],
@@ -255,7 +292,7 @@ class ReservationTest extends TestCase
 
     public function test_an_empty_basket_is_rejected()
     {
-        $this->postJson('/api/v1/reservations', [
+        $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Ana',
             'items' => [],

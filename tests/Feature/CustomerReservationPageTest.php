@@ -80,7 +80,7 @@ class CustomerReservationPageTest extends TestCase
         $drink = Inventory::first();
 
         // Exactly the shape submitReservation() sends.
-        $this->postJson('/api/v1/reservations', [
+        $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'take_out',
             'customer_name' => 'Ana Reyes',
             'customer_email' => 'ana@example.com',
@@ -104,7 +104,7 @@ class CustomerReservationPageTest extends TestCase
     {
         $drink = Inventory::first();
 
-        $reference = $this->postJson('/api/v1/reservations', [
+        $reference = $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Ana Reyes',
             'items' => [['inventory_id' => $drink->id, 'quantity' => 1]],

@@ -45,7 +45,7 @@ class SidebarOrderCountTest extends TestCase
 
     private function reserve(string $status, string $branch = 'kotapark'): Reservation
     {
-        $reference = $this->postJson('/api/v1/reservations', [
+        $reference = $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Ana Reyes',
             'branch' => $branch,

@@ -4,6 +4,11 @@ Native Android client for reserving drinks. Customers browse the menu, reserve
 for dine in or take out, and get a push notification the moment the counter
 marks their order ready.
 
+The Reserve tab requires sign-in before checkout and preserves the basket
+through login or registration. Customers choose Kota Park, Madridejos or
+Madridejos Community College as their pick-up branch before confirming.
+The reservation API also requires a valid authentication token.
+
 It talks to the Laravel API in this same repository (`routes/api.php`, prefix
 `/api/v1`). Nothing is priced on the device: the basket is sent to the server,
 which returns the totals, so the app and the counter can never disagree.

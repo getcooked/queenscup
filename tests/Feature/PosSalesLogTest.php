@@ -48,7 +48,7 @@ class PosSalesLogTest extends TestCase
         $drink = Inventory::create(['name' => 'Mulberry Lime', 'category' => 'Fruit', 'regular_price' => 85, 'large_price' => 105, 'stock' => 50]);
 
         // A customer reservation is not a till sale and must not inflate it.
-        $this->postJson('/api/v1/reservations', [
+        $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Ana',
             'items' => [['inventory_id' => $drink->id, 'quantity' => 1]],

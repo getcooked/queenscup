@@ -40,7 +40,7 @@ class CombinedSalesReportTest extends TestCase
     /** An app reservation, later paid for at the counter. */
     private function paidReservation(int $quantity = 1): string
     {
-        $reference = $this->postJson('/api/v1/reservations', [
+        $reference = $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Ana Reyes',
             'items' => [['inventory_id' => $this->drink->id, 'quantity' => $quantity]],
@@ -106,7 +106,7 @@ class CombinedSalesReportTest extends TestCase
         $this->asStaff();
 
         // Reserved but never paid for: not revenue.
-        $this->postJson('/api/v1/reservations', [
+        $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Ana',
             'items' => [['inventory_id' => $this->drink->id, 'quantity' => 1]],
@@ -146,7 +146,7 @@ class CombinedSalesReportTest extends TestCase
     {
         $this->asStaff();
 
-        $this->postJson('/api/v1/reservations', [
+        $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Ana',
             'items' => [['inventory_id' => $this->drink->id, 'quantity' => 1]],

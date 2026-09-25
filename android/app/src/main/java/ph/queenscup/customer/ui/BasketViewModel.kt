@@ -29,6 +29,7 @@ data class BasketEntry(
 }
 
 data class BasketUiState(
+    val branch: String = "kotapark",
     val products: List<Product> = emptyList(),
     val categories: List<String> = emptyList(),
     val selectedCategory: String? = null,
@@ -139,6 +140,10 @@ class BasketViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setCustomerName(value: String) = _state.update { it.copy(customerName = value) }
 
+    fun setBranch(value: String) {
+        if (value in listOf("kotapark", "mcc")) _state.update { it.copy(branch = value) }
+    }
+
     fun setCustomerContact(value: String) = _state.update { it.copy(customerContact = value) }
 
     /**
@@ -171,7 +176,7 @@ class BasketViewModel(app: Application) : AndroidViewModel(app) {
     fun submit(notes: String?) {
         val current = _state.value
 
-        if (current.isEmpty) return
+        if (current.isEmpty || current.submitting) return
         if (current.customerName.isBlank()) {
             _state.update { it.copy(error = "Please tell us the name for this reservation.") }
             return
@@ -181,6 +186,7 @@ class BasketViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(submitting = true, error = null) }
             runCatching {
                 repository.reserve(
+                    branch = current.branch,
                     lines = current.toLines(),
                     serviceType = current.serviceType,
                     name = current.customerName.trim(),

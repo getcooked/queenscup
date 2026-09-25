@@ -29,14 +29,17 @@ class ReservationRepository(private val session: SessionStore) {
         api.quote(QuoteRequest(serviceType.wire, lines))
 
     suspend fun reserve(
+        branch: String,
         lines: List<BasketLine>,
         serviceType: ServiceType,
         name: String,
         contact: String?,
         notes: String?,
     ): Reservation {
+        check(!session.token.first().isNullOrBlank()) { "Please sign in before ordering." }
         val reservation = api.reserve(
             ReservationRequest(
+                branch = branch,
                 serviceType = serviceType.wire,
                 customerName = name,
                 customerContact = contact,

@@ -17,8 +17,7 @@ use Illuminate\Support\Facades\Route;
 | app, so both go through exactly the same rules. Counter-side endpoints live
 | in web.php because the admin panel authenticates with a session.
 |
-| Reserving does not require an account: a guest reserves and then tracks the
-| order with the reference code returned here.
+| Reserving requires an account. Tracking remains available by reference.
 |
 */
 
@@ -30,7 +29,7 @@ Route::prefix('v1')->group(function () {
     // Menu
     Route::get('/products', [ProductController::class, 'index']);
 
-    // Accounts are optional; they only persist a customer's history.
+    // Customers sign in before placing a reservation.
     Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::post('/auth/verify', [AuthController::class, 'verify'])->middleware('throttle:10,1');
@@ -44,7 +43,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/chat', [ChatController::class, 'send'])->middleware('throttle:30,1');
 
     Route::post('/reservations/quote', [ReservationController::class, 'quote']);
-    Route::post('/reservations', [ReservationController::class, 'store'])->middleware('throttle:30,1');
+    Route::post('/reservations', [ReservationController::class, 'store'])->middleware(['auth:sanctum', 'throttle:30,1']);
     Route::get('/reservations/{reference}', [ReservationController::class, 'show']);
     Route::post('/reservations/{reference}/cancel', [ReservationController::class, 'cancel']);
 

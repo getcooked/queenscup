@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,16 +33,34 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ph.queenscup.customer.data.model.ServiceType
 import ph.queenscup.customer.ui.BasketViewModel
+import ph.queenscup.customer.ui.account.AuthScreen
+import ph.queenscup.customer.ui.account.AuthViewModel
 import ph.queenscup.customer.ui.peso
 
 @Composable
 fun BasketScreen(
     viewModel: BasketViewModel,
+    authViewModel: AuthViewModel,
     onBrowseMenu: () -> Unit,
     onTrackReservation: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val auth by authViewModel.state.collectAsStateWithLifecycle()
     var notes by remember { mutableStateOf("") }
+
+    LaunchedEffect(auth.signedIn) {
+        auth.signedIn?.let {
+            viewModel.setCustomerName(it.fullName)
+            viewModel.setCustomerContact(it.contactNumber.orEmpty())
+        }
+    }
+
+    if (auth.signedIn == null) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            AuthScreen(viewModel = authViewModel)
+        }
+        return
+    }
 
     state.placed?.let { reservation ->
         AlertDialog(
@@ -89,6 +108,18 @@ fun BasketScreen(
             .padding(16.dp),
     ) {
         Text("Your reservation", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(16.dp))
+
+        Text("Pick-up branch", style = MaterialTheme.typography.titleMedium)
+        listOf("kotapark" to "Kota Park, Madridejos", "mcc" to "Madridejos Community College").forEach { (value, label) ->
+            FilterChip(
+                selected = state.branch == value,
+                onClick = { viewModel.setBranch(value) },
+                enabled = !state.submitting,
+                label = { Text(label) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
         Spacer(Modifier.height(16.dp))
 
         // ---- How they want it served -------------------------------------

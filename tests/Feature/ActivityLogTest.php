@@ -38,7 +38,7 @@ class ActivityLogTest extends TestCase
 
     private function reserve(): Reservation
     {
-        $reference = $this->postJson('/api/v1/reservations', [
+        $reference = $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Walk-in',
             'items' => [['inventory_id' => $this->drink->id, 'quantity' => 1]],

@@ -38,7 +38,7 @@ class StaffOrderBookTest extends TestCase
             'items' => [['inventory_id' => $this->drink->id, 'quantity' => 1]],
         ])->assertCreated();
 
-        $this->postJson('/api/v1/reservations', [
+        $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'take_out',
             'customer_name' => 'Ana Reyes',
             'items' => [['inventory_id' => $this->drink->id, 'quantity' => 2]],
@@ -56,7 +56,7 @@ class StaffOrderBookTest extends TestCase
 
     public function test_an_unpaid_reservation_still_appears_in_the_book()
     {
-        $this->postJson('/api/v1/reservations', [
+        $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Ana',
             'items' => [['inventory_id' => $this->drink->id, 'quantity' => 1]],
@@ -81,7 +81,7 @@ class StaffOrderBookTest extends TestCase
 
     public function test_the_book_advances_an_order_through_the_server()
     {
-        $reference = $this->postJson('/api/v1/reservations', [
+        $reference = $this->withToken(\App\Models\User::factory()->create(['role' => 'customer'])->createToken('test')->plainTextToken)->postJson('/api/v1/reservations', [
             'service_type' => 'dine_in',
             'customer_name' => 'Ana',
             'items' => [['inventory_id' => $this->drink->id, 'quantity' => 1]],

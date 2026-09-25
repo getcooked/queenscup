@@ -158,6 +158,7 @@ private fun QueensCupApp(deepLinkReference: String?, themeViewModel: ThemeViewMo
             composable(Tab.BASKET.route) {
                 BasketScreen(
                     viewModel = basketViewModel,
+                    authViewModel = authViewModel,
                     onBrowseMenu = { navController.navigate(Tab.MENU.route) },
                     onTrackReservation = { navController.navigate(Tab.TRACK.route) },
                 )

@@ -76,6 +76,7 @@ data class QuoteResponse(
 
 @Serializable
 data class ReservationRequest(
+    val branch: String,
     @SerialName("service_type") val serviceType: String,
     @SerialName("customer_name") val customerName: String,
     @SerialName("customer_contact") val customerContact: String? = null,
