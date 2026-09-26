@@ -546,6 +546,7 @@ body{background:radial-gradient(circle at top right,rgba(22,199,106,.08),transpa
 }
 </style>
 <link href="{{ asset('css/admin-shell.css') }}" rel="stylesheet">
+<script src="{{ asset('js/cdn-retry.js') }}"></script>
 <script src="{{ asset('js/admin-sidebar.js') }}" defer></script>
 <script src="{{ asset('js/security.js') }}"></script>
 </head>

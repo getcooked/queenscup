@@ -14,6 +14,7 @@
         @media(max-width:900px){.layout{display:block}.sidebar{display:none}.grid{grid-template-columns:1fr}.content{padding:18px}.top{display:block}.top h1{font-size:26px}}
     </style>
     <link href="{{ asset('css/admin-shell.css') }}" rel="stylesheet">
+    <script src="{{ asset('js/cdn-retry.js') }}"></script>
     <script src="{{ asset('js/admin-sidebar.js') }}" defer></script>
 </head>
 <body>

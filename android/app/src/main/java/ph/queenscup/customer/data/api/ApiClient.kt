@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import ph.queenscup.customer.BuildConfig
 import retrofit2.Retrofit
@@ -39,9 +40,34 @@ object ApiClient {
         chain.proceed(request)
     }
 
+    private val CDN_RETRY_DELAYS_MS = longArrayOf(300, 900)
+
+    /**
+     * Hostinger's CDN sometimes answers with its own static 403/404 HTML page
+     * instead of passing the request on to Laravel. The API never answers
+     * with HTML, so that response means the request did not reach the server
+     * and is safe to send again. Without this an order fails with "HTTP 404"
+     * roughly one time in three while the CDN is misbehaving.
+     */
+    private val cdnRetryInterceptor = Interceptor { chain ->
+        var response = chain.proceed(chain.request())
+        var attempt = 0
+        while (attempt < CDN_RETRY_DELAYS_MS.size && response.isCdnErrorPage()) {
+            response.close()
+            Thread.sleep(CDN_RETRY_DELAYS_MS[attempt++])
+            response = chain.proceed(chain.request())
+        }
+        response
+    }
+
+    private fun Response.isCdnErrorPage(): Boolean =
+        (code == 403 || code == 404) && header("Content-Type").orEmpty().startsWith("text/html")
+
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            // After auth, so every retry still carries the bearer token.
+            .addInterceptor(cdnRetryInterceptor)
             .apply {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(HttpLoggingInterceptor().apply {

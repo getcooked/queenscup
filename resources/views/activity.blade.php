@@ -99,6 +99,7 @@
         .nav-item.active{box-shadow:inset 3px 0 0 var(--green)}
     </style>
     <link href="{{ asset('css/admin-shell.css') }}" rel="stylesheet">
+    <script src="{{ asset('js/cdn-retry.js') }}"></script>
     <script src="{{ asset('js/admin-sidebar.js') }}" defer></script>
 </head>
 <body>

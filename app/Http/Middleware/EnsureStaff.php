@@ -16,6 +16,9 @@ class EnsureStaff
         try {
             $staff = $staffId ? User::find($staffId) : null;
         } catch (QueryException $exception) {
+            // Staff are sent back to sign in when this happens, so record why.
+            report($exception);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'We could not connect to the database. Please try again later.',

@@ -130,6 +130,7 @@
         </div>
     </div>
 
+    <script src="{{ asset('js/cdn-retry.js') }}"></script>
     <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         function toggleStaffPassword(event) {
             const input = document.getElementById('staffPassword');

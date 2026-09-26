@@ -47,7 +47,9 @@ $ordersView = function (Request $request) {
                 ];
             }
         } catch (QueryException $exception) {
-            // The public ordering page can still load while the database is unavailable.
+            // The public ordering page can still load while the database is
+            // unavailable, but staff then see the sign-in screen, so log it.
+            report($exception);
         }
     }
 

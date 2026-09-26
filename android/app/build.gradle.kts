@@ -32,8 +32,8 @@ android {
         targetSdk = 34
         // Bump on every published build: Android only treats a new APK as an
         // update when versionCode goes up.
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 6
+        versionName = "1.5"
     }
 
     // Release signing. The keystore and its passwords stay out of git; set

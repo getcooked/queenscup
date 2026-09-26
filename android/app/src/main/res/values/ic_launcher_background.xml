@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Splash background. -->
     <color name="ic_launcher_background">#12864E</color>
+    <!-- Launcher icon background: the logo's own page colour. -->
+    <color name="ic_launcher_icon_background">#FCFCFD</color>
 </resources>
